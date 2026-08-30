@@ -230,7 +230,7 @@ export const PrintableThermalReceipt: React.FC<PrintableThermalReceiptProps> = (
             <div className="text-center pt-2 text-[10px] space-y-0.5">
               <p className="font-bold">*** ধন্যবাদ, আবার আসবেন ***</p>
               <p>পণ্য পরিবর্তনযোগ্য (২৪ ঘণ্টার মধ্যে রসিদসহ)</p>
-              <p className="text-[9px] text-slate-500">কারিগরি সহযোগিতায়: মুদিদোকান (MudiDokan POS)</p>
+              <p className="text-[9px] text-slate-500">কারিগরি সহযোগিতায়: আমার দোকান (Amar Dokan SaaS)</p>
             </div>
           </div>
         </div>

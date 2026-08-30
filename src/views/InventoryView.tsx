@@ -29,6 +29,7 @@ import {
 } from 'lucide-react';
 import { BigButton } from '../components/common/BigButton';
 import { SupplierChalanSection } from '../components/inventory/SupplierChalanSection';
+import { useAuthStore } from '../hooks/useAuthStore';
 
 const getCategoryEmoji = (name?: string) => {
   if (!name) return '📦';
@@ -43,6 +44,10 @@ const getCategoryEmoji = (name?: string) => {
 };
 
 export const InventoryView: React.FC = () => {
+  const { hasAccess } = useAuthStore();
+  const canManageStock = hasAccess('INVENTORY_MANAGE');
+  const canViewChalan = hasAccess('CHALAN');
+
   const [subSection, setSubSection] = useState<'PRODUCTS' | 'CHALAN'>('PRODUCTS');
   const [isGroupedView, setIsGroupedView] = useState<boolean>(true);
   const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(new Set());
@@ -329,13 +334,15 @@ export const InventoryView: React.FC = () => {
             </span>
           </div>
 
-          <button
-            onClick={() => handleOpenAdjust(product)}
-            className="h-11 px-3.5 sm:px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs flex items-center gap-1.5 shadow-xs transition-all flex-shrink-0"
-          >
-            <Plus className="w-4 h-4 text-emerald-400" />
-            <span>মাল যোগ / স্টক আপডেট</span>
-          </button>
+          {canManageStock && (
+            <button
+              onClick={() => handleOpenAdjust(product)}
+              className="h-11 px-3.5 sm:px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs flex items-center gap-1.5 shadow-xs transition-all flex-shrink-0 cursor-pointer"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>মজুদ সমন্বয়</span>
+            </button>
+          )}
         </div>
       </div>
     );
@@ -357,20 +364,22 @@ export const InventoryView: React.FC = () => {
           <span>পণ্য ও মজুদ ({toBanglaDigits(allProducts.length)})</span>
         </button>
 
-        <button
-          onClick={() => setSubSection('CHALAN')}
-          className={`flex-1 py-3 px-4 rounded-2xl font-black text-sm flex items-center justify-center gap-2 transition-all select-none relative ${
-            subSection === 'CHALAN'
-              ? 'bg-slate-900 text-white shadow-md'
-              : 'text-slate-600 hover:text-slate-900'
-          }`}
-        >
-          <Truck className="w-4 h-4" />
-          <span>কোম্পানির চালান ({toBanglaDigits(totalChalansCount)})</span>
-          {totalSupplierDue > 0 && (
-            <span className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-ping absolute top-3 right-4" />
-          )}
-        </button>
+        {canViewChalan && (
+          <button
+            onClick={() => setSubSection('CHALAN')}
+            className={`flex-1 py-3 px-4 rounded-2xl font-black text-sm flex items-center justify-center gap-2 transition-all select-none relative ${
+              subSection === 'CHALAN'
+                ? 'bg-slate-900 text-white shadow-md'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            <Truck className="w-4 h-4" />
+            <span>কোম্পানির চালান ({toBanglaDigits(totalChalansCount)})</span>
+            {totalSupplierDue > 0 && (
+              <span className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-ping absolute top-3 right-4" />
+            )}
+          </button>
+        )}
       </div>
 
       {subSection === 'CHALAN' ? (
@@ -572,13 +581,15 @@ export const InventoryView: React.FC = () => {
                   </button>
                 </div>
 
-                <button
-                  onClick={() => setIsAddModalOpen(true)}
-                  className="h-12 px-4 rounded-2xl bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white text-sm font-bold flex items-center gap-2 shadow-xs transition-all flex-shrink-0"
-                >
-                  <PackagePlus className="w-4 h-4" />
-                  <span>+ নতুন পণ্য</span>
-                </button>
+                {canManageStock && (
+                  <button
+                    onClick={() => setIsAddModalOpen(true)}
+                    className="h-12 px-4 rounded-2xl bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white text-sm font-bold flex items-center gap-2 shadow-xs transition-all flex-shrink-0 cursor-pointer"
+                  >
+                    <PackagePlus className="w-4 h-4" />
+                    <span>+ নতুন পণ্য</span>
+                  </button>
+                )}
               </div>
             </div>
 

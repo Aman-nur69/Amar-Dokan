@@ -22,6 +22,7 @@ import {
   FileCheck,
   PlusCircle,
 } from 'lucide-react';
+import { useAuthStore } from '../../hooks/useAuthStore';
 
 export interface DailyMetrics {
   totalSales: number;
@@ -53,6 +54,9 @@ export const DailyProfitWidget: React.FC<DailyProfitWidgetProps> = ({
   onOpenCashCountModal,
   onOpenDayClosingModal,
 }) => {
+  const { hasAccess } = useAuthStore();
+  const canSeeProfit = hasAccess('NET_PROFIT');
+
   const isProfitPositive = metrics.netProfit >= 0;
   const profitMarginPercent =
     metrics.totalSales > 0 ? (metrics.netProfit / metrics.totalSales) * 100 : 0;
@@ -140,20 +144,26 @@ export const DailyProfitWidget: React.FC<DailyProfitWidgetProps> = ({
                 {formatBengaliCurrency(metrics.totalSales)}
               </h2>
               {metrics.totalSales > 0 && (
-                <span
-                  className={`text-sm font-extrabold flex items-center gap-0.5 px-2.5 py-1 rounded-xl ${
-                    isProfitPositive
-                      ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
-                      : 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
-                  }`}
-                >
-                  {isProfitPositive ? (
-                    <ArrowUpRight className="w-4 h-4" />
-                  ) : (
-                    <ArrowDownRight className="w-4 h-4" />
-                  )}
-                  লাভ: {formatBengaliCurrency(metrics.netProfit)} ({toBanglaDigits(profitMarginPercent.toFixed(1))}%)
-                </span>
+                canSeeProfit ? (
+                  <span
+                    className={`text-sm font-extrabold flex items-center gap-0.5 px-2.5 py-1 rounded-xl ${
+                      isProfitPositive
+                        ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                        : 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
+                    }`}
+                  >
+                    {isProfitPositive ? (
+                      <ArrowUpRight className="w-4 h-4" />
+                    ) : (
+                      <ArrowDownRight className="w-4 h-4" />
+                    )}
+                    লাভ: {formatBengaliCurrency(metrics.netProfit)} ({toBanglaDigits(profitMarginPercent.toFixed(1))}%)
+                  </span>
+                ) : (
+                  <span className="text-xs text-slate-400 bg-slate-800 px-2.5 py-1 rounded-lg border border-slate-700">
+                    🔒 লাভ শুধুমাত্র মালিক দেখতে পারেন
+                  </span>
+                )
               )}
             </div>
 

@@ -6,7 +6,17 @@ export type PaymentMethod = 'CASH' | 'MFS' | 'BAKI' | 'SPLIT';
 export type BakiType = 'DEBIT' | 'CREDIT'; // DEBIT = Customer owes more (New Due), CREDIT = Customer paid (Repayment)
 export type MfsProvider = 'BKASH' | 'NAGAD' | 'ROCKET' | 'UPAY' | 'CASH' | 'OTHER';
 export type ProductUnit = 'kg' | 'gm' | 'litre' | 'packet' | 'piece' | 'hali';
-export type UserRole = 'owner' | 'manager' | 'cashier';
+export type UserRole = 'super_admin' | 'owner' | 'manager' | 'cashier';
+
+export interface UserSession {
+  id: string;
+  store_id: string;
+  full_name: string;
+  phone: string;
+  role: UserRole;
+  avatar?: string;
+  logged_at: string;
+}
 
 export interface Store {
   id: string;
@@ -29,6 +39,7 @@ export interface Profile {
   phone?: string;
   role: UserRole;
   pin_code: string;
+  is_active?: boolean;
   created_at: string;
   updated_at: string;
 }

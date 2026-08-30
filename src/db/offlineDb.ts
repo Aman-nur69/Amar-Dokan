@@ -6,6 +6,7 @@
 import Dexie, { Table } from 'dexie';
 import {
   Store,
+  Profile,
   Category,
   Product,
   Customer,
@@ -32,11 +33,13 @@ export class MudiDokanDexieDb extends Dexie {
   chalan_items!: Table<ChalanItem, string>;
   supplier_payments!: Table<SupplierPayment, string>;
   sync_queue!: Table<SyncQueueItem, string>;
+  profiles!: Table<Profile, string>;
 
   constructor() {
-    super('MudiDokanOfflineDB');
-    this.version(3).stores({
+    super('AmarDokanOfflineDB');
+    this.version(4).stores({
       stores: 'id',
+      profiles: 'id, store_id, phone, role',
       categories: 'id, store_id',
       products: 'id, store_id, barcode, category_id, is_quick_item, name_bn, name_en',
       customers: 'id, store_id, phone, name',
@@ -57,7 +60,7 @@ export const db = new MudiDokanDexieDb();
 // Default Store Profile
 export const DEFAULT_STORE: Store = {
   id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
-  name: 'ভাই ভাই স্টোর (Bhai Bhai Store)',
+  name: 'আমার দোকান (Amar Dokan Super Store)',
   proprietor: 'মোঃ রফিকুল ইসলাম',
   phone: '01711998877',
   address: 'দোকান নং ১২, মীরপুর-১০ গোলচত্বর বাজার, ঢাকা',
@@ -68,6 +71,54 @@ export const DEFAULT_STORE: Store = {
   created_at: new Date().toISOString(),
   updated_at: new Date().toISOString(),
 };
+
+// Initial Seed Staff Profiles for Multi-Role Login
+export const INITIAL_PROFILES: Profile[] = [
+  {
+    id: 'p-0000000-0000-0000-0000-000000000000',
+    store_id: DEFAULT_STORE.id,
+    full_name: 'তানভীর আহমেদ',
+    phone: '01700000000',
+    role: 'super_admin',
+    pin_code: '0000',
+    is_active: true,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+  {
+    id: 'p-1111111-1111-1111-1111-111111111111',
+    store_id: DEFAULT_STORE.id,
+    full_name: 'মোঃ রফিকুল ইসলাম',
+    phone: '01711998877',
+    role: 'owner',
+    pin_code: '1234',
+    is_active: true,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+  {
+    id: 'p-2222222-2222-2222-2222-222222222222',
+    store_id: DEFAULT_STORE.id,
+    full_name: 'আব্দুল করিম',
+    phone: '01811223344',
+    role: 'manager',
+    pin_code: '2345',
+    is_active: true,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+  {
+    id: 'p-3333333-3333-3333-3333-333333333333',
+    store_id: DEFAULT_STORE.id,
+    full_name: 'সাকিব হাসান',
+    phone: '01911334455',
+    role: 'cashier',
+    pin_code: '3456',
+    is_active: true,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+];
 
 // Initial Seed Data for Instant Standalone / Offline Execution
 export const INITIAL_CATEGORIES: Category[] = [
@@ -505,8 +556,9 @@ export const INITIAL_CHALAN_ITEMS: ChalanItem[] = [
 export async function initializeLocalDatabase(): Promise<void> {
   const storeCount = await db.stores.count();
   if (storeCount === 0) {
-    await db.transaction('rw', [db.stores, db.categories, db.products, db.customers, db.expenses, db.baki_transactions, db.supplier_chalans, db.chalan_items], async () => {
+    await db.transaction('rw', [db.stores, db.profiles, db.categories, db.products, db.customers, db.expenses, db.baki_transactions, db.supplier_chalans, db.chalan_items], async () => {
       await db.stores.put(DEFAULT_STORE);
+      await db.profiles.bulkPut(INITIAL_PROFILES);
       await db.categories.bulkPut(INITIAL_CATEGORIES);
       await db.products.bulkPut(INITIAL_PRODUCTS);
       await db.customers.bulkPut(INITIAL_CUSTOMERS);
@@ -515,8 +567,15 @@ export async function initializeLocalDatabase(): Promise<void> {
       await db.supplier_chalans.bulkPut(INITIAL_CHALANS);
       await db.chalan_items.bulkPut(INITIAL_CHALAN_ITEMS);
     });
-    console.log('[MudiDokan DB] Offline database successfully initialized and seeded.');
+    console.log('[AmarDokan DB] Offline database successfully initialized and seeded.');
   } else {
+    // Check if profiles need seeding
+    const profileCount = await db.profiles.count();
+    if (profileCount === 0) {
+      await db.profiles.bulkPut(INITIAL_PROFILES);
+      console.log('[AmarDokan DB] Staff profiles successfully seeded.');
+    }
+
     // Check if supplier_chalans need seeding
     const chalanCount = await db.supplier_chalans.count();
     if (chalanCount === 0) {
@@ -524,7 +583,7 @@ export async function initializeLocalDatabase(): Promise<void> {
         await db.supplier_chalans.bulkPut(INITIAL_CHALANS);
         await db.chalan_items.bulkPut(INITIAL_CHALAN_ITEMS);
       });
-      console.log('[MudiDokan DB] Supplier chalans successfully seeded.');
+      console.log('[AmarDokan DB] Supplier chalans successfully seeded.');
     }
   }
 }

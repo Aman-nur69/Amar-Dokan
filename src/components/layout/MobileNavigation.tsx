@@ -1,13 +1,14 @@
 // ==============================================================================
-// MudiDokan (মুদিদোকান) Mobile Bottom Dock & Desktop Tab Navigation
-// Touch Hitboxes >= 56px, High-Contrast Bengali Semantics, and Cart Badges
+// Amar Dokan (আমার দোকান) Simple & Clean Navigation Bar
+// Human-Centered Design: Uncluttered, Role-Aware, & Intuitive
 // ==============================================================================
 
 import React from 'react';
-import { ShoppingCart, BookOpen, Boxes, BarChart3 } from 'lucide-react';
+import { ShoppingCart, BookOpen, Boxes, BarChart3, Users } from 'lucide-react';
 import { toBanglaDigits } from '../../lib/banglaNumberFormatter';
+import { useAuthStore } from '../../hooks/useAuthStore';
 
-export type ActiveTab = 'POS' | 'BAKI' | 'INVENTORY' | 'DASHBOARD';
+export type ActiveTab = 'POS' | 'BAKI' | 'INVENTORY' | 'DASHBOARD' | 'STAFF';
 
 interface MobileNavigationProps {
   activeTab: ActiveTab;
@@ -20,41 +21,52 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({
   onTabChange,
   cartItemCount,
 }) => {
-  const tabs = [
+  const { hasAccess } = useAuthStore();
+
+  // Clean, focused tabs list based on role
+  const allTabs = [
     {
       id: 'POS' as ActiveTab,
-      label: 'ক্যাশ বিক্রি',
-      subLabel: 'POS স্ক্রিন',
+      label: 'বিক্রি (POS)',
       icon: ShoppingCart,
       badge: cartItemCount > 0 ? toBanglaDigits(cartItemCount) : undefined,
+      show: hasAccess('POS'),
     },
     {
       id: 'BAKI' as ActiveTab,
       label: 'বাকির খাতা',
-      subLabel: 'লেজার ও তাগাদা',
       icon: BookOpen,
+      show: hasAccess('BAKI'),
     },
     {
       id: 'INVENTORY' as ActiveTab,
-      label: 'পণ্য মজুদ',
-      subLabel: 'স্টক ও আগমন',
+      label: 'পণ্য ও মজুদ',
       icon: Boxes,
+      show: hasAccess('INVENTORY_VIEW'),
     },
     {
       id: 'DASHBOARD' as ActiveTab,
-      label: 'দৈনিক হিসাব',
-      subLabel: 'প্রফিট ও রিপোর্ট',
+      label: 'দৈনিক রিপোর্ট',
       icon: BarChart3,
+      show: hasAccess('REPORTS'),
+    },
+    {
+      id: 'STAFF' as ActiveTab,
+      label: 'স্টাফ ও রোল',
+      icon: Users,
+      show: hasAccess('STAFF'),
     },
   ];
 
+  const visibleTabs = allTabs.filter((t) => t.show);
+
   return (
     <>
-      {/* 1. Desktop / Tablet Top Subnav (visible md and up) */}
-      <nav className="hidden md:block bg-white border-b border-slate-200 px-4 py-2 sticky top-[65px] z-30 shadow-sm">
+      {/* 1. Desktop Simple Top Subnav */}
+      <nav className="hidden md:block bg-white border-b border-slate-200 px-4 py-2 sticky top-[61px] z-30">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex gap-2">
-            {tabs.map((tab) => {
+          <div className="flex items-center gap-1.5">
+            {visibleTabs.map((tab) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
 
@@ -63,10 +75,10 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({
                   key={tab.id}
                   onClick={() => onTabChange(tab.id)}
                   className={`
-                    relative flex items-center gap-2.5 px-5 py-2.5 rounded-2xl font-bold text-sm transition-all duration-150 select-none
+                    flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm transition-colors cursor-pointer select-none
                     ${
                       isActive
-                        ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20'
+                        ? 'bg-slate-900 text-white'
                         : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
                     }
                   `}
@@ -74,7 +86,11 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({
                   <Icon className="w-4 h-4" />
                   <span>{tab.label}</span>
                   {tab.badge && (
-                    <span className="ml-1 px-2 py-0.5 rounded-full bg-rose-500 text-white text-xs font-black">
+                    <span
+                      className={`ml-1 px-1.5 py-0.5 rounded-full text-xs font-black ${
+                        isActive ? 'bg-emerald-500 text-white' : 'bg-slate-900 text-white'
+                      }`}
+                    >
                       {tab.badge}
                     </span>
                   )}
@@ -83,16 +99,19 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({
             })}
           </div>
 
-          <div className="text-xs font-bold text-slate-500">
-            মুদিদোকান • অফলাইন ক্যাশ ও বাকির খাতা
+          <div className="text-xs text-slate-500 font-medium">
+            আমার দোকান • সহজ রিটেইল পিওএস
           </div>
         </div>
       </nav>
 
-      {/* 2. Mobile Bottom Dock (visible on mobile < md) */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200 shadow-2xl safe-area-pb">
-        <div className="grid grid-cols-4 h-16 max-w-lg mx-auto">
-          {tabs.map((tab) => {
+      {/* 2. Mobile Bottom Dock */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-slate-200 shadow-lg safe-area-pb">
+        <div
+          className="grid h-14 max-w-md mx-auto"
+          style={{ gridTemplateColumns: `repeat(${visibleTabs.length}, minmax(0, 1fr))` }}
+        >
+          {visibleTabs.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
 
@@ -101,21 +120,21 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({
                 key={tab.id}
                 onClick={() => onTabChange(tab.id)}
                 className={`
-                  relative flex flex-col items-center justify-center gap-1 select-none transition-all
-                  ${isActive ? 'text-emerald-700 font-extrabold' : 'text-slate-500 font-medium'}
+                  relative flex flex-col items-center justify-center gap-0.5 select-none transition-colors
+                  ${isActive ? 'text-emerald-700 font-bold' : 'text-slate-500 font-medium'}
                 `}
               >
                 <div className="relative">
-                  <Icon className={`w-5 h-5 ${isActive ? 'scale-110' : ''}`} />
+                  <Icon className="w-4 h-4" />
                   {tab.badge && (
-                    <span className="absolute -top-2 -right-3 px-1.5 py-0.2 rounded-full bg-rose-600 text-white text-[10px] font-black border-2 border-white shadow">
+                    <span className="absolute -top-1.5 -right-2.5 px-1 rounded-full bg-emerald-600 text-white text-[9px] font-black">
                       {tab.badge}
                     </span>
                   )}
                 </div>
-                <span className="text-[11px] leading-tight tracking-tight">{tab.label}</span>
+                <span className="text-[10px] leading-tight">{tab.label}</span>
                 {isActive && (
-                  <span className="absolute bottom-1 w-8 h-1 bg-emerald-600 rounded-full" />
+                  <span className="absolute top-0 w-8 h-0.5 bg-emerald-600 rounded-full" />
                 )}
               </button>
             );
