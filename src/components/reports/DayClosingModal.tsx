@@ -1,0 +1,194 @@
+// ==============================================================================
+// MudiDokan (মুদিদোকান) Daily Day-Closing Statement Slip & Printable Modal
+// High-fidelity thermal receipt closing summary and 1-tap WhatsApp export
+// ==============================================================================
+
+import React from 'react';
+import { DailyMetrics } from './DailyProfitWidget';
+import { DEFAULT_STORE } from '../../db/offlineDb';
+import {
+  formatBengaliCurrency,
+  toBanglaDigits,
+  formatBengaliDate,
+} from '../../lib/banglaNumberFormatter';
+import { X, Printer, Share2, FileCheck, CheckCircle2 } from 'lucide-react';
+import { BigButton } from '../common/BigButton';
+
+interface DayClosingModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  metrics: DailyMetrics;
+  selectedDate: string;
+}
+
+export const DayClosingModal: React.FC<DayClosingModalProps> = ({
+  isOpen,
+  onClose,
+  metrics,
+  selectedDate,
+}) => {
+  if (!isOpen) return null;
+
+  const handlePrint = () => {
+    window.print();
+  };
+
+  const handleShareWhatsApp = () => {
+    const text = `📊 *${DEFAULT_STORE.name} — দৈনিক হিসাব ক্লোজিং রিপোর্ট*
+📅 তারিখ: ${toBanglaDigits(new Date(selectedDate).toLocaleDateString('bn-BD'))}
+
+🔹 *আজকের মোট বিক্রি:* ${formatBengaliCurrency(metrics.totalSales)} (মোট ${toBanglaDigits(metrics.saleCount)} টি ইনভয়েস)
+💵 *নগদ বিক্রি:* ${formatBengaliCurrency(metrics.totalSales - metrics.totalNewDue)}
+🔴 *নতুন বাকি প্রদান:* ${formatBengaliCurrency(metrics.totalNewDue)}
+🟢 *কাস্টমার বাকি আদায়:* ${formatBengaliCurrency(metrics.totalDueCollected)}
+🚚 *আজকের চালানে মাল ক্রয়:* ${formatBengaliCurrency(metrics.totalChalanPurchases)}
+💸 *কোম্পানিকে নগদ পরিশোধ:* ${formatBengaliCurrency(metrics.totalChalanCashPaid)}${
+      metrics.totalSupplierDuePaid ? `\n💸 *চালানের বকেয়া পরিশোধ:* ${formatBengaliCurrency(metrics.totalSupplierDuePaid)}` : ''
+    }
+🧾 *দোকানের অন্যান্য খরচ:* ${formatBengaliCurrency(metrics.totalExpenses)}
+
+--------------------------------
+💰 *ক্যাশবাক্সে বর্তমান নগদ টাকা:* ${formatBengaliCurrency(metrics.totalCashCollected)}
+📈 *আজকের আনুমানিক নিট লাভ:* ${formatBengaliCurrency(metrics.netProfit)}
+--------------------------------
+মুদিদোকান সফটওয়্যার দ্বারা প্রস্তুতকৃত।`;
+
+    const encoded = encodeURIComponent(text);
+    window.open(`https://wa.me/?text=${encoded}`, '_blank');
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-900/80 backdrop-blur-sm animate-in fade-in overflow-y-auto">
+      <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl border border-slate-200 my-auto overflow-hidden flex flex-col max-h-[92vh]">
+        {/* Modal Header */}
+        <div className="p-4 bg-slate-900 text-white flex justify-between items-center flex-shrink-0">
+          <div className="flex items-center gap-2.5">
+            <div className="w-10 h-10 rounded-2xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
+              <FileCheck className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="text-lg font-black">দিনের হিসাব ক্লোজিং রসিদ</h3>
+              <p className="text-xs text-slate-300">
+                {toBanglaDigits(new Date(selectedDate).toLocaleDateString('bn-BD'))}
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-1.5 rounded-full text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Printable Slip Container */}
+        <div className="flex-1 overflow-y-auto p-5 bg-slate-100 flex justify-center">
+          <div className="bg-white w-full max-w-[340px] p-5 rounded-2xl shadow-md border border-slate-200 font-mono text-xs text-slate-800 space-y-3">
+            {/* Store Header */}
+            <div className="text-center border-b border-dashed border-slate-300 pb-3">
+              <h4 className="font-black text-base tracking-wide font-sans">{DEFAULT_STORE.name}</h4>
+              <p className="text-[11px] text-slate-500 font-sans mt-0.5">{DEFAULT_STORE.address}</p>
+              <p className="text-[11px] text-slate-500 font-sans">প্রোপাইটর: {DEFAULT_STORE.proprietor}</p>
+              <div className="mt-2 inline-block px-2.5 py-0.5 rounded-full bg-slate-100 text-[10px] font-bold uppercase tracking-wider text-slate-700">
+                ★ দৈনিক ক্লোজিং স্টেটমেন্ট ★
+              </div>
+            </div>
+
+            {/* Time & Invoices */}
+            <div className="flex justify-between text-[11px] text-slate-600 border-b border-dashed border-slate-200 pb-2">
+              <span>তারিখ: {toBanglaDigits(new Date(selectedDate).toLocaleDateString('bn-BD'))}</span>
+              <span>বিক্রি সংখ্যা: {toBanglaDigits(metrics.saleCount)} টি</span>
+            </div>
+
+            {/* Inflow & Sales Breakdown */}
+            <div className="space-y-1.5 pt-1">
+              <div className="flex justify-between font-bold text-slate-900">
+                <span>আজকের মোট বিক্রি:</span>
+                <span>{formatBengaliCurrency(metrics.totalSales)}</span>
+              </div>
+              <div className="flex justify-between text-slate-600 pl-2">
+                <span>• নগদ বিক্রি:</span>
+                <span>{formatBengaliCurrency(metrics.totalSales - metrics.totalNewDue)}</span>
+              </div>
+              <div className="flex justify-between text-rose-600 pl-2">
+                <span>• নতুন বাকি:</span>
+                <span>+{formatBengaliCurrency(metrics.totalNewDue)}</span>
+              </div>
+              <div className="flex justify-between text-emerald-700">
+                <span>আজকের বাকি আদায়:</span>
+                <span>+{formatBengaliCurrency(metrics.totalDueCollected)}</span>
+              </div>
+            </div>
+
+            {/* Outflow Breakdown */}
+            <div className="border-t border-dashed border-slate-200 pt-2 space-y-1.5">
+              <div className="flex justify-between text-amber-800">
+                <span>দোকান খরচ:</span>
+                <span>-{formatBengaliCurrency(metrics.totalExpenses)}</span>
+              </div>
+              <div className="flex justify-between text-slate-700">
+                <span>আজকের চালান ক্রয়:</span>
+                <span>{formatBengaliCurrency(metrics.totalChalanPurchases)}</span>
+              </div>
+              <div className="flex justify-between text-rose-700 pl-2">
+                <span>• চালান নগদ পরিশোধ:</span>
+                <span>-{formatBengaliCurrency(metrics.totalChalanCashPaid)}</span>
+              </div>
+              {metrics.totalSupplierDuePaid !== undefined && metrics.totalSupplierDuePaid > 0 && (
+                <div className="flex justify-between text-rose-700 pl-2 font-bold">
+                  <span>• চালান বকেয়া পরিশোধ:</span>
+                  <span>-{formatBengaliCurrency(metrics.totalSupplierDuePaid)}</span>
+                </div>
+              )}
+              <div className="flex justify-between text-slate-500 pl-2">
+                <span>• চালান অবশিষ্ট বাকি:</span>
+                <span>{formatBengaliCurrency(metrics.totalChalanDue)}</span>
+              </div>
+            </div>
+
+            {/* Bottom Net Totals */}
+            <div className="border-t-2 border-slate-900 pt-3 space-y-2 font-sans">
+              <div className="flex justify-between text-base font-black text-slate-900">
+                <span>ড্রয়ারে ক্যাশ জমা:</span>
+                <span className="text-emerald-700">
+                  {formatBengaliCurrency(metrics.totalCashCollected)}
+                </span>
+              </div>
+              <div className="flex justify-between text-sm font-bold text-slate-800">
+                <span>আনুমানিক নিট লাভ:</span>
+                <span className="text-emerald-600">
+                  {formatBengaliCurrency(metrics.netProfit)}
+                </span>
+              </div>
+            </div>
+
+            {/* Footer Notice */}
+            <div className="text-center pt-3 border-t border-dashed border-slate-300 text-[10px] text-slate-400 font-sans">
+              মুদিদোকান (MudiDokan) ডিজিটাল হিসাব ক্যাশ ড্রয়ার অডিট
+            </div>
+          </div>
+        </div>
+
+        {/* Modal Actions */}
+        <div className="p-4 bg-slate-100 border-t border-slate-200 flex flex-col sm:flex-row gap-2.5">
+          <BigButton
+            variant="cash"
+            onClick={handleShareWhatsApp}
+            icon={Share2}
+            className="flex-1"
+          >
+            হোয়াটসঅ্যাপে পাঠান
+          </BigButton>
+          <BigButton
+            variant="secondary"
+            onClick={handlePrint}
+            icon={Printer}
+            className="flex-1"
+          >
+            স্লিপ প্রিন্ট করুন
+          </BigButton>
+        </div>
+      </div>
+    </div>
+  );
+};
