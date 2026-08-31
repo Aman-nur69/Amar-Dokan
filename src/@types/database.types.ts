@@ -18,12 +18,19 @@ export interface UserSession {
   logged_at: string;
 }
 
+export type ShopVerificationStatus = 'approved' | 'pending' | 'rejected' | 'suspended';
+
 export interface Store {
   id: string;
   name: string;
   proprietor: string;
   phone: string;
   address: string;
+  trade_licence_no?: string;
+  trade_licence_doc_url?: string;
+  tin_number?: string;
+  verification_status: ShopVerificationStatus;
+  verification_notes?: string;
   bkash_number?: string;
   nagad_number?: string;
   currency_symbol: string;

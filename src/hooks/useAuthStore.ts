@@ -13,15 +13,27 @@ interface AuthState {
   isAuthenticated: boolean;
   loginError: string | null;
   isLoading: boolean;
+  activeStoreId: string;
 
   // Authentication actions
   loginWithPhoneAndPin: (phone: string, pin: string) => Promise<boolean>;
   quickLoginDemoRole: (role: UserRole) => Promise<boolean>;
+  registerNewShop: (shopData: {
+    shopName: string;
+    proprietor: string;
+    phone: string;
+    pin: string;
+    address: string;
+    tradeLicenceNo: string;
+    tradeLicenceDocUrl?: string;
+    tinNumber: string;
+  }) => Promise<{ success: boolean; message: string }>;
+  switchActiveStore: (storeId: string) => void;
   logout: () => void;
   clearError: () => void;
 
   // Permissions helpers
-  hasAccess: (feature: 'POS' | 'BAKI' | 'INVENTORY_VIEW' | 'INVENTORY_MANAGE' | 'CHALAN' | 'REPORTS' | 'NET_PROFIT' | 'STAFF') => boolean;
+  hasAccess: (feature: 'POS' | 'BAKI' | 'INVENTORY_VIEW' | 'INVENTORY_MANAGE' | 'CHALAN' | 'REPORTS' | 'NET_PROFIT' | 'STAFF' | 'SUPER_ADMIN') => boolean;
   isSuperAdmin: () => boolean;
   isOwnerOrAbove: () => boolean;
   isManagerOrAbove: () => boolean;
@@ -34,8 +46,16 @@ export const useAuthStore = create<AuthState>()(
       isAuthenticated: false,
       loginError: null,
       isLoading: false,
+      activeStoreId: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
 
       clearError: () => set({ loginError: null }),
+
+      switchActiveStore: (storeId: string) => {
+        set((state) => ({
+          activeStoreId: storeId,
+          currentUser: state.currentUser ? { ...state.currentUser, store_id: storeId } : null,
+        }));
+      },
 
       loginWithPhoneAndPin: async (phone: string, pin: string): Promise<boolean> => {
         set({ isLoading: true, loginError: null });
@@ -67,6 +87,25 @@ export const useAuthStore = create<AuthState>()(
             return false;
           }
 
+          // Check if store is approved (non-super_admin roles)
+          if (profile.role !== 'super_admin') {
+            const store = await db.stores.get(profile.store_id);
+            if (store && store.verification_status === 'pending') {
+              set({
+                isLoading: false,
+                loginError: 'আপনার দোকানটি এখনও সুপার অ্যাডমিন দ্বারা যাচাইাধীন। অনুগ্রহ করে অনুমোদন পর্যন্ত অপেক্ষা করুন।',
+              });
+              return false;
+            }
+            if (store && store.verification_status === 'rejected') {
+              set({
+                isLoading: false,
+                loginError: `আবেদন প্রত্যাখ্যাত: ${store.verification_notes || 'কাগজপত্রে অসামঞ্জস্য রয়েছে।'}`,
+              });
+              return false;
+            }
+          }
+
           const session: UserSession = {
             id: profile.id,
             store_id: profile.store_id,
@@ -78,6 +117,7 @@ export const useAuthStore = create<AuthState>()(
 
           set({
             currentUser: session,
+            activeStoreId: profile.store_id,
             isAuthenticated: true,
             loginError: null,
             isLoading: false,
@@ -90,6 +130,57 @@ export const useAuthStore = create<AuthState>()(
             loginError: 'লগইন করতে সমস্যা হয়েছে। দয়া করে আবার চেষ্টা করুন।',
           });
           return false;
+        }
+      },
+
+      registerNewShop: async (shopData) => {
+        set({ isLoading: true, loginError: null });
+        try {
+          const storeId = `store-${Date.now()}`;
+          const newStore = {
+            id: storeId,
+            name: shopData.shopName.trim(),
+            proprietor: shopData.proprietor.trim(),
+            phone: shopData.phone.trim(),
+            address: shopData.address.trim(),
+            trade_licence_no: shopData.tradeLicenceNo.trim(),
+            trade_licence_doc_url: shopData.tradeLicenceDocUrl || 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=600&auto=format&fit=crop&q=60',
+            tin_number: shopData.tinNumber.trim(),
+            verification_status: 'pending' as const,
+            verification_notes: 'ট্রেড লাইসেন্স ও টিআইএন যাচাই প্রক্রিয়াধীন',
+            currency_symbol: '৳',
+            is_active: false,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          };
+
+          const newProfile: Profile = {
+            id: `p-${Date.now()}`,
+            store_id: storeId,
+            full_name: shopData.proprietor.trim(),
+            phone: shopData.phone.trim(),
+            role: 'owner',
+            pin_code: shopData.pin.trim(),
+            is_active: true,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          };
+
+          await db.stores.put(newStore);
+          await db.profiles.put(newProfile);
+
+          set({ isLoading: false });
+          return {
+            success: true,
+            message: 'আপনার দোকান সফলভাবে নথিভুক্ত হয়েছে! সুপার অ্যাডমিনের যাচাই শেষে অ্যাকাউন্ট সক্রিয় হবে।',
+          };
+        } catch (error) {
+          console.error('Registration error:', error);
+          set({ isLoading: false, loginError: 'নিবন্ধন সম্পন্ন করা যায়নি।' });
+          return {
+            success: false,
+            message: 'নিবন্ধন করতে সমস্যা হয়েছে। দয়া করে আবার চেষ্টা করুন।',
+          };
         }
       },
 
@@ -112,6 +203,7 @@ export const useAuthStore = create<AuthState>()(
 
         set({
           currentUser: session,
+          activeStoreId: target.store_id,
           isAuthenticated: true,
           loginError: null,
           isLoading: false,
@@ -149,6 +241,9 @@ export const useAuthStore = create<AuthState>()(
           case 'NET_PROFIT':
           case 'STAFF':
             return role === 'super_admin' || role === 'owner';
+
+          case 'SUPER_ADMIN':
+            return role === 'super_admin';
 
           default:
             return false;

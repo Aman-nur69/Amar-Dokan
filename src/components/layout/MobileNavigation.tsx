@@ -8,7 +8,7 @@ import { ShoppingCart, BookOpen, Boxes, BarChart3, Users } from 'lucide-react';
 import { toBanglaDigits } from '../../lib/banglaNumberFormatter';
 import { useAuthStore } from '../../hooks/useAuthStore';
 
-export type ActiveTab = 'POS' | 'BAKI' | 'INVENTORY' | 'DASHBOARD' | 'STAFF';
+export type ActiveTab = 'POS' | 'BAKI' | 'INVENTORY' | 'DASHBOARD' | 'STAFF' | 'SUPER_ADMIN';
 
 interface MobileNavigationProps {
   activeTab: ActiveTab;
@@ -21,10 +21,16 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({
   onTabChange,
   cartItemCount,
 }) => {
-  const { hasAccess } = useAuthStore();
+  const { hasAccess, isSuperAdmin } = useAuthStore();
 
   // Clean, focused tabs list based on role
   const allTabs = [
+    {
+      id: 'SUPER_ADMIN' as ActiveTab,
+      label: 'সব দোকান (ওভারভিউ)',
+      icon: Users,
+      show: isSuperAdmin(),
+    },
     {
       id: 'POS' as ActiveTab,
       label: 'বিক্রি (POS)',

@@ -64,6 +64,10 @@ export const DEFAULT_STORE: Store = {
   proprietor: 'মোঃ রফিকুল ইসলাম',
   phone: '01711998877',
   address: 'দোকান নং ১২, মীরপুর-১০ গোলচত্বর বাজার, ঢাকা',
+  trade_licence_no: 'TRAD/DNCC/2024/098124',
+  trade_licence_doc_url: 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=600&auto=format&fit=crop&q=60',
+  tin_number: '748392019482',
+  verification_status: 'approved',
   bkash_number: '01711998877',
   nagad_number: '01811998877',
   currency_symbol: '৳',
@@ -71,6 +75,58 @@ export const DEFAULT_STORE: Store = {
   created_at: new Date().toISOString(),
   updated_at: new Date().toISOString(),
 };
+
+// Seed stores for Super Admin multi-shop management
+export const INITIAL_STORES: Store[] = [
+  DEFAULT_STORE,
+  {
+    id: 'store-2222-2222-2222-222222222222',
+    name: 'মদিনা জেনারেল স্টোর',
+    proprietor: 'হাজী মোঃ ইউসুফ',
+    phone: '01822334455',
+    address: 'প্লট নং ৪, আগ্রাবাদ বাণিজ্যিক এলাকা, চট্টগ্রাম',
+    trade_licence_no: 'TRAD/CCC/2024/114920',
+    trade_licence_doc_url: 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=600&auto=format&fit=crop&q=60',
+    tin_number: '592810394812',
+    verification_status: 'approved',
+    currency_symbol: '৳',
+    is_active: true,
+    created_at: new Date(Date.now() - 7 * 86400000).toISOString(),
+    updated_at: new Date(Date.now() - 7 * 86400000).toISOString(),
+  },
+  {
+    id: 'store-3333-3333-3333-333333333333',
+    name: 'জননী ডিপার্টমেন্টাল স্টোর',
+    proprietor: 'কামাল হোসেন',
+    phone: '01933445566',
+    address: 'সেক্টর-৩, রবীন্দ্র সরণি, উত্তরা, ঢাকা',
+    trade_licence_no: 'TRAD/DNCC/2026/047192',
+    trade_licence_doc_url: 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=600&auto=format&fit=crop&q=60',
+    tin_number: '883920194820',
+    verification_status: 'pending',
+    verification_notes: 'ট্রেড লাইসেন্স ও টিআইএন যাচাই প্রক্রিয়াধীন',
+    currency_symbol: '৳',
+    is_active: false,
+    created_at: new Date(Date.now() - 1 * 86400000).toISOString(),
+    updated_at: new Date(Date.now() - 1 * 86400000).toISOString(),
+  },
+  {
+    id: 'store-4444-4444-4444-444444444444',
+    name: 'আল-মদিনা গ্রোসারি শপ',
+    proprietor: 'মোঃ জাহিদ হাসান',
+    phone: '01644556677',
+    address: 'বাজার রোড, চাষাঢ়া, নারায়ণগঞ্জ',
+    trade_licence_no: 'TRAD/NCC/2026/001284',
+    trade_licence_doc_url: 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=600&auto=format&fit=crop&q=60',
+    tin_number: '339102948192',
+    verification_status: 'rejected',
+    verification_notes: 'ট্রেড লাইসেন্স স্ক্যান কপিতে মেয়াদ উত্তীর্ণ দেখা যাচ্ছে। হালনাগাদ কপি জমা দিন।',
+    currency_symbol: '৳',
+    is_active: false,
+    created_at: new Date(Date.now() - 3 * 86400000).toISOString(),
+    updated_at: new Date(Date.now() - 3 * 86400000).toISOString(),
+  },
+];
 
 // Initial Seed Staff Profiles for Multi-Role Login
 export const INITIAL_PROFILES: Profile[] = [
@@ -557,7 +613,7 @@ export async function initializeLocalDatabase(): Promise<void> {
   const storeCount = await db.stores.count();
   if (storeCount === 0) {
     await db.transaction('rw', [db.stores, db.profiles, db.categories, db.products, db.customers, db.expenses, db.baki_transactions, db.supplier_chalans, db.chalan_items], async () => {
-      await db.stores.put(DEFAULT_STORE);
+      await db.stores.bulkPut(INITIAL_STORES);
       await db.profiles.bulkPut(INITIAL_PROFILES);
       await db.categories.bulkPut(INITIAL_CATEGORIES);
       await db.products.bulkPut(INITIAL_PRODUCTS);
@@ -567,8 +623,13 @@ export async function initializeLocalDatabase(): Promise<void> {
       await db.supplier_chalans.bulkPut(INITIAL_CHALANS);
       await db.chalan_items.bulkPut(INITIAL_CHALAN_ITEMS);
     });
-    console.log('[AmarDokan DB] Offline database successfully initialized and seeded.');
+    console.log('[AmarDokan DB] Offline database successfully initialized and seeded with multiple stores.');
   } else {
+    // Check if additional initial stores need adding
+    if (storeCount < INITIAL_STORES.length) {
+      await db.stores.bulkPut(INITIAL_STORES);
+    }
+
     // Check if profiles need seeding
     const profileCount = await db.profiles.count();
     if (profileCount === 0) {

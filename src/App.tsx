@@ -15,15 +15,24 @@ import { BakiKhataView } from './views/BakiKhataView';
 import { InventoryView } from './views/InventoryView';
 import { DashboardView } from './views/DashboardView';
 import { StaffManagementView } from './views/StaffManagementView';
+import { SuperAdminDashboardView } from './views/SuperAdminDashboardView';
 import { LoginScreen } from './components/auth/LoginScreen';
 import { WifiOff, Store } from 'lucide-react';
 import { toBanglaDigits } from './lib/banglaNumberFormatter';
 
 export const App: React.FC = () => {
+  const { isAuthenticated, hasAccess, isSuperAdmin } = useAuthStore();
   const [activeTab, setActiveTab] = useState<ActiveTab>('POS');
   const [isDbReady, setIsDbReady] = useState(false);
 
-  const { isAuthenticated, hasAccess } = useAuthStore();
+  // Set default tab for super admin to SUPER_ADMIN
+  useEffect(() => {
+    if (isSuperAdmin()) {
+      setActiveTab('SUPER_ADMIN');
+    } else {
+      setActiveTab('POS');
+    }
+  }, [isSuperAdmin]);
 
   const {
     isOnline,
@@ -120,7 +129,8 @@ export const App: React.FC = () => {
       )}
 
       {/* 4. Active View Content */}
-      <main className="flex-1 max-w-7xl w-full mx-auto p-3 sm:p-5">
+      <main className="flex-1 max-w-7xl w-full mx-auto p-3 sm:p-6">
+        {activeTab === 'SUPER_ADMIN' && <SuperAdminDashboardView />}
         {activeTab === 'POS' && <POSView />}
         {activeTab === 'BAKI' && <BakiKhataView />}
         {activeTab === 'INVENTORY' && <InventoryView />}

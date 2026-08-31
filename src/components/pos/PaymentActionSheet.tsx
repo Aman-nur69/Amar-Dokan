@@ -36,6 +36,7 @@ export const PaymentActionSheet: React.FC<PaymentActionSheetProps> = ({
   const totalAmount = getTotalAmount();
 
   const [cashAmount, setCashAmount] = useState<number>(totalAmount);
+  const [customerCashTendered, setCustomerCashTendered] = useState<number>(0);
   const [mfsAmount, setMfsAmount] = useState<number>(0);
   const [mfsProvider, setMfsProvider] = useState<'BKASH' | 'NAGAD'>('BKASH');
   const [mfsTxnId, setMfsTxnId] = useState<string>('');
@@ -117,44 +118,109 @@ export const PaymentActionSheet: React.FC<PaymentActionSheetProps> = ({
             </div>
           </div>
 
-          {/* Quick Cash Presets */}
-          <div>
-            <label className="block text-xs font-bold text-slate-700 uppercase mb-2">
-              নগদ টাকা (ক্যাশ):
-            </label>
-            <div className="relative mb-2">
+          {/* Cash Payment & Change Calculator (ফেরত টাকা হিসাব) */}
+          <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-xs space-y-3">
+            <div className="flex justify-between items-center">
+              <label className="text-xs font-bold text-slate-800 uppercase tracking-wide">
+                নগদ আদায় (Cash Applied)
+              </label>
+              <span className="text-xs text-slate-500 font-medium">
+                বিলের বিপরীতে ক্যাশ জমা
+              </span>
+            </div>
+
+            <div className="relative">
               <input
                 type="number"
                 value={cashAmount || ''}
                 onChange={(e) => setCashAmount(parseFloat(e.target.value) || 0)}
                 placeholder="নগদ টাকার পরিমাণ..."
-                className="w-full h-14 pl-12 pr-4 rounded-2xl border-2 border-slate-200 text-lg font-bold text-slate-900 focus:border-emerald-500 outline-none"
+                className="w-full h-12 pl-10 pr-4 rounded-xl border border-slate-200 text-base font-bold text-slate-900 focus:border-emerald-600 outline-none transition-colors"
               />
-              <div className="absolute left-4 top-4 text-slate-400 font-bold">৳</div>
+              <div className="absolute left-3.5 top-3 text-slate-400 font-bold">৳</div>
             </div>
 
+            {/* Quick Bill Cash Presets */}
             <div className="flex flex-wrap gap-2">
               <button
+                type="button"
                 onClick={() => handleQuickAmount(totalAmount)}
-                className="px-3 py-2 rounded-xl bg-emerald-50 text-emerald-800 hover:bg-emerald-100 text-xs font-bold border border-emerald-200"
+                className="px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-800 hover:bg-emerald-100 text-xs font-bold border border-emerald-200 transition-colors cursor-pointer"
               >
-                ফুল ক্যাশ ({toBanglaDigits(totalAmount)})
+                ফুল ক্যাশ ({toBanglaDigits(totalAmount)}৳)
               </button>
               <button
+                type="button"
                 onClick={() => handleQuickAmount(0)}
-                className="px-3 py-2 rounded-xl bg-rose-50 text-rose-800 hover:bg-rose-100 text-xs font-bold border border-rose-200"
+                className="px-3 py-1.5 rounded-lg bg-rose-50 text-rose-800 hover:bg-rose-100 text-xs font-bold border border-rose-200 transition-colors cursor-pointer"
               >
-                সম্পূর্ণ বাকি (০)
+                সম্পূর্ণ বাকি
               </button>
-              {[100, 500, 1000].map((amt) => (
-                <button
-                  key={amt}
-                  onClick={() => handleQuickAmount(amt)}
-                  className="px-3 py-2 rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 text-xs font-semibold"
-                >
-                  +{toBanglaDigits(amt)}৳
-                </button>
-              ))}
+            </div>
+
+            {/* Cash Tendered / Received from Customer (ক্যাশ গ্রহণ ও ফেরত ক্যালকুলেটর) */}
+            <div className="pt-3 border-t border-slate-100 space-y-2">
+              <div className="flex justify-between items-center">
+                <span className="text-xs font-bold text-slate-700">
+                  গ্রাহক থেকে নগদ গ্রহণ (Tendered Note)
+                </span>
+                {customerCashTendered > (cashAmount || 0) && (
+                  <span className="text-xs font-bold text-emerald-600">
+                    ফেরতযোগ্য
+                  </span>
+                )}
+              </div>
+
+              <div className="relative">
+                <input
+                  type="number"
+                  value={customerCashTendered || ''}
+                  onChange={(e) => setCustomerCashTendered(parseFloat(e.target.value) || 0)}
+                  placeholder="যেমনঃ ৫০০ বা ১০০০ টাকার নোট..."
+                  className="w-full h-12 pl-10 pr-4 rounded-xl border border-slate-300 text-base font-bold text-slate-900 focus:border-slate-800 outline-none transition-colors bg-slate-50/50"
+                />
+                <div className="absolute left-3.5 top-3 text-slate-400 font-bold">৳</div>
+              </div>
+
+              {/* Quick Banknote Buttons */}
+              <div className="flex flex-wrap gap-1.5">
+                {[50, 100, 200, 500, 1000].map((note) => (
+                  <button
+                    key={note}
+                    type="button"
+                    onClick={() => setCustomerCashTendered(note)}
+                    className="px-2.5 py-1 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition-colors cursor-pointer"
+                  >
+                    +{toBanglaDigits(note)}৳ নোট
+                  </button>
+                ))}
+                {customerCashTendered > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setCustomerCashTendered(0)}
+                    className="px-2 py-1 rounded-md text-slate-400 hover:text-slate-600 text-xs"
+                  >
+                    রিসেট
+                  </button>
+                )}
+              </div>
+
+              {/* Change Return Banner (উচ্চ দৃশ্যমান ফেরত টাকা) */}
+              {customerCashTendered > (cashAmount || 0) && (
+                <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-300 flex items-center justify-between animate-in fade-in">
+                  <div>
+                    <span className="text-xs font-medium text-emerald-800 block">
+                      গ্রাহককে নগদ ফেরত দিবেন:
+                    </span>
+                    <span className="text-xl font-black text-emerald-700">
+                      {formatBengaliCurrency(customerCashTendered - (cashAmount || 0))}
+                    </span>
+                  </div>
+                  <span className="px-2.5 py-1 rounded-lg bg-emerald-600 text-white text-xs font-bold">
+                    ভাউচার ফেরত
+                  </span>
+                </div>
+              )}
             </div>
           </div>
 
