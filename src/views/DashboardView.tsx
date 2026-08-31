@@ -42,7 +42,7 @@ import {
 type ActivityTab = 'ALL' | 'SALES' | 'CHALAN' | 'COLLECTIONS' | 'EXPENSES';
 
 export const DashboardView: React.FC = () => {
-  const { isSuperAdmin } = useAuthStore();
+  const { isSuperAdmin, activeStoreId } = useAuthStore();
   const [sales, setSales] = useState<Sale[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [bakiTx, setBakiTx] = useState<BakiTransaction[]>([]);
@@ -63,12 +63,22 @@ export const DashboardView: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState<string>('');
 
   const loadData = useCallback(async () => {
-    const allSales = await db.sales.toArray();
-    const allExpenses = await db.expenses.toArray();
-    const allBaki = await db.baki_transactions.toArray();
-    const allItems = await db.sale_items.toArray();
-    const allChalans = await db.supplier_chalans.toArray();
-    const allPayments = await db.supplier_payments.toArray();
+    if (!activeStoreId) {
+      setSales([]);
+      setExpenses([]);
+      setBakiTx([]);
+      setSaleItems([]);
+      setChalans([]);
+      setSupplierPayments([]);
+      return;
+    }
+
+    const allSales = await db.sales.where('store_id').equals(activeStoreId).toArray();
+    const allExpenses = await db.expenses.where('store_id').equals(activeStoreId).toArray();
+    const allBaki = await db.baki_transactions.where('store_id').equals(activeStoreId).toArray();
+    const allItems = await db.sale_items.where('store_id').equals(activeStoreId).toArray();
+    const allChalans = await db.supplier_chalans.where('store_id').equals(activeStoreId).toArray();
+    const allPayments = await db.supplier_payments.where('store_id').equals(activeStoreId).toArray();
 
     // Sort newest first
     allSales.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
@@ -83,7 +93,7 @@ export const DashboardView: React.FC = () => {
     setSaleItems(allItems);
     setChalans(allChalans);
     setSupplierPayments(allPayments);
-  }, []);
+  }, [activeStoreId]);
 
   useEffect(() => {
     loadData();

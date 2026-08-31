@@ -4,7 +4,8 @@
 // ==============================================================================
 
 import { useState, useEffect, useCallback } from 'react';
-import { db, DEFAULT_STORE } from '../db/offlineDb';
+import { db } from '../db/offlineDb';
+import { useAuthStore } from './useAuthStore';
 import {
   Product,
   Category,
@@ -16,6 +17,7 @@ import {
 } from '../@types/database.types';
 
 export function useInventory() {
+  const { activeStoreId } = useAuthStore();
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [chalans, setChalans] = useState<SupplierChalan[]>([]);
@@ -27,27 +29,36 @@ export function useInventory() {
   const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
 
   const refreshInventory = useCallback(async () => {
+    if (!activeStoreId) {
+      setProducts([]);
+      setCategories([]);
+      setChalans([]);
+      setChalanItems([]);
+      setIsLoading(false);
+      return;
+    }
+
     setIsLoading(true);
     try {
-      const allProducts = await db.products.toArray();
+      const allProducts = await db.products.where('store_id').equals(activeStoreId).toArray();
       allProducts.sort((a, b) => a.name_bn.localeCompare(b.name_bn, 'bn'));
       setProducts(allProducts);
 
-      const allCats = await db.categories.toArray();
+      const allCats = await db.categories.where('store_id').equals(activeStoreId).toArray();
       setCategories(allCats);
 
-      const allChalans = await db.supplier_chalans.toArray();
+      const allChalans = await db.supplier_chalans.where('store_id').equals(activeStoreId).toArray();
       allChalans.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
       setChalans(allChalans);
 
-      const allChalanItems = await db.chalan_items.toArray();
+      const allChalanItems = await db.chalan_items.where('store_id').equals(activeStoreId).toArray();
       setChalanItems(allChalanItems);
     } catch (err) {
       console.error('[useInventory] Failed to load stock or chalans:', err);
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [activeStoreId]);
 
   useEffect(() => {
     refreshInventory();
@@ -129,10 +140,11 @@ export function useInventory() {
     try {
       const now = new Date().toISOString();
       const chalanId = crypto.randomUUID();
+      const targetStoreId = activeStoreId || 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11';
 
       const newChalan: SupplierChalan = {
         id: chalanId,
-        store_id: DEFAULT_STORE.id,
+        store_id: targetStoreId,
         chalan_no: chalanData.chalan_no.trim() || `CH-${Date.now().toString().slice(-6)}`,
         supplier_name: chalanData.supplier_name.trim(),
         supplier_phone: chalanData.supplier_phone?.trim(),
@@ -148,7 +160,7 @@ export function useInventory() {
 
       const chalanItemRecords: ChalanItem[] = items.map((it) => ({
         id: crypto.randomUUID(),
-        store_id: DEFAULT_STORE.id,
+        store_id: targetStoreId,
         chalan_id: chalanId,
         product_id: it.product_id,
         product_name_bn: it.product_name_bn,
@@ -249,7 +261,7 @@ export function useInventory() {
 
       const paymentRecord: SupplierPayment = {
         id: crypto.randomUUID(),
-        store_id: DEFAULT_STORE.id,
+        store_id: chalan.store_id || activeStoreId || 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
         chalan_id: chalan.id,
         chalan_no: chalan.chalan_no,
         supplier_name: chalan.supplier_name,
@@ -308,9 +320,10 @@ export function useInventory() {
 
     try {
       const now = new Date().toISOString();
+      const targetStoreId = activeStoreId || 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11';
       const newProduct: Product = {
         id: crypto.randomUUID(),
-        store_id: DEFAULT_STORE.id,
+        store_id: targetStoreId,
         ...productData,
         is_quick_item: Boolean(productData.is_quick_item),
         created_at: now,

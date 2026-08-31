@@ -70,6 +70,12 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({
 
   const visibleTabs = allTabs.filter((t) => t.show);
 
+  // If Super Admin is at the central platform control center (not visiting any shop),
+  // hide the sub-navigation completely so only the central dashboard is shown!
+  if (isSuperAdminWithoutShop) {
+    return null;
+  }
+
   return (
     <>
       {/* 1. Desktop Simple Top Subnav */}

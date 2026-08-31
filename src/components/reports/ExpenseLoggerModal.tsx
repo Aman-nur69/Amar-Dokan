@@ -4,7 +4,8 @@
 // ==============================================================================
 
 import React, { useState } from 'react';
-import { db, DEFAULT_STORE } from '../../db/offlineDb';
+import { db } from '../../db/offlineDb';
+import { useAuthStore } from '../../hooks/useAuthStore';
 import { Expense } from '../../@types/database.types';
 import { toBanglaDigits } from '../../lib/banglaNumberFormatter';
 import { X, Receipt, Check } from 'lucide-react';
@@ -32,6 +33,7 @@ export const ExpenseLoggerModal: React.FC<ExpenseLoggerModalProps> = ({
   onClose,
   onExpenseAdded,
 }) => {
+  const { activeStoreId } = useAuthStore();
   const [category, setCategory] = useState(EXPENSE_CATEGORIES[0]);
   const [amount, setAmount] = useState<number>(0);
   const [note, setNote] = useState('');
@@ -50,9 +52,10 @@ export const ExpenseLoggerModal: React.FC<ExpenseLoggerModalProps> = ({
     setIsSubmitting(true);
     try {
       const now = new Date().toISOString();
+      const targetStoreId = activeStoreId || 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11';
       const expenseItem: Expense = {
         id: crypto.randomUUID(),
-        store_id: DEFAULT_STORE.id,
+        store_id: targetStoreId,
         category,
         amount,
         note: note.trim() || undefined,

@@ -4,13 +4,15 @@
 // ==============================================================================
 
 import { useState } from 'react';
-import { db, DEFAULT_STORE } from '../db/offlineDb';
+import { db } from '../db/offlineDb';
+import { useAuthStore } from './useAuthStore';
 import { Sale, SaleItem, BakiTransaction, SyncQueueItem } from '../@types/database.types';
 import { ThermalReceiptData } from '../@types/pos.types';
 import { useCartStore } from './useCartStore';
 import confetti from 'canvas-confetti';
 
 export function useSalesEngine() {
+  const { activeStoreId } = useAuthStore();
   const [isProcessing, setIsProcessing] = useState(false);
   const [lastReceipt, setLastReceipt] = useState<ThermalReceiptData | null>(null);
 
@@ -75,10 +77,12 @@ export function useSalesEngine() {
         }
       }
 
+      const targetStoreId = activeStoreId || 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11';
+
       // 1. Prepare Sale entity
       const saleRecord: Sale = {
         id: saleId,
-        store_id: DEFAULT_STORE.id,
+        store_id: targetStoreId,
         customer_id: selectedCustomer?.id,
         invoice_no: invoiceNo,
         total_amount: totalAmount,
@@ -102,7 +106,7 @@ export function useSalesEngine() {
 
         return {
           id: itemId,
-          store_id: DEFAULT_STORE.id,
+          store_id: targetStoreId,
           sale_id: saleId,
           product_id: cartItem.product.id,
           product_name_bn: cartItem.product.name_bn,
@@ -138,7 +142,7 @@ export function useSalesEngine() {
           const bakiTxId = crypto.randomUUID();
           const bakiTx: BakiTransaction = {
             id: bakiTxId,
-            store_id: DEFAULT_STORE.id,
+            store_id: targetStoreId,
             customer_id: selectedCustomer.id,
             sale_id: saleId,
             type: 'DEBIT', // Customer owes more
@@ -180,13 +184,14 @@ export function useSalesEngine() {
       });
 
       // 4. Construct Thermal Receipt Data
+      const currentStore = await db.stores.get(targetStoreId);
       const customerPrevBalance = selectedCustomer ? selectedCustomer.current_balance : 0;
       const receiptData: ThermalReceiptData = {
-        storeName: DEFAULT_STORE.name,
-        storeProprietor: DEFAULT_STORE.proprietor,
-        storePhone: DEFAULT_STORE.phone,
-        storeAddress: DEFAULT_STORE.address,
-        bkashNumber: DEFAULT_STORE.bkash_number,
+        storeName: currentStore?.name || 'আমার দোকান',
+        storeProprietor: currentStore?.proprietor || 'স্বত্বাধিকারী',
+        storePhone: currentStore?.phone || '',
+        storeAddress: currentStore?.address || '',
+        bkashNumber: currentStore?.bkash_number || '',
         invoiceNo,
         date: now,
         customerName: selectedCustomer?.name,

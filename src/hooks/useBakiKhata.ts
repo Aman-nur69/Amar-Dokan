@@ -5,26 +5,35 @@
 // ==============================================================================
 
 import { useState, useEffect, useCallback } from 'react';
-import { db, DEFAULT_STORE } from '../db/offlineDb';
+import { db } from '../db/offlineDb';
+import { useAuthStore } from './useAuthStore';
 import { Customer, BakiTransaction, SyncQueueItem, MfsProvider } from '../@types/database.types';
 
 export function useBakiKhata() {
+  const { activeStoreId } = useAuthStore();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [transactions, setTransactions] = useState<BakiTransaction[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [filterType, setFilterType] = useState<'ALL' | 'DUE_ONLY' | 'CLEARED'>('ALL');
 
-  // Load customers and transactions from local Dexie database
+  // Load customers and transactions from local Dexie database for current active store
   const refreshData = useCallback(async () => {
+    if (!activeStoreId) {
+      setCustomers([]);
+      setTransactions([]);
+      setIsLoading(false);
+      return;
+    }
+
     setIsLoading(true);
     try {
-      const allCustomers = await db.customers.toArray();
+      const allCustomers = await db.customers.where('store_id').equals(activeStoreId).toArray();
       // Sort by current_balance DESC (highest due first)
       allCustomers.sort((a, b) => b.current_balance - a.current_balance);
       setCustomers(allCustomers);
 
-      const allTx = await db.baki_transactions.toArray();
+      const allTx = await db.baki_transactions.where('store_id').equals(activeStoreId).toArray();
       allTx.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
       setTransactions(allTx);
     } catch (err) {
@@ -32,7 +41,7 @@ export function useBakiKhata() {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [activeStoreId]);
 
   useEffect(() => {
     refreshData();
@@ -62,10 +71,17 @@ export function useBakiKhata() {
       return { success: false, error: 'গ্রাহকের নাম অবশ্যই দিতে হবে।' };
     }
 
-    // Check duplicate phone
-    const existing = await db.customers.where('phone').equals(cleanPhone).first();
+    const targetStoreId = activeStoreId || 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11';
+
+    // Check duplicate phone in this store
+    const existing = await db.customers
+      .where('store_id')
+      .equals(targetStoreId)
+      .and((c) => c.phone === cleanPhone)
+      .first();
+
     if (existing) {
-      return { success: false, error: 'এই মোবাইল নম্বরে ইতিমধ্যে একটি খাতা বিদ্যমান!' };
+      return { success: false, error: 'এই দোকানে এই মোবাইল নম্বরে ইতিমধ্যে একটি খাতা বিদ্যমান!' };
     }
 
     const now = new Date().toISOString();
@@ -73,7 +89,7 @@ export function useBakiKhata() {
 
     const newCustomer: Customer = {
       id: crypto.randomUUID(),
-      store_id: DEFAULT_STORE.id,
+      store_id: targetStoreId,
       name: name.trim(),
       phone: cleanPhone,
       address: address?.trim() || '',
@@ -91,7 +107,7 @@ export function useBakiKhata() {
       if (cleanOpeningDue > 0) {
         const initialTx: BakiTransaction = {
           id: crypto.randomUUID(),
-          store_id: DEFAULT_STORE.id,
+          store_id: targetStoreId,
           customer_id: newCustomer.id,
           type: 'DEBIT',
           amount: cleanOpeningDue,
@@ -143,6 +159,7 @@ export function useBakiKhata() {
     if (amount <= 0) return false;
 
     try {
+      const targetStoreId = activeStoreId || 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11';
       const now = new Date().toISOString();
       const customer = await db.customers.get(customerId);
       if (!customer) return false;
@@ -151,7 +168,7 @@ export function useBakiKhata() {
 
       const txRecord: BakiTransaction = {
         id: crypto.randomUUID(),
-        store_id: DEFAULT_STORE.id,
+        store_id: targetStoreId,
         customer_id: customerId,
         type: 'CREDIT', // Payment collected
         amount,
@@ -206,9 +223,10 @@ export function useBakiKhata() {
 
       const newBalance = customer.current_balance + amount;
 
+      const targetStoreId = activeStoreId || 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11';
       const txRecord: BakiTransaction = {
         id: crypto.randomUUID(),
-        store_id: DEFAULT_STORE.id,
+        store_id: targetStoreId,
         customer_id: customerId,
         type: 'DEBIT',
         amount,

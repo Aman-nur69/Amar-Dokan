@@ -40,7 +40,9 @@ export const SuperAdminDashboardView: React.FC<SuperAdminDashboardViewProps> = (
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'ALL' | ShopVerificationStatus>('ALL');
   const [selectedDocStore, setSelectedDocStore] = useState<Store | null>(null);
+  const [selectedDetailStore, setSelectedDetailStore] = useState<Store | null>(null);
   const [actionSuccessMessage, setActionSuccessMessage] = useState<string | null>(null);
+  const [rejectionNoteInput, setRejectionNoteInput] = useState('');
 
   // New Shop Listing Modal States
   const [isAddShopModalOpen, setIsAddShopModalOpen] = useState(false);
@@ -77,27 +79,57 @@ export const SuperAdminDashboardView: React.FC<SuperAdminDashboardViewProps> = (
     notes?: string
   ) => {
     try {
+      const isApproved = newStatus === 'approved';
       await db.stores.update(storeId, {
         verification_status: newStatus,
-        is_active: newStatus === 'approved',
-        verification_notes: notes || (newStatus === 'approved' ? 'যাচাই শেষে অনুমোদিত' : 'স্থগিত'),
+        is_active: isApproved,
+        verification_notes: notes || (isApproved ? 'যাচাই শেষে অনুমোদিত ও সক্রিয়' : 'স্থগিত'),
         updated_at: new Date().toISOString(),
       });
+
+      // If approved, make sure owner profiles for this store are active
+      if (isApproved) {
+        const profiles = await db.profiles.where('store_id').equals(storeId).toArray();
+        for (const p of profiles) {
+          await db.profiles.update(p.id, { is_active: true });
+        }
+
+        // Seed basic starter categories for the newly approved store if none exist
+        const existingCats = await db.categories.where('store_id').equals(storeId).count();
+        if (existingCats === 0) {
+          const starterCategories = [
+            { id: crypto.randomUUID(), store_id: storeId, name_bn: 'চাল, ডাল ও তেল', name_en: 'Grains & Oil', icon: 'wheat', created_at: new Date().toISOString() },
+            { id: crypto.randomUUID(), store_id: storeId, name_bn: 'মসলা ও নিত্যপ্রয়োজনীয়', name_en: 'Spices & Essentials', icon: 'sparkles', created_at: new Date().toISOString() },
+            { id: crypto.randomUUID(), store_id: storeId, name_bn: 'বিস্কুট ও স্ন্যাকস', name_en: 'Snacks & Biscuits', icon: 'cookie', created_at: new Date().toISOString() },
+            { id: crypto.randomUUID(), store_id: storeId, name_bn: 'টয়লেট্রিজ ও সাবান', name_en: 'Toiletries', icon: 'shield-check', created_at: new Date().toISOString() },
+            { id: crypto.randomUUID(), store_id: storeId, name_bn: 'অন্যান্য পণ্য', name_en: 'General Items', icon: 'shopping-bag', created_at: new Date().toISOString() },
+          ];
+          await db.categories.bulkAdd(starterCategories);
+        }
+      }
 
       const updated = stores.map((s) =>
         s.id === storeId
           ? {
               ...s,
               verification_status: newStatus,
-              is_active: newStatus === 'approved',
+              is_active: isApproved,
               verification_notes: notes || s.verification_notes,
             }
           : s
       );
       setStores(updated);
+      if (selectedDetailStore && selectedDetailStore.id === storeId) {
+        setSelectedDetailStore({
+          ...selectedDetailStore,
+          verification_status: newStatus,
+          is_active: isApproved,
+          verification_notes: notes || selectedDetailStore.verification_notes,
+        });
+      }
       setActionSuccessMessage(
-        newStatus === 'approved'
-          ? 'দোকানটি সফলভাবে অনুমোদন দেওয়া হয়েছে!'
+        isApproved
+          ? 'দোকানটি সফলভাবে অনুমোদন দেওয়া হয়েছে এবং মালিকের অ্যাকাউন্ট সক্রিয় করা হয়েছে!'
           : 'দোকানটির আবেদন বাতিল/স্থগিত করা হয়েছে।'
       );
       setTimeout(() => setActionSuccessMessage(null), 4000);
@@ -450,6 +482,20 @@ export const SuperAdminDashboardView: React.FC<SuperAdminDashboardViewProps> = (
 
                   {/* Actions Buttons: Optimized for mobile touch with full-width flex row */}
                   <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 w-full lg:w-auto pt-2 lg:pt-0 border-t lg:border-t-0 border-slate-100 justify-end">
+                    {/* View Application Details Button */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedDetailStore(store);
+                        setRejectionNoteInput('');
+                      }}
+                      className="flex-1 sm:flex-none px-3 py-2 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-800 text-xs font-bold border border-purple-200 transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                      title="দোকানের নিবন্ধিত সমস্ত তথ্য ও সিকিউরিটি ডকুমেন্টস দেখুন"
+                    >
+                      <Eye className="w-3.5 h-3.5 text-purple-700" />
+                      <span>আবেদনের বিস্তারিত</span>
+                    </button>
+
                     {/* Approve / Reject Controls for Pending */}
                     {isPending && (
                       <>
@@ -557,6 +603,148 @@ export const SuperAdminDashboardView: React.FC<SuperAdminDashboardViewProps> = (
                 >
                   বন্ধ করুন
                 </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Comprehensive Shop Application Review Modal */}
+      {selectedDetailStore && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-xs overflow-y-auto">
+          <div className="bg-white rounded-3xl w-full max-w-xl shadow-2xl border border-slate-200 overflow-hidden animate-in fade-in zoom-in-95 my-6">
+            <div className="p-5 bg-slate-900 text-white flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-purple-600 flex items-center justify-center text-white font-bold">
+                  <StoreIcon className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-base text-white">{selectedDetailStore.name}</h3>
+                  <p className="text-xs text-purple-200">দোকান রেজিস্ট্রেশন আবেদন ও ভেরিফিকেশন তথ্য</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setSelectedDetailStore(null)}
+                className="w-8 h-8 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 flex items-center justify-center cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-5 max-h-[75vh] overflow-y-auto">
+              {/* Status Badge Strip */}
+              <div className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50 border border-slate-200">
+                <span className="text-xs font-bold text-slate-700">বর্তমান অনুমোদন স্ট্যাটাস:</span>
+                <span
+                  className={`px-3 py-1 rounded-full text-xs font-bold border ${
+                    selectedDetailStore.verification_status === 'approved'
+                      ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                      : selectedDetailStore.verification_status === 'pending'
+                      ? 'bg-amber-50 text-amber-700 border-amber-200'
+                      : 'bg-rose-50 text-rose-700 border-rose-200'
+                  }`}
+                >
+                  {selectedDetailStore.verification_status === 'approved'
+                    ? 'অনুমোদিত ও সক্রিয়'
+                    : selectedDetailStore.verification_status === 'pending'
+                    ? 'যাচাই অপেক্ষমাণ'
+                    : 'বাতিলকৃত / স্থগিত'}
+                </span>
+              </div>
+
+              {/* Form Data Information Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
+                  <span className="text-slate-400 font-medium block">স্বত্বাধিকারী / মালিক</span>
+                  <span className="font-bold text-slate-800 text-sm block">{selectedDetailStore.proprietor}</span>
+                </div>
+
+                <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
+                  <span className="text-slate-400 font-medium block">লগইন মোবাইল নম্বর</span>
+                  <span className="font-bold text-emerald-700 text-sm block font-mono">{selectedDetailStore.phone}</span>
+                </div>
+
+                <div className="sm:col-span-2 p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
+                  <span className="text-slate-400 font-medium block">দোকানের ঠিকানা</span>
+                  <span className="font-semibold text-slate-800 block">{selectedDetailStore.address || 'তথ্য প্রদান করা হয়নি'}</span>
+                </div>
+
+                <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
+                  <span className="text-slate-400 font-medium block">ট্রেড লাইসেন্স নম্বর</span>
+                  <span className="font-bold text-slate-800 font-mono text-sm block">
+                    {selectedDetailStore.trade_licence_no || 'জমাকৃত নয়'}
+                  </span>
+                </div>
+
+                <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
+                  <span className="text-slate-400 font-medium block">টিআইএন (TIN Number)</span>
+                  <span className="font-bold text-slate-800 font-mono text-sm block">
+                    {selectedDetailStore.tin_number || 'জমাকৃত নয়'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Document Scanned Preview */}
+              <div className="space-y-2">
+                <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                  <FileText className="w-4 h-4 text-purple-700" />
+                  সংযুক্ত ট্রেড লাইসেন্স / পরিচয়পত্র স্ক্যান কপি
+                </span>
+                <div className="rounded-2xl overflow-hidden border border-slate-200 bg-slate-100 max-h-56 flex items-center justify-center">
+                  <img
+                    src={selectedDetailStore.trade_licence_doc_url || 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=600&auto=format&fit=crop&q=60'}
+                    alt="Document Scan"
+                    className="w-full object-cover max-h-56"
+                  />
+                </div>
+              </div>
+
+              {/* Rejection Note / Remark input */}
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  অ্যাডমিন মন্তব্য বা কারণ (ঐচ্ছিক)
+                </label>
+                <input
+                  type="text"
+                  placeholder="উদাঃ ট্রেড লাইসেন্সের মেয়াদ উত্তীর্ণ অথবা সব কাগজপত্র সঠিক..."
+                  value={rejectionNoteInput}
+                  onChange={(e) => setRejectionNoteInput(e.target.value)}
+                  className="w-full px-3.5 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-purple-700 font-medium"
+                />
+              </div>
+
+              {/* Quick Action Footer inside Modal */}
+              <div className="pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2">
+                <button
+                  type="button"
+                  onClick={() => setSelectedDetailStore(null)}
+                  className="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 text-xs font-bold cursor-pointer"
+                >
+                  বন্ধ করুন
+                </button>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleUpdateStatus(selectedDetailStore.id, 'rejected', rejectionNoteInput.trim() || undefined);
+                    }}
+                    className="px-4 py-2.5 rounded-xl bg-rose-50 hover:bg-rose-100 active:bg-rose-200 text-rose-700 text-xs font-bold border border-rose-200 transition-colors cursor-pointer"
+                  >
+                    আবেদন বাতিল করুন
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleUpdateStatus(selectedDetailStore.id, 'approved', rejectionNoteInput.trim() || undefined);
+                    }}
+                    className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white text-xs font-bold shadow-sm transition-colors cursor-pointer flex items-center gap-1.5"
+                  >
+                    <CheckCircle2 className="w-4 h-4" />
+                    <span>অনুমোদন দিন ও সক্রিয় করুন</span>
+                  </button>
+                </div>
               </div>
             </div>
           </div>

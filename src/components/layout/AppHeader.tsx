@@ -93,12 +93,24 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
               <h1 className="font-black text-base sm:text-lg text-slate-900 tracking-tight">
                 আমার দোকান
               </h1>
-              <span className="hidden sm:inline-block px-2 py-0.5 rounded text-[11px] font-semibold bg-slate-100 text-slate-600 border border-slate-200">
-                Amar Dokan
-              </span>
+              {isSuperAdmin() && !inspectingStore ? (
+                <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-purple-100 text-purple-800 border border-purple-200">
+                  সুপার অ্যাডমিন
+                </span>
+              ) : (
+                <span className="hidden sm:inline-block px-2 py-0.5 rounded text-[11px] font-semibold bg-slate-100 text-slate-600 border border-slate-200">
+                  Amar Dokan
+                </span>
+              )}
             </div>
             <p className="text-xs text-slate-500 truncate max-w-[200px] sm:max-w-md">
-              {isSuperAdmin() ? 'প্ল্যাটফর্ম সার্বিক নিয়ন্ত্রণ' : currentStore?.name || DEFAULT_STORE.name}
+              {isSuperAdmin()
+                ? inspectingStore
+                  ? `${inspectingStore.name} • ${inspectingStore.address || inspectingStore.proprietor}`
+                  : 'সেন্ট্রাল কন্ট্রোল প্যানেল'
+                : currentStore?.name
+                ? `${currentStore.name} • ${currentStore.address || currentStore.proprietor}`
+                : 'সহজ রিটেইল পিওএস'}
             </p>
           </div>
         </div>
