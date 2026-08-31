@@ -69,20 +69,20 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
     <>
       {/* Superadmin Store Inspection Notification Strip */}
       {isSuperAdmin() && inspectingStore && (
-        <div className="bg-purple-950 text-purple-200 px-4 py-2 text-xs font-semibold flex items-center justify-between border-b border-purple-800 z-50">
-          <div className="max-w-7xl mx-auto w-full flex items-center justify-between">
+        <div className="bg-purple-950 text-purple-200 px-3 sm:px-4 py-2 text-xs font-semibold border-b border-purple-800 z-50">
+          <div className="max-w-7xl mx-auto w-full flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
             <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-purple-400 animate-pulse" />
-              <span>
-                আপনি এখন সুপার অ্যাডমিন হিসেবে <strong>"{inspectingStore.name}"</strong> পরিদর্শন করছেন।
+              <span className="w-2.5 h-2.5 rounded-full bg-purple-400 animate-pulse flex-shrink-0" />
+              <span className="text-[11px] sm:text-xs">
+                পরিদর্শন মোড: <strong>"{inspectingStore.name}"</strong>
               </span>
             </div>
             <button
               type="button"
               onClick={exitStoreInspection}
-              className="px-3 py-1 rounded-md bg-purple-800 hover:bg-purple-700 text-white font-bold text-xs transition-colors cursor-pointer"
+              className="w-full sm:w-auto px-3 py-1.5 rounded-lg bg-purple-800 hover:bg-purple-700 active:bg-purple-900 text-white font-bold text-[11px] sm:text-xs transition-colors cursor-pointer text-center"
             >
-              সুপার অ্যাডমিন পোর্টালে ফিরুন ✕
+              পোর্টালে ফিরুন ✕
             </button>
           </div>
         </div>

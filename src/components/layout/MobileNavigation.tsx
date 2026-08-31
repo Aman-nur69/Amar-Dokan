@@ -140,21 +140,35 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({
                 key={tab.id}
                 onClick={() => onTabChange(tab.id)}
                 className={`
-                  relative flex flex-col items-center justify-center gap-0.5 select-none transition-colors
-                  ${isActive ? 'text-emerald-700 font-bold' : 'text-slate-500 font-medium'}
+                  relative flex flex-col items-center justify-center gap-0.5 select-none transition-colors cursor-pointer
+                  ${
+                    isActive
+                      ? tab.isSpecial
+                        ? 'text-purple-900 font-bold'
+                        : 'text-emerald-700 font-bold'
+                      : tab.isSpecial
+                      ? 'text-purple-600 font-medium'
+                      : 'text-slate-500 font-medium'
+                  }
                 `}
               >
                 <div className="relative">
-                  <Icon className="w-4 h-4" />
+                  <Icon className={`w-4 h-4 ${tab.isSpecial && !isActive ? 'text-purple-600' : ''}`} />
                   {tab.badge && (
                     <span className="absolute -top-1.5 -right-2.5 px-1 rounded-full bg-emerald-600 text-white text-[9px] font-black">
                       {tab.badge}
                     </span>
                   )}
                 </div>
-                <span className="text-[10px] leading-tight">{tab.label}</span>
+                <span className="text-[10px] leading-tight text-center px-1 truncate max-w-[80px]">
+                  {tab.id === 'SUPER_ADMIN' ? 'কন্ট্রোল' : tab.label}
+                </span>
                 {isActive && (
-                  <span className="absolute top-0 w-8 h-0.5 bg-emerald-600 rounded-full" />
+                  <span
+                    className={`absolute top-0 w-8 h-0.5 rounded-full ${
+                      tab.isSpecial ? 'bg-purple-800' : 'bg-emerald-600'
+                    }`}
+                  />
                 )}
               </button>
             );
