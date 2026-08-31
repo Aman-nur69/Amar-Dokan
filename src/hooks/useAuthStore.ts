@@ -7,6 +7,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { UserRole, UserSession, Profile, Store } from '../@types/database.types';
 import { db, INITIAL_PROFILES } from '../db/offlineDb';
+import { isSupabaseConfigured, supabase } from '../lib/supabaseClient';
 
 interface AuthState {
   currentUser: UserSession | null;
@@ -17,13 +18,15 @@ interface AuthState {
   inspectingStore: Store | null;
 
   // Authentication actions
-  loginWithPhoneAndPin: (phone: string, pin: string) => Promise<boolean>;
+  loginWithPhoneAndPassword: (phone: string, password: string) => Promise<boolean>;
+  loginWithPhoneAndPin: (phone: string, pin: string) => Promise<boolean>; // Backwards-compatible alias
   quickLoginDemoRole: (role: UserRole) => Promise<boolean>;
   registerNewShop: (shopData: {
     shopName: string;
     proprietor: string;
     phone: string;
-    pin: string;
+    password: string;
+    pin?: string;
     address: string;
     tradeLicenceNo: string;
     tradeLicenceDocUrl?: string;
@@ -77,13 +80,31 @@ export const useAuthStore = create<AuthState>()(
         }));
       },
 
-      loginWithPhoneAndPin: async (phone: string, pin: string): Promise<boolean> => {
+      loginWithPhoneAndPassword: async (phone: string, secret: string): Promise<boolean> => {
         set({ isLoading: true, loginError: null });
         const cleanPhone = phone.trim();
-        const cleanPin = pin.trim();
+        const cleanSecret = secret.trim();
 
         try {
-          // Look up in Dexie offline database
+          // 1. If Supabase is configured, attempt cloud authentication to establish RLS token session
+          if (isSupabaseConfigured()) {
+            try {
+              // Convert phone to compliant format or email pseudo-identity for Supabase auth
+              const authEmail = `${cleanPhone}@mudidokan.internal`;
+              const { error: sbAuthError } = await supabase.auth.signInWithPassword({
+                email: authEmail,
+                password: cleanSecret,
+              });
+
+              if (sbAuthError) {
+                console.warn('[AmarDokan Auth] Supabase cloud auth attempted:', sbAuthError.message);
+              }
+            } catch (sbErr) {
+              console.warn('[AmarDokan Auth] Supabase online auth skipped/failed:', sbErr);
+            }
+          }
+
+          // 2. Local Dexie offline authentication lookup
           let profile: Profile | undefined = await db.profiles.where('phone').equals(cleanPhone).first();
 
           // Fallback to initial seed profiles if database isn't fully ready
@@ -99,10 +120,15 @@ export const useAuthStore = create<AuthState>()(
             return false;
           }
 
-          if (profile.pin_code !== cleanPin) {
+          // Verify either password or pin_code
+          const isValidSecret =
+            (profile.password && profile.password === cleanSecret) ||
+            (profile.pin_code && profile.pin_code === cleanSecret);
+
+          if (!isValidSecret) {
             set({
               isLoading: false,
-              loginError: 'ভুল পিন কোড! সঠিক ৪-সংখ্যার পিন দিন।',
+              loginError: 'ভুল পাসওয়ার্ড! দয়া করে সঠিক পাসওয়ার্ড দিন।',
             });
             return false;
           }
@@ -153,6 +179,11 @@ export const useAuthStore = create<AuthState>()(
         }
       },
 
+      // Backwards compatibility alias
+      loginWithPhoneAndPin: async (phone: string, pin: string) => {
+        return get().loginWithPhoneAndPassword(phone, pin);
+      },
+
       registerNewShop: async (shopData) => {
         set({ isLoading: true, loginError: null });
         try {
@@ -174,13 +205,39 @@ export const useAuthStore = create<AuthState>()(
             updated_at: new Date().toISOString(),
           };
 
+          const passwordVal = (shopData.password || shopData.pin || 'dokan123').trim();
+
+          // If Supabase is configured, create Auth user so auth.uid() is provisioned
+          let authUid = `p-${Date.now()}`;
+          if (isSupabaseConfigured()) {
+            try {
+              const { data: authData } = await supabase.auth.signUp({
+                email: `${shopData.phone.trim()}@mudidokan.internal`,
+                password: passwordVal,
+                options: {
+                  data: {
+                    full_name: shopData.proprietor.trim(),
+                    phone: shopData.phone.trim(),
+                    role: 'owner',
+                  },
+                },
+              });
+              if (authData?.user?.id) {
+                authUid = authData.user.id;
+              }
+            } catch (sbErr) {
+              console.warn('[AmarDokan Auth] Supabase cloud registration skipped/failed:', sbErr);
+            }
+          }
+
           const newProfile: Profile = {
-            id: `p-${Date.now()}`,
+            id: authUid,
             store_id: storeId,
             full_name: shopData.proprietor.trim(),
             phone: shopData.phone.trim(),
             role: 'owner',
-            pin_code: shopData.pin.trim(),
+            password: passwordVal,
+            pin_code: passwordVal.slice(0, 4),
             is_active: true,
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),

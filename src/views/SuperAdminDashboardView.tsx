@@ -54,7 +54,7 @@ export const SuperAdminDashboardView: React.FC<SuperAdminDashboardViewProps> = (
   const [shopName, setShopName] = useState('');
   const [proprietor, setProprietor] = useState('');
   const [shopPhone, setShopPhone] = useState('');
-  const [shopPin, setShopPin] = useState('');
+  const [shopPassword, setShopPassword] = useState('');
   const [shopAddress, setShopAddress] = useState('');
   const [tradeLicence, setTradeLicence] = useState('');
   const [tinNumber, setTinNumber] = useState('');
@@ -149,13 +149,13 @@ export const SuperAdminDashboardView: React.FC<SuperAdminDashboardViewProps> = (
     e.preventDefault();
     setShopError(null);
 
-    if (!shopName.trim() || !proprietor.trim() || !shopPhone.trim() || !shopPin.trim()) {
-      setShopError('দয়া করে দোকানের নাম, স্বত্বাধিকারী, মোবাইল নম্বর ও ৪ সংখ্যার পিন প্রদান করুন।');
+    if (!shopName.trim() || !proprietor.trim() || !shopPhone.trim() || !shopPassword.trim()) {
+      setShopError('দয়া করে দোকানের নাম, স্বত্বাধিকারী, মোবাইল নম্বর ও পাসওয়ার্ড প্রদান করুন।');
       return;
     }
 
-    if (shopPin.trim().length !== 4) {
-      setShopError('পিন অবশ্যই ৪ সংখ্যার হতে হবে।');
+    if (shopPassword.trim().length < 6) {
+      setShopError('পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে।');
       return;
     }
 
@@ -186,7 +186,8 @@ export const SuperAdminDashboardView: React.FC<SuperAdminDashboardViewProps> = (
         full_name: proprietor.trim(),
         phone: shopPhone.trim(),
         role: 'owner' as const,
-        pin_code: shopPin.trim(),
+        password: shopPassword.trim(),
+        pin_code: shopPassword.trim().slice(0, 4),
         is_active: true,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
@@ -204,7 +205,7 @@ export const SuperAdminDashboardView: React.FC<SuperAdminDashboardViewProps> = (
       setShopName('');
       setProprietor('');
       setShopPhone('');
-      setShopPin('');
+      setShopPassword('');
       setShopAddress('');
       setTradeLicence('');
       setTinNumber('');
@@ -850,16 +851,16 @@ export const SuperAdminDashboardView: React.FC<SuperAdminDashboardViewProps> = (
 
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1">
-                    মালিকের ৪-সংখ্যার পিন *
+                    মালিকের পাসওয়ার্ড (কমপক্ষে ৬ অক্ষর) *
                   </label>
                   <input
                     type="password"
                     required
-                    maxLength={4}
-                    placeholder="••••"
-                    value={shopPin}
-                    onChange={(e) => setShopPin(e.target.value)}
-                    className="w-full px-3.5 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-purple-700 font-mono text-center tracking-widest font-bold"
+                    minLength={6}
+                    placeholder="পাসওয়ার্ড দিন"
+                    value={shopPassword}
+                    onChange={(e) => setShopPassword(e.target.value)}
+                    className="w-full px-3.5 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-purple-700 font-medium"
                   />
                 </div>
               </div>

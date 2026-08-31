@@ -8,15 +8,48 @@ import { db } from '../db/offlineDb';
 import { isSupabaseConfigured, supabase } from '../lib/supabaseClient';
 import { SyncQueueItem } from '../@types/database.types';
 
+// Relational hierarchy for foreign-key safety:
+// Parent records must insert before child records, but delete after child records.
+const TABLE_HIERARCHY_RANK: Record<string, number> = {
+  stores: 1,
+  profiles: 2,
+  categories: 3,
+  products: 4,
+  customers: 5,
+  sales: 6,
+  sale_items: 7,
+  baki_transactions: 8,
+  expenses: 9,
+  supplier_chalans: 10,
+  chalan_items: 11,
+  supplier_payments: 12,
+};
+
 export function useOfflineSync() {
   const [isOnline, setIsOnline] = useState<boolean>(navigator.onLine);
   const [isSimulatedOffline, setIsSimulatedOffline] = useState<boolean>(false);
   const [pendingCount, setPendingCount] = useState<number>(0);
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
   const [lastSyncTime, setLastSyncTime] = useState<Date | null>(null);
+  const [isStoragePersisted, setIsStoragePersisted] = useState<boolean>(true);
 
   // Effective online status: True only if real network is online AND simulation is off
   const effectiveOnline = isOnline && !isSimulatedOffline;
+
+  // Check storage persistence status
+  useEffect(() => {
+    async function checkPersist() {
+      if (navigator.storage && navigator.storage.persisted) {
+        try {
+          const persisted = await navigator.storage.persisted();
+          setIsStoragePersisted(persisted);
+        } catch {
+          // ignore
+        }
+      }
+    }
+    checkPersist();
+  }, []);
 
   // Check pending mutation count
   const checkPendingQueue = useCallback(async () => {
@@ -28,36 +61,68 @@ export function useOfflineSync() {
     }
   }, []);
 
-  // Process FIFO Sync Queue when online
+  // Process Dependency-Ordered Sync Queue when online
   const processSyncQueue = useCallback(async () => {
     if (!effectiveOnline || isSyncing) return;
 
     try {
-      const pendingItems: SyncQueueItem[] = await db.sync_queue
+      const rawPendingItems: SyncQueueItem[] = await db.sync_queue
         .where('status')
         .equals('PENDING')
-        .sortBy('created_at');
+        .toArray();
 
-      if (pendingItems.length === 0) {
+      if (rawPendingItems.length === 0) {
         setPendingCount(0);
         return;
       }
 
+      // Sort items topologically to guarantee Foreign Key integrity:
+      // - For INSERT and UPDATE: lowest rank first (parent -> child)
+      // - For DELETE: highest rank first (child -> parent)
+      const sortedItems = [...rawPendingItems].sort((a, b) => {
+        const rankA = TABLE_HIERARCHY_RANK[a.table_name] || 99;
+        const rankB = TABLE_HIERARCHY_RANK[b.table_name] || 99;
+
+        if (a.action === 'DELETE' && b.action === 'DELETE') {
+          return rankB - rankA; // child before parent
+        }
+        if (a.action === 'DELETE') return 1;
+        if (b.action === 'DELETE') return -1;
+
+        if (rankA !== rankB) return rankA - rankB; // parent before child
+        return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+      });
+
       setIsSyncing(true);
-      console.log(`[MudiDokan Sync] Processing ${pendingItems.length} queued mutations...`);
+      console.log(`[AmarDokan Sync] Processing ${sortedItems.length} ordered mutations...`);
 
       const hasLiveSupabase = isSupabaseConfigured();
 
-      for (const item of pendingItems) {
+      for (const item of sortedItems) {
+        // Poison pill guard: quarantine mutations that exceeded retry threshold
+        if (item.retry_count >= 5) {
+          console.warn(`[AmarDokan Sync] Item ${item.id} quarantined due to excessive retries.`);
+          await db.sync_queue.update(item.id, {
+            status: 'FAILED',
+            error_message: 'Max retry attempts (5) reached.',
+          });
+          continue;
+        }
+
         try {
           if (hasLiveSupabase) {
-            // Push to live Supabase PostgreSQL
+            const recordId = (item.payload as { id?: string })?.id;
+
             if (item.action === 'INSERT') {
-              await supabase.from(item.table_name).insert(item.payload);
+              // Upsert to handle offline idempotent replays smoothly
+              await supabase.from(item.table_name).upsert(item.payload, { onConflict: 'id' });
             } else if (item.action === 'UPDATE') {
-              const id = (item.payload as { id?: string }).id;
-              if (id) {
-                await supabase.from(item.table_name).update(item.payload).eq('id', id);
+              if (recordId) {
+                await supabase.from(item.table_name).update(item.payload).eq('id', recordId);
+              }
+            } else if (item.action === 'DELETE') {
+              if (recordId) {
+                await supabase.from(item.table_name).delete().eq('id', recordId);
               }
             }
           }
@@ -67,9 +132,11 @@ export function useOfflineSync() {
             status: 'SYNCED',
           });
         } catch (err) {
-          console.warn(`[MudiDokan Sync] Failed to sync item ${item.id}:`, err);
+          console.warn(`[AmarDokan Sync] Failed to sync item ${item.id}:`, err);
+          const nextRetry = (item.retry_count || 0) + 1;
           await db.sync_queue.update(item.id, {
-            retry_count: item.retry_count + 1,
+            retry_count: nextRetry,
+            status: nextRetry >= 5 ? 'FAILED' : 'PENDING',
             error_message: String(err),
           });
         }
@@ -78,7 +145,7 @@ export function useOfflineSync() {
       setLastSyncTime(new Date());
       await checkPendingQueue();
     } catch (err) {
-      console.error('[MudiDokan Sync] Sync queue processing error:', err);
+      console.error('[AmarDokan Sync] Sync queue processing error:', err);
     } finally {
       setIsSyncing(false);
     }
@@ -134,6 +201,7 @@ export function useOfflineSync() {
     pendingCount,
     isSyncing,
     lastSyncTime,
+    isStoragePersisted,
     triggerSync: processSyncQueue,
     checkPendingQueue,
   };

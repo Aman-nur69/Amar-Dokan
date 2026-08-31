@@ -45,7 +45,8 @@ export interface Profile {
   full_name: string;
   phone?: string;
   role: UserRole;
-  pin_code: string;
+  password?: string;
+  pin_code?: string;
   is_active?: boolean;
   created_at: string;
   updated_at: string;

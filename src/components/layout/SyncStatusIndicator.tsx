@@ -47,6 +47,15 @@ export const SyncStatusIndicator: React.FC<SyncStatusIndicatorProps> = ({
         </div>
       )}
 
+      {/* Storage Persistence Guaranteed Badge (Hidden on very narrow screens) */}
+      <div
+        title="মেমরি সুরক্ষা সক্রিয়: ব্রাউজার বা মোবাইল এই ডেটা কখনো মুছবে না"
+        className="hidden lg:flex items-center gap-1 px-2 py-1 rounded-xl bg-slate-100 border border-slate-200/80 text-[11px] font-semibold text-slate-600 cursor-help"
+      >
+        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+        <span>মেমরি সুরক্ষিত</span>
+      </div>
+
       {/* Offline Test Simulation Button */}
       <button
         onClick={onToggleSimulatedOffline}

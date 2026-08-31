@@ -1,6 +1,6 @@
 // ==============================================================================
 // Amar Dokan (আমার দোকান) Login & Shop Registration Screen
-// Clean, Human-Friendly, Simple SaaS Design with Trade Licence/TIN & Quick Demo Logins
+// Clean, Human-Friendly, Simple SaaS Design with Password Security & Quick Demo Logins
 // ==============================================================================
 
 import React, { useState } from 'react';
@@ -20,6 +20,8 @@ import {
   Building2,
   CheckCircle2,
   Upload,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 
 export const LoginScreen: React.FC = () => {
@@ -27,20 +29,22 @@ export const LoginScreen: React.FC = () => {
 
   // Login Form states
   const [phone, setPhone] = useState('01711998877');
-  const [pin, setPin] = useState('1234');
+  const [password, setPassword] = useState('dokan123');
+  const [showPassword, setShowPassword] = useState(false);
 
   // Register Form states
   const [regShopName, setRegShopName] = useState('');
   const [regProprietor, setRegProprietor] = useState('');
   const [regPhone, setRegPhone] = useState('');
-  const [regPin, setRegPin] = useState('');
+  const [regPassword, setRegPassword] = useState('');
+  const [showRegPassword, setShowRegPassword] = useState(false);
   const [regAddress, setRegAddress] = useState('');
   const [regTradeLicence, setRegTradeLicence] = useState('');
   const [regTin, setRegTin] = useState('');
   const [regSuccessMessage, setRegSuccessMessage] = useState<string | null>(null);
 
   const {
-    loginWithPhoneAndPin,
+    loginWithPhoneAndPassword,
     quickLoginDemoRole,
     registerNewShop,
     isLoading,
@@ -50,16 +54,16 @@ export const LoginScreen: React.FC = () => {
 
   const handleManualLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!phone || !pin) return;
-    await loginWithPhoneAndPin(phone, pin);
+    if (!phone || !password) return;
+    await loginWithPhoneAndPassword(phone, password);
   };
 
   const handleRegisterShop = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!regShopName || !regProprietor || !regPhone || !regPin || !regTradeLicence) return;
+    if (!regShopName || !regProprietor || !regPhone || !regPassword || !regTradeLicence) return;
 
-    if (regPin.length !== 4) {
-      alert('গোপন পিন অবশ্যই ৪-সংখ্যার হতে হবে।');
+    if (regPassword.length < 6) {
+      alert('পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে।');
       return;
     }
 
@@ -67,7 +71,7 @@ export const LoginScreen: React.FC = () => {
       shopName: regShopName,
       proprietor: regProprietor,
       phone: regPhone,
-      pin: regPin,
+      password: regPassword,
       address: regAddress || 'ঢাকা, বাংলাদেশ',
       tradeLicenceNo: regTradeLicence,
       tinNumber: regTin || 'N/A',
@@ -80,7 +84,7 @@ export const LoginScreen: React.FC = () => {
       setRegShopName('');
       setRegProprietor('');
       setRegPhone('');
-      setRegPin('');
+      setRegPassword('');
       setRegAddress('');
       setRegTradeLicence('');
       setRegTin('');
@@ -193,19 +197,25 @@ export const LoginScreen: React.FC = () => {
 
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                    ৪-সংখ্যার গোপন পিন (PIN)
+                    পাসওয়ার্ড (Password)
                   </label>
                   <div className="relative">
                     <Lock className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
                     <input
-                      type="password"
+                      type={showPassword ? 'text' : 'password'}
                       required
-                      maxLength={4}
-                      placeholder="••••"
-                      value={pin}
-                      onChange={(e) => setPin(e.target.value)}
-                      className="w-full pl-10 pr-4 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent tracking-widest text-center font-bold text-slate-800 placeholder-slate-400"
+                      placeholder="আপনার পাসওয়ার্ড দিন"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="w-full pl-10 pr-11 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent font-medium text-slate-800 placeholder-slate-400"
                     />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none"
+                    >
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
                   </div>
                 </div>
 
@@ -246,7 +256,7 @@ export const LoginScreen: React.FC = () => {
                       <span className="text-xs font-bold text-purple-900">সুপার অ্যাডমিন</span>
                     </div>
                     <p className="text-[11px] text-purple-700/80 leading-tight">
-                      সকল শপ অনুমোদন ও পর্যবেক্ষণ
+                      সকল শপ অনুমোদন ও পর্যবেক্ষণ (admin123)
                     </p>
                   </button>
 
@@ -261,7 +271,7 @@ export const LoginScreen: React.FC = () => {
                       <span className="text-xs font-bold text-emerald-900">দোকান মালিক</span>
                     </div>
                     <p className="text-[11px] text-emerald-700/80 leading-tight">
-                      লাভ, চালান, খরচ ও স্টাফ
+                      লাভ, চালান, খরচ ও স্টাফ (dokan123)
                     </p>
                   </button>
 
@@ -276,7 +286,7 @@ export const LoginScreen: React.FC = () => {
                       <span className="text-xs font-bold text-blue-900">ম্যানেজার</span>
                     </div>
                     <p className="text-[11px] text-blue-700/80 leading-tight">
-                      স্টক, চালান ও বাকি খাতা
+                      স্টক, চালান ও বাকি খাতা (dokan123)
                     </p>
                   </button>
 
@@ -291,7 +301,7 @@ export const LoginScreen: React.FC = () => {
                       <span className="text-xs font-bold text-amber-900">ক্যাশিয়ার</span>
                     </div>
                     <p className="text-[11px] text-amber-700/80 leading-tight">
-                      ক্যাশ বিক্রি ও ফেরত হিসাব
+                      ক্যাশ বিক্রি ও ফেরত হিসাব (dokan123)
                     </p>
                   </button>
                 </div>
@@ -347,17 +357,26 @@ export const LoginScreen: React.FC = () => {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1">
-                    ৪-সংখ্যার পিন *
+                    পাসওয়ার্ড (কমপক্ষে ৬ অক্ষর) *
                   </label>
-                  <input
-                    type="password"
-                    required
-                    maxLength={4}
-                    placeholder="••••"
-                    value={regPin}
-                    onChange={(e) => setRegPin(e.target.value)}
-                    className="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900 font-mono text-center tracking-widest font-bold"
-                  />
+                  <div className="relative">
+                    <input
+                      type={showRegPassword ? 'text' : 'password'}
+                      required
+                      minLength={6}
+                      placeholder="পাসওয়ার্ড দিন"
+                      value={regPassword}
+                      onChange={(e) => setRegPassword(e.target.value)}
+                      className="w-full px-3.5 py-2.5 pr-9 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900 font-medium"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowRegPassword(!showRegPassword)}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none"
+                    >
+                      {showRegPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                    </button>
+                  </div>
                 </div>
 
                 <div>

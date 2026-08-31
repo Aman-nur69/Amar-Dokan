@@ -128,7 +128,7 @@ export const INITIAL_STORES: Store[] = [
   },
 ];
 
-// Initial Seed Staff Profiles for Multi-Role Login
+// Initial Seed Staff Profiles for Multi-Role Login (Password Authenticated)
 export const INITIAL_PROFILES: Profile[] = [
   {
     id: 'p-0000000-0000-0000-0000-000000000000',
@@ -136,6 +136,7 @@ export const INITIAL_PROFILES: Profile[] = [
     full_name: 'তানভীর আহমেদ',
     phone: '01700000000',
     role: 'super_admin',
+    password: 'admin123',
     pin_code: '0000',
     is_active: true,
     created_at: new Date().toISOString(),
@@ -147,6 +148,7 @@ export const INITIAL_PROFILES: Profile[] = [
     full_name: 'মোঃ রফিকুল ইসলাম',
     phone: '01711998877',
     role: 'owner',
+    password: 'dokan123',
     pin_code: '1234',
     is_active: true,
     created_at: new Date().toISOString(),
@@ -158,6 +160,7 @@ export const INITIAL_PROFILES: Profile[] = [
     full_name: 'আব্দুল করিম',
     phone: '01811223344',
     role: 'manager',
+    password: 'dokan123',
     pin_code: '2345',
     is_active: true,
     created_at: new Date().toISOString(),
@@ -169,6 +172,7 @@ export const INITIAL_PROFILES: Profile[] = [
     full_name: 'সাকিব হাসান',
     phone: '01911334455',
     role: 'cashier',
+    password: 'dokan123',
     pin_code: '3456',
     is_active: true,
     created_at: new Date().toISOString(),
@@ -607,9 +611,36 @@ export const INITIAL_CHALAN_ITEMS: ChalanItem[] = [
 ];
 
 /**
+ * Request persistent browser storage to prevent silent eviction under low disk space
+ */
+export async function requestPersistentStorage(): Promise<boolean> {
+  if (navigator.storage && navigator.storage.persist) {
+    try {
+      const isPersisted = await navigator.storage.persist();
+      console.log(`[AmarDokan DB] Persistent storage granted: ${isPersisted}`);
+      if (navigator.storage.estimate) {
+        const estimate = await navigator.storage.estimate();
+        const usageMB = estimate.usage ? (estimate.usage / (1024 * 1024)).toFixed(2) : '0';
+        const quotaMB = estimate.quota ? (estimate.quota / (1024 * 1024)).toFixed(2) : '0';
+        console.log(`[AmarDokan DB] Storage usage: ${usageMB} MB of ${quotaMB} MB quota.`);
+      }
+      return isPersisted;
+    } catch (e) {
+      console.warn('[AmarDokan DB] Persistent storage request failed:', e);
+      return false;
+    }
+  }
+  return false;
+}
+
+/**
  * Initializes and seeds the Dexie local database if empty
  */
 export async function initializeLocalDatabase(): Promise<void> {
+  // 1. Request OS/Browser storage persistence
+  await requestPersistentStorage();
+
+  // 2. Check store count and seed
   const storeCount = await db.stores.count();
   if (storeCount === 0) {
     await db.transaction('rw', [db.stores, db.profiles, db.categories, db.products, db.customers, db.expenses, db.baki_transactions, db.supplier_chalans, db.chalan_items], async () => {
@@ -630,11 +661,19 @@ export async function initializeLocalDatabase(): Promise<void> {
       await db.stores.bulkPut(INITIAL_STORES);
     }
 
-    // Check if profiles need seeding
+    // Check if profiles need seeding or updating with password
     const profileCount = await db.profiles.count();
     if (profileCount === 0) {
       await db.profiles.bulkPut(INITIAL_PROFILES);
       console.log('[AmarDokan DB] Staff profiles successfully seeded.');
+    } else {
+      // Ensure seed profiles have password property populated
+      for (const p of INITIAL_PROFILES) {
+        const existing = await db.profiles.get(p.id);
+        if (existing && !existing.password) {
+          await db.profiles.update(p.id, { password: p.password });
+        }
+      }
     }
 
     // Check if supplier_chalans need seeding

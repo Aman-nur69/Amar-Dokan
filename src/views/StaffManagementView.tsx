@@ -30,7 +30,7 @@ export const StaffManagementView: React.FC = () => {
   const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');
   const [role, setRole] = useState<UserRole>('cashier');
-  const [pinCode, setPinCode] = useState('');
+  const [staffPassword, setStaffPassword] = useState('');
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
 
   const fetchProfiles = async () => {
@@ -53,10 +53,10 @@ export const StaffManagementView: React.FC = () => {
 
   const handleAddStaff = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!fullName || !phone || !pinCode) return;
+    if (!fullName || !phone || !staffPassword) return;
 
-    if (pinCode.length !== 4) {
-      setStatusMessage('পিন কোড অবশ্যই ৪-সংখ্যার হতে হবে।');
+    if (staffPassword.length < 6) {
+      setStatusMessage('পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে।');
       return;
     }
 
@@ -67,7 +67,8 @@ export const StaffManagementView: React.FC = () => {
         full_name: fullName,
         phone: phone,
         role: role,
-        pin_code: pinCode,
+        password: staffPassword,
+        pin_code: staffPassword.slice(0, 4),
         is_active: true,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
@@ -78,7 +79,7 @@ export const StaffManagementView: React.FC = () => {
       setIsAddModalOpen(false);
       setFullName('');
       setPhone('');
-      setPinCode('');
+      setStaffPassword('');
       setRole('cashier');
       fetchProfiles();
 
@@ -212,7 +213,7 @@ export const StaffManagementView: React.FC = () => {
                       </span>
                       <span className="flex items-center gap-1 text-slate-600">
                         <Key className="w-3 h-3 text-slate-400" />
-                        পিন: <span className="font-mono font-bold tracking-widest">{p.pin_code}</span>
+                        পাসওয়ার্ড: <span className="font-mono font-bold tracking-wider">{p.password || p.pin_code || '••••••'}</span>
                       </span>
                     </div>
                   </div>
@@ -298,16 +299,16 @@ export const StaffManagementView: React.FC = () => {
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">
-                  ৪-সংখ্যার গোপন পিন (লগইনের জন্য)
+                  পাসওয়ার্ড (লগইনের জন্য, কমপক্ষে ৬ অক্ষর)
                 </label>
                 <input
                   type="password"
                   required
-                  maxLength={4}
-                  placeholder="••••"
-                  value={pinCode}
-                  onChange={(e) => setPinCode(e.target.value)}
-                  className="w-full px-3.5 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 text-center font-mono font-bold tracking-widest"
+                  minLength={6}
+                  placeholder="পাসওয়ার্ড দিন"
+                  value={staffPassword}
+                  onChange={(e) => setStaffPassword(e.target.value)}
+                  className="w-full px-3.5 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 font-medium"
                 />
               </div>
 
