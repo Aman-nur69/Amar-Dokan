@@ -1,12 +1,8 @@
-// ==============================================================================
-// Amar Dokan (আমার দোকান) Super Admin Multi-Store Control Center
-// Platform-wide shop approvals, compliance review (Trade Licence/TIN), and live oversight
-// ==============================================================================
-
 import React, { useState, useEffect } from 'react';
 import { db } from '../db/offlineDb';
 import { Store, ShopVerificationStatus, Sale } from '../@types/database.types';
 import { useAuthStore } from '../hooks/useAuthStore';
+import { useSuperAdminNavStore } from '../hooks/useSuperAdminNavStore';
 import { formatBengaliCurrency, toBanglaDigits } from '../lib/banglaNumberFormatter';
 import {
   ShieldCheck,
@@ -35,17 +31,24 @@ interface SuperAdminDashboardViewProps {
 
 export const SuperAdminDashboardView: React.FC<SuperAdminDashboardViewProps> = ({ onNavigateToShop }) => {
   const { enterStoreInspection, registerNewShop } = useAuthStore();
+  const {
+    adminTab,
+    setAdminTab,
+    isAddShopModalOpen,
+    openAddShopModal,
+    closeAddShopModal,
+    setPlatformCounts,
+  } = useSuperAdminNavStore();
+
   const [stores, setStores] = useState<Store[]>([]);
   const [sales, setSales] = useState<Sale[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'ALL' | ShopVerificationStatus>('ALL');
   const [selectedDocStore, setSelectedDocStore] = useState<Store | null>(null);
   const [selectedDetailStore, setSelectedDetailStore] = useState<Store | null>(null);
   const [actionSuccessMessage, setActionSuccessMessage] = useState<string | null>(null);
   const [rejectionNoteInput, setRejectionNoteInput] = useState('');
 
   // New Shop Listing Modal States
-  const [isAddShopModalOpen, setIsAddShopModalOpen] = useState(false);
   const [isSubmittingShop, setIsSubmittingShop] = useState(false);
   const [shopError, setShopError] = useState<string | null>(null);
   const [shopName, setShopName] = useState('');
@@ -206,7 +209,7 @@ export const SuperAdminDashboardView: React.FC<SuperAdminDashboardViewProps> = (
       setTradeLicence('');
       setTinNumber('');
       setTradeLicenceUrl('');
-      setIsAddShopModalOpen(false);
+      closeAddShopModal();
     } catch (err: any) {
       console.error('Error creating shop:', err);
       setShopError('দোকান তৈরি করতে সমস্যা হয়েছে। দয়া করে আবার চেষ্টা করুন।');
@@ -215,11 +218,19 @@ export const SuperAdminDashboardView: React.FC<SuperAdminDashboardViewProps> = (
     }
   };
 
-  // Platform Metrics
+  // Sync platform counts with navigation store
   const totalShops = stores.length;
   const approvedShops = stores.filter((s) => s.verification_status === 'approved').length;
   const pendingShops = stores.filter((s) => s.verification_status === 'pending').length;
   const totalPlatformSales = sales.reduce((acc, s) => acc + Number(s.total_amount || 0), 0);
+
+  useEffect(() => {
+    setPlatformCounts({
+      total: totalShops,
+      pending: pendingShops,
+      approved: approvedShops,
+    });
+  }, [totalShops, pendingShops, approvedShops, setPlatformCounts]);
 
   const filteredStores = stores.filter((s) => {
     const matchesSearch =
@@ -228,7 +239,7 @@ export const SuperAdminDashboardView: React.FC<SuperAdminDashboardViewProps> = (
       s.phone.includes(searchQuery) ||
       (s.trade_licence_no && s.trade_licence_no.toLowerCase().includes(searchQuery.toLowerCase()));
 
-    const matchesStatus = statusFilter === 'ALL' || s.verification_status === statusFilter;
+    const matchesStatus = adminTab === 'ALL' || s.verification_status === adminTab;
     return matchesSearch && matchesStatus;
   });
 
@@ -267,7 +278,7 @@ export const SuperAdminDashboardView: React.FC<SuperAdminDashboardViewProps> = (
           <button
             onClick={() => {
               setShopError(null);
-              setIsAddShopModalOpen(true);
+              openAddShopModal();
             }}
             className="px-4 py-2.5 rounded-xl bg-purple-700 hover:bg-purple-800 active:bg-purple-900 text-white font-bold text-xs sm:text-sm flex items-center gap-2 shadow-xs transition-all cursor-pointer"
           >
@@ -287,7 +298,15 @@ export const SuperAdminDashboardView: React.FC<SuperAdminDashboardViewProps> = (
       {/* Platform Executive Metrics Cards: Focused purely on Shop List, Approvals & Rejections */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-4">
         {/* Total Shops */}
-        <div className="p-3.5 sm:p-5 rounded-xl sm:rounded-2xl bg-white border border-slate-200/80 shadow-xs flex flex-col justify-between">
+        <button
+          type="button"
+          onClick={() => setAdminTab('ALL')}
+          className={`p-3.5 sm:p-5 rounded-xl sm:rounded-2xl border text-left transition-all cursor-pointer ${
+            adminTab === 'ALL'
+              ? 'bg-purple-50/60 border-purple-300 ring-2 ring-purple-600/20 shadow-xs'
+              : 'bg-white border-slate-200/80 shadow-xs hover:border-slate-300'
+          }`}
+        >
           <div className="flex items-center justify-between text-slate-500 mb-1.5">
             <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider">মোট নথিভুক্ত দোকান</span>
             <Building2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-400" />
@@ -296,10 +315,18 @@ export const SuperAdminDashboardView: React.FC<SuperAdminDashboardViewProps> = (
             <p className="text-2xl sm:text-3xl font-black text-slate-900">{toBanglaDigits(totalShops)} <span className="text-xs sm:text-sm font-bold text-slate-400">টি</span></p>
             <p className="text-[10px] sm:text-xs text-slate-400 mt-0.5">প্ল্যাটফর্ম শপ তালিকা</p>
           </div>
-        </div>
+        </button>
 
         {/* Pending Approvals */}
-        <div className="p-3.5 sm:p-5 rounded-xl sm:rounded-2xl bg-white border border-amber-200/90 shadow-xs flex flex-col justify-between">
+        <button
+          type="button"
+          onClick={() => setAdminTab('pending')}
+          className={`p-3.5 sm:p-5 rounded-xl sm:rounded-2xl border text-left transition-all cursor-pointer ${
+            adminTab === 'pending'
+              ? 'bg-amber-50/80 border-amber-400 ring-2 ring-amber-500/20 shadow-xs'
+              : 'bg-white border-amber-200/90 shadow-xs hover:border-amber-300'
+          }`}
+        >
           <div className="flex items-center justify-between text-amber-700 mb-1.5">
             <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider">অনুমোদন অপেক্ষমাণ</span>
             <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-600" />
@@ -308,10 +335,18 @@ export const SuperAdminDashboardView: React.FC<SuperAdminDashboardViewProps> = (
             <p className="text-2xl sm:text-3xl font-black text-amber-600">{toBanglaDigits(pendingShops)} <span className="text-xs sm:text-sm font-bold text-amber-500">টি</span></p>
             <p className="text-[10px] sm:text-xs text-amber-600/80 mt-0.5">ট্রেড লাইসেন্স ও টিআইএন যাচাই</p>
           </div>
-        </div>
+        </button>
 
         {/* Approved Active */}
-        <div className="p-3.5 sm:p-5 rounded-xl sm:rounded-2xl bg-white border border-emerald-200/90 shadow-xs flex flex-col justify-between">
+        <button
+          type="button"
+          onClick={() => setAdminTab('approved')}
+          className={`p-3.5 sm:p-5 rounded-xl sm:rounded-2xl border text-left transition-all cursor-pointer ${
+            adminTab === 'approved'
+              ? 'bg-emerald-50/80 border-emerald-400 ring-2 ring-emerald-500/20 shadow-xs'
+              : 'bg-white border-emerald-200/90 shadow-xs hover:border-emerald-300'
+          }`}
+        >
           <div className="flex items-center justify-between text-emerald-700 mb-1.5">
             <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider">অনুমোদিত ও সক্রিয়</span>
             <CheckCircle2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-600" />
@@ -320,7 +355,7 @@ export const SuperAdminDashboardView: React.FC<SuperAdminDashboardViewProps> = (
             <p className="text-2xl sm:text-3xl font-black text-emerald-600">{toBanglaDigits(approvedShops)} <span className="text-xs sm:text-sm font-bold text-emerald-500">টি</span></p>
             <p className="text-[10px] sm:text-xs text-emerald-600/80 mt-0.5">সক্রিয় চালুকৃত দোকান</p>
           </div>
-        </div>
+        </button>
       </div>
 
       {/* Filter and Search Bar: Mobile friendly */}
@@ -340,9 +375,9 @@ export const SuperAdminDashboardView: React.FC<SuperAdminDashboardViewProps> = (
           {/* Filter Pills with horizontal scroll on mobile */}
           <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-0.5 -mx-1 px-1">
             <button
-              onClick={() => setStatusFilter('ALL')}
+              onClick={() => setAdminTab('ALL')}
               className={`px-3 py-1.5 sm:py-2 rounded-xl text-xs font-bold transition-colors whitespace-nowrap flex-shrink-0 cursor-pointer ${
-                statusFilter === 'ALL'
+                adminTab === 'ALL'
                   ? 'bg-slate-900 text-white'
                   : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
               }`}
@@ -350,9 +385,9 @@ export const SuperAdminDashboardView: React.FC<SuperAdminDashboardViewProps> = (
               সব ({toBanglaDigits(totalShops)})
             </button>
             <button
-              onClick={() => setStatusFilter('pending')}
+              onClick={() => setAdminTab('pending')}
               className={`px-3 py-1.5 sm:py-2 rounded-xl text-xs font-bold transition-colors whitespace-nowrap flex-shrink-0 cursor-pointer ${
-                statusFilter === 'pending'
+                adminTab === 'pending'
                   ? 'bg-amber-600 text-white shadow-xs'
                   : 'bg-amber-50 text-amber-800 hover:bg-amber-100'
               }`}
@@ -360,24 +395,14 @@ export const SuperAdminDashboardView: React.FC<SuperAdminDashboardViewProps> = (
               অপেক্ষমাণ ({toBanglaDigits(pendingShops)})
             </button>
             <button
-              onClick={() => setStatusFilter('approved')}
+              onClick={() => setAdminTab('approved')}
               className={`px-3 py-1.5 sm:py-2 rounded-xl text-xs font-bold transition-colors whitespace-nowrap flex-shrink-0 cursor-pointer ${
-                statusFilter === 'approved'
+                adminTab === 'approved'
                   ? 'bg-emerald-600 text-white shadow-xs'
                   : 'bg-emerald-50 text-emerald-800 hover:bg-emerald-100'
               }`}
             >
               অনুমোদিত ({toBanglaDigits(approvedShops)})
-            </button>
-            <button
-              onClick={() => setStatusFilter('rejected')}
-              className={`px-3 py-1.5 sm:py-2 rounded-xl text-xs font-bold transition-colors whitespace-nowrap flex-shrink-0 cursor-pointer ${
-                statusFilter === 'rejected'
-                  ? 'bg-rose-600 text-white shadow-xs'
-                  : 'bg-rose-50 text-rose-800 hover:bg-rose-100'
-              }`}
-            >
-              বাতিলকৃত
             </button>
           </div>
         </div>
@@ -763,7 +788,7 @@ export const SuperAdminDashboardView: React.FC<SuperAdminDashboardViewProps> = (
                 </div>
               </div>
               <button
-                onClick={() => setIsAddShopModalOpen(false)}
+                onClick={() => closeAddShopModal()}
                 className="w-8 h-8 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 flex items-center justify-center cursor-pointer"
               >
                 <X className="w-5 h-5" />
@@ -923,7 +948,7 @@ export const SuperAdminDashboardView: React.FC<SuperAdminDashboardViewProps> = (
               <div className="pt-2 flex items-center justify-end gap-2 border-t border-slate-100">
                 <button
                   type="button"
-                  onClick={() => setIsAddShopModalOpen(false)}
+                  onClick={() => closeAddShopModal()}
                   className="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 text-xs font-bold cursor-pointer"
                 >
                   বাতিল
