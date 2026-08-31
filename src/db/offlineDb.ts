@@ -637,8 +637,8 @@ export async function requestPersistentStorage(): Promise<boolean> {
  * Initializes and seeds the Dexie local database if empty
  */
 export async function initializeLocalDatabase(): Promise<void> {
-  // 1. Request OS/Browser storage persistence
-  await requestPersistentStorage();
+  // 1. Request OS/Browser storage persistence asynchronously
+  requestPersistentStorage().catch(() => {});
 
   // 2. Check store count and seed
   const storeCount = await db.stores.count();

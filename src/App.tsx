@@ -75,15 +75,29 @@ export const App: React.FC = () => {
 
   // Initialize Dexie local database with seed data
   useEffect(() => {
+    let isMounted = true;
     async function init() {
       try {
         await initializeLocalDatabase();
-        setIsDbReady(true);
       } catch (err) {
-        console.error('[AmarDokan App] Database initialization error:', err);
+        console.warn('[AmarDokan App] Database initialization fallback active:', err);
+      } finally {
+        if (isMounted) {
+          setIsDbReady(true);
+        }
       }
     }
     init();
+
+    // Fallback safety timeout so the app never hangs on initialization
+    const fallbackTimer = setTimeout(() => {
+      if (isMounted) setIsDbReady(true);
+    }, 2000);
+
+    return () => {
+      isMounted = false;
+      clearTimeout(fallbackTimer);
+    };
   }, []);
 
   // Make sure active tab is allowed for current role
