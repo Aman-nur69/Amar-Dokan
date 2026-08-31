@@ -21,7 +21,7 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({
   onTabChange,
   cartItemCount,
 }) => {
-  const { hasAccess, isSuperAdmin, inspectingStore } = useAuthStore();
+  const { hasAccess, isSuperAdmin, inspectingStore, exitStoreInspection } = useAuthStore();
 
   // Clean, focused tabs list based on role
   // If Super Admin is NOT inspecting a specific shop, show ONLY the Super Admin portal tab to prevent ambiguity!
@@ -70,6 +70,13 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({
 
   const visibleTabs = allTabs.filter((t) => t.show);
 
+  const handleTabClick = (tabId: ActiveTab) => {
+    if (tabId === 'SUPER_ADMIN') {
+      exitStoreInspection();
+    }
+    onTabChange(tabId);
+  };
+
   // If Super Admin is at the central platform control center (not visiting any shop),
   // hide the sub-navigation completely so only the central dashboard is shown!
   if (isSuperAdminWithoutShop) {
@@ -89,7 +96,7 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({
               return (
                 <button
                   key={tab.id}
-                  onClick={() => onTabChange(tab.id)}
+                  onClick={() => handleTabClick(tab.id)}
                   className={`
                     flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm transition-colors cursor-pointer select-none
                     ${
@@ -144,7 +151,7 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({
             return (
               <button
                 key={tab.id}
-                onClick={() => onTabChange(tab.id)}
+                onClick={() => handleTabClick(tab.id)}
                 className={`
                   relative flex flex-col items-center justify-center gap-0.5 select-none transition-colors cursor-pointer
                   ${

@@ -119,14 +119,11 @@ export const SuperAdminDashboardView: React.FC<SuperAdminDashboardViewProps> = (
           : s
       );
       setStores(updated);
-      if (selectedDetailStore && selectedDetailStore.id === storeId) {
-        setSelectedDetailStore({
-          ...selectedDetailStore,
-          verification_status: newStatus,
-          is_active: isApproved,
-          verification_notes: notes || selectedDetailStore.verification_notes,
-        });
-      }
+
+      // Auto-close the detail review modal immediately upon approval or rejection
+      setSelectedDetailStore(null);
+      setRejectionNoteInput('');
+
       setActionSuccessMessage(
         isApproved
           ? 'দোকানটি সফলভাবে অনুমোদন দেওয়া হয়েছে এবং মালিকের অ্যাকাউন্ট সক্রিয় করা হয়েছে!'

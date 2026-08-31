@@ -21,7 +21,14 @@ import { WifiOff, Store } from 'lucide-react';
 import { toBanglaDigits } from './lib/banglaNumberFormatter';
 
 export const App: React.FC = () => {
-  const { currentUser, isAuthenticated, hasAccess, isSuperAdmin, inspectingStore } = useAuthStore();
+  const {
+    currentUser,
+    isAuthenticated,
+    hasAccess,
+    isSuperAdmin,
+    inspectingStore,
+    exitStoreInspection,
+  } = useAuthStore();
   const [activeTab, setActiveTab] = useState<ActiveTab>('POS');
   const [isDbReady, setIsDbReady] = useState(false);
 
@@ -45,6 +52,14 @@ export const App: React.FC = () => {
       setActiveTab('POS');
     }
   }, [isAuthenticated, currentUser?.id, currentUser?.role, inspectingStore]);
+
+  // Synchronized tab changer: if switching to Central Panel (SUPER_ADMIN), exit inspection mode completely
+  const handleTabChange = (tab: ActiveTab) => {
+    if (tab === 'SUPER_ADMIN') {
+      exitStoreInspection();
+    }
+    setActiveTab(tab);
+  };
 
   const {
     isOnline,
@@ -116,7 +131,7 @@ export const App: React.FC = () => {
       {/* 2. Simple Role-Aware Navigation Bar */}
       <MobileNavigation
         activeTab={activeTab}
-        onTabChange={setActiveTab}
+        onTabChange={handleTabChange}
         cartItemCount={cartItemCount}
       />
 
