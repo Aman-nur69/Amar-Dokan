@@ -25,11 +25,11 @@ export const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<ActiveTab>('POS');
   const [isDbReady, setIsDbReady] = useState(false);
 
-  // Set default tab for super admin to SUPER_ADMIN, unless inspecting a store
+  // Set default tab for super admin to SUPER_ADMIN, unless inspecting a store (then INVENTORY - products)
   useEffect(() => {
     if (isSuperAdmin()) {
       if (inspectingStore) {
-        setActiveTab('POS');
+        setActiveTab('INVENTORY');
       } else {
         setActiveTab('SUPER_ADMIN');
       }
@@ -135,7 +135,7 @@ export const App: React.FC = () => {
       {/* 4. Active View Content */}
       <main className="flex-1 max-w-7xl w-full mx-auto p-3 sm:p-6">
         {activeTab === 'SUPER_ADMIN' && (
-          <SuperAdminDashboardView onNavigateToShop={() => setActiveTab('POS')} />
+          <SuperAdminDashboardView onNavigateToShop={() => setActiveTab('INVENTORY')} />
         )}
         {activeTab === 'POS' && <POSView />}
         {activeTab === 'BAKI' && <BakiKhataView />}

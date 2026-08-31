@@ -245,25 +245,48 @@ export const useAuthStore = create<AuthState>()(
         if (!user) return false;
         const role = user.role;
 
+        // Super Admin permissions:
+        // Central management: SUPER_ADMIN
+        // Shop inspection: strictly read-only for INVENTORY_VIEW (products) and REPORTS (daily reports)
+        // Strictly FORBIDDEN: POS (sell), BAKI (payment/credit), INVENTORY_MANAGE (maintain stock), CHALAN (supplier memos), STAFF
+        if (role === 'super_admin') {
+          switch (feature) {
+            case 'SUPER_ADMIN':
+              return true;
+            case 'INVENTORY_VIEW':
+              return true; // Can see shop products
+            case 'REPORTS':
+              return true; // Can see daily reports
+            case 'POS':
+            case 'BAKI':
+            case 'INVENTORY_MANAGE':
+            case 'CHALAN':
+            case 'NET_PROFIT':
+            case 'STAFF':
+            default:
+              return false; // Cannot sell, payment, maintain stock, or manage staff
+          }
+        }
+
         switch (feature) {
           case 'POS':
           case 'BAKI':
           case 'INVENTORY_VIEW':
-            return true; // All roles can sell, collect baki, view catalog
+            return true; // Store roles can sell, collect baki, view catalog
 
           case 'INVENTORY_MANAGE':
           case 'CHALAN':
-            return role === 'super_admin' || role === 'owner' || role === 'manager';
+            return role === 'owner' || role === 'manager';
 
           case 'REPORTS':
-            return role === 'super_admin' || role === 'owner' || role === 'manager';
+            return role === 'owner' || role === 'manager';
 
           case 'NET_PROFIT':
           case 'STAFF':
-            return role === 'super_admin' || role === 'owner';
+            return role === 'owner';
 
           case 'SUPER_ADMIN':
-            return role === 'super_admin';
+            return false;
 
           default:
             return false;

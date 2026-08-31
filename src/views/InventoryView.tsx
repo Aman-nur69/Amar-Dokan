@@ -44,7 +44,7 @@ const getCategoryEmoji = (name?: string) => {
 };
 
 export const InventoryView: React.FC = () => {
-  const { hasAccess } = useAuthStore();
+  const { hasAccess, isSuperAdmin } = useAuthStore();
   const canManageStock = hasAccess('INVENTORY_MANAGE');
   const canViewChalan = hasAccess('CHALAN');
 
@@ -350,6 +350,21 @@ export const InventoryView: React.FC = () => {
 
   return (
     <div className="space-y-5 pb-16">
+      {/* Super Admin Read-Only Notice */}
+      {isSuperAdmin() && (
+        <div className="p-3.5 rounded-2xl bg-purple-50 border border-purple-200 text-purple-900 flex items-center justify-between text-xs font-semibold">
+          <div className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-purple-600 animate-pulse flex-shrink-0" />
+            <span>
+              সুপার অ্যাডমিন পরিদর্শন মোড: আপনি এই দোকানের পণ্য ও মজুদ শুধুমাত্র দেখতে পারবেন (স্টক পরিবর্তন, বিক্রি ও পেমেন্ট সংরক্ষিত)।
+            </span>
+          </div>
+          <span className="px-2 py-0.5 rounded-md bg-purple-200 text-purple-950 text-[10px] font-black uppercase">
+            শুধুমাত্র প্রদর্শন
+          </span>
+        </div>
+      )}
+
       {/* Sub-Section Navigation Switcher (Products vs Supplier Chalans) */}
       <div className="flex bg-slate-200/80 p-1.5 rounded-3xl w-full max-w-lg mx-auto shadow-inner">
         <button

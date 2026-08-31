@@ -54,7 +54,7 @@ export const DailyProfitWidget: React.FC<DailyProfitWidgetProps> = ({
   onOpenCashCountModal,
   onOpenDayClosingModal,
 }) => {
-  const { hasAccess } = useAuthStore();
+  const { hasAccess, isSuperAdmin } = useAuthStore();
   const canSeeProfit = hasAccess('NET_PROFIT');
 
   const isProfitPositive = metrics.netProfit >= 0;
@@ -78,13 +78,15 @@ export const DailyProfitWidget: React.FC<DailyProfitWidgetProps> = ({
                 ক্যাশবাক্সে বর্তমান নগদ স্থিতি (Cash in Drawer)
               </span>
 
-              <button
-                onClick={onOpenCashCountModal}
-                className="px-3 py-1 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white text-xs font-bold flex items-center gap-1 shadow-sm transition-all"
-              >
-                <Calculator className="w-3.5 h-3.5" />
-                <span>ক্যাশ মেলান</span>
-              </button>
+              {!isSuperAdmin() && (
+                <button
+                  onClick={onOpenCashCountModal}
+                  className="px-3 py-1 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white text-xs font-bold flex items-center gap-1 shadow-sm transition-all"
+                >
+                  <Calculator className="w-3.5 h-3.5" />
+                  <span>ক্যাশ মেলান</span>
+                </button>
+              )}
             </div>
 
             <div className="my-2">
@@ -130,13 +132,15 @@ export const DailyProfitWidget: React.FC<DailyProfitWidgetProps> = ({
                 দিনের আর্থিক লাভ ও বিক্রি (Sales & Profit)
               </span>
 
-              <button
-                onClick={onOpenDayClosingModal}
-                className="px-3 py-1 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold flex items-center gap-1 border border-slate-700 transition-all"
-              >
-                <FileCheck className="w-3.5 h-3.5 text-emerald-400" />
-                <span>ক্লোজিং রসিদ</span>
-              </button>
+              {!isSuperAdmin() && (
+                <button
+                  onClick={onOpenDayClosingModal}
+                  className="px-3 py-1 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold flex items-center gap-1 border border-slate-700 transition-all"
+                >
+                  <FileCheck className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>ক্লোজিং রসিদ</span>
+                </button>
+              )}
             </div>
 
             <div className="flex items-baseline gap-3 my-2">
@@ -173,15 +177,17 @@ export const DailyProfitWidget: React.FC<DailyProfitWidgetProps> = ({
             </p>
           </div>
 
-          <div className="pt-3 border-t border-slate-800/80 mt-2 flex gap-2">
-            <button
-              onClick={onOpenExpenseModal}
-              className="h-10 px-4 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs flex items-center gap-1.5 shadow-md transition-all"
-            >
-              <Receipt className="w-4 h-4" />
-              <span>+ দৈনিক খরচ লিখুন</span>
-            </button>
-          </div>
+          {!isSuperAdmin() && (
+            <div className="pt-3 border-t border-slate-800/80 mt-2 flex gap-2">
+              <button
+                onClick={onOpenExpenseModal}
+                className="h-10 px-4 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs flex items-center gap-1.5 shadow-md transition-all"
+              >
+                <Receipt className="w-4 h-4" />
+                <span>+ দৈনিক খরচ লিখুন</span>
+              </button>
+            </div>
+          )}
         </div>
       </div>
 

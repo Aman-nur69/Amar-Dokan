@@ -7,7 +7,6 @@ import React, { useState, useEffect } from 'react';
 import { DEFAULT_STORE, db } from '../../db/offlineDb';
 import { SyncStatusIndicator } from './SyncStatusIndicator';
 import { useAuthStore, getRoleInfo } from '../../hooks/useAuthStore';
-import { UserRole } from '../../@types/database.types';
 import { Store, LogOut, ChevronDown, User, ShieldCheck } from 'lucide-react';
 
 interface AppHeaderProps {
@@ -30,7 +29,6 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
   const {
     currentUser,
     logout,
-    quickLoginDemoRole,
     activeStoreId,
     isSuperAdmin,
     inspectingStore,
@@ -58,12 +56,6 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
       return () => window.removeEventListener('click', closeMenu);
     }
   }, [isMenuOpen]);
-
-  const handleRoleSwitch = (role: UserRole, e: React.MouseEvent) => {
-    e.stopPropagation();
-    quickLoginDemoRole(role);
-    setIsMenuOpen(false);
-  };
 
   return (
     <>
@@ -152,9 +144,9 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
             {isMenuOpen && (
               <div
                 onClick={(e) => e.stopPropagation()}
-                className="absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-xl border border-slate-200 py-2 z-50 animate-in fade-in zoom-in-95"
+                className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-slate-200 py-2 z-50 animate-in fade-in zoom-in-95"
               >
-                <div className="px-4 py-2 border-b border-slate-100">
+                <div className="px-4 py-2.5 border-b border-slate-100">
                   <p className="text-xs font-bold text-slate-800">{currentUser?.full_name}</p>
                   <p className="text-[11px] text-slate-500">{currentUser?.phone}</p>
                   <div className="mt-1.5 inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-bold border border-slate-200 bg-slate-50 text-slate-700">
@@ -163,39 +155,11 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
                   </div>
                 </div>
 
-                {/* Quick Role Switcher for seamless testing */}
-                <div className="p-2 border-b border-slate-100">
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-2 mb-1.5">
-                    রোল পরিবর্তন করুন (দ্রুত টেস্ট)
-                  </p>
-                  <div className="space-y-1">
-                    {(['super_admin', 'owner', 'manager', 'cashier'] as UserRole[]).map((r) => {
-                      const info = getRoleInfo(r);
-                      const isCurrent = currentUser?.role === r;
-
-                      return (
-                        <button
-                          key={r}
-                          onClick={(e) => handleRoleSwitch(r, e)}
-                          className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-medium flex items-center justify-between transition-colors ${
-                            isCurrent
-                              ? 'bg-emerald-50 text-emerald-800 font-bold'
-                              : 'text-slate-600 hover:bg-slate-50'
-                          }`}
-                        >
-                          <span>{info.labelBn}</span>
-                          {isCurrent && <span className="text-[10px] text-emerald-600">✓ সক্রিয়</span>}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
                 {/* Logout Button */}
                 <div className="p-1.5">
                   <button
                     onClick={() => logout()}
-                    className="w-full px-3 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50 rounded-xl transition-colors flex items-center gap-2"
+                    className="w-full px-3 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50 rounded-xl transition-colors flex items-center gap-2 cursor-pointer"
                   >
                     <LogOut className="w-4 h-4" />
                     <span>লগআউট করুন</span>

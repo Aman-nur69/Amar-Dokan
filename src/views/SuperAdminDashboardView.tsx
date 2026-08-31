@@ -152,53 +152,41 @@ export const SuperAdminDashboardView: React.FC<SuperAdminDashboardViewProps> = (
         </div>
       )}
 
-      {/* Platform Executive Metrics Cards: 2x2 grid on mobile, 4 columns on large screens */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
+      {/* Platform Executive Metrics Cards: Focused purely on Shop List, Approvals & Rejections */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-4">
         {/* Total Shops */}
         <div className="p-3.5 sm:p-5 rounded-xl sm:rounded-2xl bg-white border border-slate-200/80 shadow-xs flex flex-col justify-between">
           <div className="flex items-center justify-between text-slate-500 mb-1.5">
-            <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider">মোট দোকান</span>
+            <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider">মোট নথিভুক্ত দোকান</span>
             <Building2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-400" />
           </div>
           <div>
-            <p className="text-xl sm:text-3xl font-black text-slate-900">{toBanglaDigits(totalShops)} <span className="text-xs sm:text-sm font-bold text-slate-400">টি</span></p>
-            <p className="text-[10px] sm:text-xs text-slate-400 mt-0.5 hidden sm:block">দেশব্যাপী নিবন্ধিত শপ</p>
+            <p className="text-2xl sm:text-3xl font-black text-slate-900">{toBanglaDigits(totalShops)} <span className="text-xs sm:text-sm font-bold text-slate-400">টি</span></p>
+            <p className="text-[10px] sm:text-xs text-slate-400 mt-0.5">প্ল্যাটফর্ম শপ তালিকা</p>
           </div>
         </div>
 
         {/* Pending Approvals */}
         <div className="p-3.5 sm:p-5 rounded-xl sm:rounded-2xl bg-white border border-amber-200/90 shadow-xs flex flex-col justify-between">
           <div className="flex items-center justify-between text-amber-700 mb-1.5">
-            <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider">অপেক্ষমাণ</span>
+            <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider">অনুমোদন অপেক্ষমাণ</span>
             <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-600" />
           </div>
           <div>
-            <p className="text-xl sm:text-3xl font-black text-amber-600">{toBanglaDigits(pendingShops)} <span className="text-xs sm:text-sm font-bold text-amber-500">টি</span></p>
-            <p className="text-[10px] sm:text-xs text-amber-600/80 mt-0.5 hidden sm:block">যাচাই দরকার</p>
+            <p className="text-2xl sm:text-3xl font-black text-amber-600">{toBanglaDigits(pendingShops)} <span className="text-xs sm:text-sm font-bold text-amber-500">টি</span></p>
+            <p className="text-[10px] sm:text-xs text-amber-600/80 mt-0.5">ট্রেড লাইসেন্স ও টিআইএন যাচাই</p>
           </div>
         </div>
 
         {/* Approved Active */}
         <div className="p-3.5 sm:p-5 rounded-xl sm:rounded-2xl bg-white border border-emerald-200/90 shadow-xs flex flex-col justify-between">
           <div className="flex items-center justify-between text-emerald-700 mb-1.5">
-            <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider">অনুমোদিত</span>
+            <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider">অনুমোদিত ও সক্রিয়</span>
             <CheckCircle2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-600" />
           </div>
           <div>
-            <p className="text-xl sm:text-3xl font-black text-emerald-600">{toBanglaDigits(approvedShops)} <span className="text-xs sm:text-sm font-bold text-emerald-500">টি</span></p>
-            <p className="text-[10px] sm:text-xs text-emerald-600/80 mt-0.5 hidden sm:block">সক্রিয় দোকান</p>
-          </div>
-        </div>
-
-        {/* Platform GMV */}
-        <div className="p-3.5 sm:p-5 rounded-xl sm:rounded-2xl bg-white border border-slate-200/80 shadow-xs flex flex-col justify-between">
-          <div className="flex items-center justify-between text-slate-500 mb-1.5">
-            <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider">মোট বিক্রি</span>
-            <TrendingUp className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-400" />
-          </div>
-          <div>
-            <p className="text-lg sm:text-2xl font-black text-slate-900 truncate">{formatBengaliCurrency(totalPlatformSales)}</p>
-            <p className="text-[10px] sm:text-xs text-slate-400 mt-0.5 hidden sm:block">নেটওয়ার্ক লেনদেন</p>
+            <p className="text-2xl sm:text-3xl font-black text-emerald-600">{toBanglaDigits(approvedShops)} <span className="text-xs sm:text-sm font-bold text-emerald-500">টি</span></p>
+            <p className="text-[10px] sm:text-xs text-emerald-600/80 mt-0.5">সক্রিয় চালুকৃত দোকান</p>
           </div>
         </div>
       </div>
