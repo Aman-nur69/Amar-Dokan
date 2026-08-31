@@ -155,8 +155,8 @@ export const App: React.FC = () => {
         </div>
       )}
 
-      {/* 4. Active View Content */}
-      <main className="flex-1 max-w-7xl w-full mx-auto p-3 sm:p-6">
+      {/* 4. Active View Content (With generous bottom padding on mobile to float over modern dock) */}
+      <main className="flex-1 max-w-7xl w-full mx-auto p-3 sm:p-6 pb-24 sm:pb-6">
         {activeTab === 'SUPER_ADMIN' && (
           <SuperAdminDashboardView onNavigateToShop={() => setActiveTab('INVENTORY')} />
         )}

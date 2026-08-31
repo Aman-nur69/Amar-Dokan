@@ -138,56 +138,87 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({
         </div>
       </nav>
 
-      {/* 2. Mobile Bottom Dock */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-slate-200 shadow-lg safe-area-pb">
-        <div
-          className="grid h-14 max-w-md mx-auto"
-          style={{ gridTemplateColumns: `repeat(${visibleTabs.length}, minmax(0, 1fr))` }}
-        >
+      {/* 2. Mobile Floating Island / Modern Glass Dock (Tailwind UI Inspired) */}
+      <div className="md:hidden fixed bottom-3 inset-x-0 z-40 px-3 pointer-events-none safe-area-pb">
+        <nav className="pointer-events-auto max-w-md mx-auto bg-white/95 backdrop-blur-xl border border-slate-200/90 shadow-[0_12px_36px_rgba(15,23,42,0.16)] rounded-2xl sm:rounded-3xl p-1.5 flex items-center justify-around gap-1 transition-all duration-300 ring-1 ring-black/5">
           {visibleTabs.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
+            const isSpecial = tab.isSpecial;
+
+            // Compact readable label for mobile dock
+            const shortLabel =
+              tab.id === 'SUPER_ADMIN'
+                ? 'কন্ট্রোল'
+                : tab.id === 'POS'
+                ? 'বিক্রি'
+                : tab.id === 'BAKI'
+                ? 'বাকি'
+                : tab.id === 'INVENTORY'
+                ? 'মজুদ'
+                : tab.id === 'DASHBOARD'
+                ? 'রিপোর্ট'
+                : tab.id === 'STAFF'
+                ? 'স্টাফ'
+                : tab.label;
 
             return (
               <button
                 key={tab.id}
                 onClick={() => handleTabClick(tab.id)}
                 className={`
-                  relative flex flex-col items-center justify-center gap-0.5 select-none transition-colors cursor-pointer
+                  relative flex-1 flex flex-col items-center justify-center py-2 px-1 rounded-xl select-none transition-all duration-200 active:scale-90 cursor-pointer group
                   ${
                     isActive
-                      ? tab.isSpecial
-                        ? 'text-purple-900 font-bold'
-                        : 'text-emerald-700 font-bold'
-                      : tab.isSpecial
-                      ? 'text-purple-600 font-medium'
-                      : 'text-slate-500 font-medium'
+                      ? isSpecial
+                        ? 'bg-purple-900 text-white shadow-md shadow-purple-900/30'
+                        : 'bg-slate-900 text-white shadow-md shadow-slate-900/30'
+                      : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100/70'
                   }
                 `}
               >
                 <div className="relative">
-                  <Icon className={`w-4 h-4 ${tab.isSpecial && !isActive ? 'text-purple-600' : ''}`} />
+                  <Icon
+                    className={`w-5 h-5 transition-transform duration-200 ${
+                      isActive
+                        ? 'scale-110 -translate-y-0.5 text-white'
+                        : 'text-slate-500 group-hover:text-slate-700'
+                    }`}
+                  />
                   {tab.badge && (
-                    <span className="absolute -top-1.5 -right-2.5 px-1 rounded-full bg-emerald-600 text-white text-[9px] font-black">
+                    <span
+                      className={`absolute -top-1.5 -right-2.5 px-1.5 py-0.2 rounded-full text-[9px] font-black shadow-xs ${
+                        isActive
+                          ? 'bg-emerald-400 text-slate-950 font-extrabold'
+                          : 'bg-emerald-600 text-white'
+                      }`}
+                    >
                       {tab.badge}
                     </span>
                   )}
                 </div>
-                <span className="text-[10px] leading-tight text-center px-1 truncate max-w-[80px]">
-                  {tab.id === 'SUPER_ADMIN' ? 'কন্ট্রোল' : tab.label}
+
+                <span
+                  className={`text-[10px] tracking-tight transition-all duration-200 truncate max-w-[62px] mt-0.5 ${
+                    isActive ? 'font-black opacity-100' : 'font-semibold opacity-75'
+                  }`}
+                >
+                  {shortLabel}
                 </span>
+
+                {/* Subtle Glowing Active Indicator Dot */}
                 {isActive && (
                   <span
-                    className={`absolute top-0 w-8 h-0.5 rounded-full ${
-                      tab.isSpecial ? 'bg-purple-800' : 'bg-emerald-600'
+                    className={`w-1.5 h-1.5 rounded-full mt-0.5 transition-all ${
+                      isSpecial ? 'bg-purple-300 animate-pulse' : 'bg-emerald-400 animate-pulse'
                     }`}
                   />
                 )}
               </button>
             );
           })}
-        </div>
-      </nav>
+        </nav>
+      </div>
     </>
   );
 };
