@@ -24,6 +24,9 @@ import {
   Phone,
   MapPin,
   TrendingUp,
+  Plus,
+  X,
+  Upload,
 } from 'lucide-react';
 
 interface SuperAdminDashboardViewProps {
@@ -31,13 +34,27 @@ interface SuperAdminDashboardViewProps {
 }
 
 export const SuperAdminDashboardView: React.FC<SuperAdminDashboardViewProps> = ({ onNavigateToShop }) => {
-  const { enterStoreInspection } = useAuthStore();
+  const { enterStoreInspection, registerNewShop } = useAuthStore();
   const [stores, setStores] = useState<Store[]>([]);
   const [sales, setSales] = useState<Sale[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'ALL' | ShopVerificationStatus>('ALL');
   const [selectedDocStore, setSelectedDocStore] = useState<Store | null>(null);
   const [actionSuccessMessage, setActionSuccessMessage] = useState<string | null>(null);
+
+  // New Shop Listing Modal States
+  const [isAddShopModalOpen, setIsAddShopModalOpen] = useState(false);
+  const [isSubmittingShop, setIsSubmittingShop] = useState(false);
+  const [shopError, setShopError] = useState<string | null>(null);
+  const [shopName, setShopName] = useState('');
+  const [proprietor, setProprietor] = useState('');
+  const [shopPhone, setShopPhone] = useState('');
+  const [shopPin, setShopPin] = useState('');
+  const [shopAddress, setShopAddress] = useState('');
+  const [tradeLicence, setTradeLicence] = useState('');
+  const [tinNumber, setTinNumber] = useState('');
+  const [tradeLicenceUrl, setTradeLicenceUrl] = useState('');
+  const [autoApprove, setAutoApprove] = useState(true);
 
   const loadPlatformData = async () => {
     try {
@@ -96,6 +113,79 @@ export const SuperAdminDashboardView: React.FC<SuperAdminDashboardViewProps> = (
     }
   };
 
+  const handleCreateShopSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setShopError(null);
+
+    if (!shopName.trim() || !proprietor.trim() || !shopPhone.trim() || !shopPin.trim()) {
+      setShopError('দয়া করে দোকানের নাম, স্বত্বাধিকারী, মোবাইল নম্বর ও ৪ সংখ্যার পিন প্রদান করুন।');
+      return;
+    }
+
+    if (shopPin.trim().length !== 4) {
+      setShopError('পিন অবশ্যই ৪ সংখ্যার হতে হবে।');
+      return;
+    }
+
+    setIsSubmittingShop(true);
+    try {
+      const storeId = `store-${Date.now()}`;
+      const status: ShopVerificationStatus = autoApprove ? 'approved' : 'pending';
+      const newStore: Store = {
+        id: storeId,
+        name: shopName.trim(),
+        proprietor: proprietor.trim(),
+        phone: shopPhone.trim(),
+        address: shopAddress.trim() || 'নির্ধারিত ঠিকানা নেই',
+        trade_licence_no: tradeLicence.trim() || 'TRAD/SAAS/' + Math.floor(100000 + Math.random() * 900000),
+        trade_licence_doc_url: tradeLicenceUrl || 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=600&auto=format&fit=crop&q=60',
+        tin_number: tinNumber.trim() || 'TIN-' + Math.floor(1000000000 + Math.random() * 9000000000),
+        verification_status: status,
+        verification_notes: autoApprove ? 'সুপার অ্যাডমিন কর্তৃক সরাসরি নথিভুক্ত ও অনুমোদিত' : 'ট্রেড লাইসেন্স ও টিআইএন যাচাই প্রক্রিয়াধীন',
+        currency_symbol: '৳',
+        is_active: autoApprove,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+
+      const newProfile = {
+        id: `p-${Date.now()}`,
+        store_id: storeId,
+        full_name: proprietor.trim(),
+        phone: shopPhone.trim(),
+        role: 'owner' as const,
+        pin_code: shopPin.trim(),
+        is_active: true,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+
+      await db.stores.put(newStore);
+      await db.profiles.put(newProfile);
+
+      await loadPlatformData();
+
+      setActionSuccessMessage(`"${newStore.name}" সফলভাবে নতুন দোকান হিসেবে প্ল্যাটফর্মে নথিভুক্ত করা হয়েছে!`);
+      setTimeout(() => setActionSuccessMessage(null), 4000);
+
+      // Reset form
+      setShopName('');
+      setProprietor('');
+      setShopPhone('');
+      setShopPin('');
+      setShopAddress('');
+      setTradeLicence('');
+      setTinNumber('');
+      setTradeLicenceUrl('');
+      setIsAddShopModalOpen(false);
+    } catch (err: any) {
+      console.error('Error creating shop:', err);
+      setShopError('দোকান তৈরি করতে সমস্যা হয়েছে। দয়া করে আবার চেষ্টা করুন।');
+    } finally {
+      setIsSubmittingShop(false);
+    }
+  };
+
   // Platform Metrics
   const totalShops = stores.length;
   const approvedShops = stores.filter((s) => s.verification_status === 'approved').length;
@@ -134,14 +224,27 @@ export const SuperAdminDashboardView: React.FC<SuperAdminDashboardViewProps> = (
           </p>
         </div>
 
-        <div className="flex items-center justify-between sm:justify-end gap-2 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100">
-          <span className="text-[11px] font-bold uppercase text-slate-400 sm:hidden">
-            প্ল্যাটফর্ম স্থিতি:
-          </span>
-          <span className="text-xs sm:text-sm font-bold text-emerald-600 flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            লাইভ ক্লাউড সিঙ্ক
-          </span>
+        <div className="flex flex-wrap items-center justify-between sm:justify-end gap-3 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100">
+          <div className="flex items-center gap-2">
+            <span className="text-[11px] font-bold uppercase text-slate-400 sm:hidden">
+              প্ল্যাটফর্ম স্থিতি:
+            </span>
+            <span className="text-xs sm:text-sm font-bold text-emerald-600 flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              লাইভ ক্লাউড সিঙ্ক
+            </span>
+          </div>
+
+          <button
+            onClick={() => {
+              setShopError(null);
+              setIsAddShopModalOpen(true);
+            }}
+            className="px-4 py-2.5 rounded-xl bg-purple-700 hover:bg-purple-800 active:bg-purple-900 text-white font-bold text-xs sm:text-sm flex items-center gap-2 shadow-xs transition-all cursor-pointer"
+          >
+            <Plus className="w-4 h-4" />
+            <span>+ নতুন দোকান নথিভুক্ত করুন</span>
+          </button>
         </div>
       </div>
 
@@ -418,7 +521,7 @@ export const SuperAdminDashboardView: React.FC<SuperAdminDashboardViewProps> = (
               </div>
               <button
                 onClick={() => setSelectedDocStore(null)}
-                className="w-8 h-8 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 flex items-center justify-center"
+                className="w-8 h-8 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 flex items-center justify-center cursor-pointer"
               >
                 ✕
               </button>
@@ -450,12 +553,205 @@ export const SuperAdminDashboardView: React.FC<SuperAdminDashboardViewProps> = (
               <div className="pt-2 flex justify-end gap-2">
                 <button
                   onClick={() => setSelectedDocStore(null)}
-                  className="px-4 py-2 rounded-xl bg-slate-900 text-white text-xs font-bold"
+                  className="px-4 py-2 rounded-xl bg-slate-900 text-white text-xs font-bold cursor-pointer"
                 >
                   বন্ধ করুন
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* New Shop Registration Modal (Super Admin Directly Lists a New Shop) */}
+      {isAddShopModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs overflow-y-auto">
+          <div className="bg-white rounded-2xl w-full max-w-lg shadow-2xl border border-slate-200 overflow-hidden animate-in fade-in zoom-in-95 my-8">
+            <div className="p-5 bg-slate-900 text-white flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-purple-600 flex items-center justify-center text-white font-bold">
+                  <Building2 className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-base text-white">নতুন দোকান নথিভুক্ত করুন</h3>
+                  <p className="text-xs text-purple-200">সুপার অ্যাডমিন প্ল্যাটফর্মে নতুন শপ লিস্টিং</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsAddShopModalOpen(false)}
+                className="w-8 h-8 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 flex items-center justify-center cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateShopSubmit} className="p-6 space-y-4 max-h-[80vh] overflow-y-auto">
+              {shopError && (
+                <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold flex items-center gap-2">
+                  <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+                  <span>{shopError}</span>
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    দোকানের নাম *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="উদাঃ রহমান ব্রাদার্স স্টোর"
+                    value={shopName}
+                    onChange={(e) => setShopName(e.target.value)}
+                    className="w-full px-3.5 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-purple-700 font-medium"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    দোকান মালিকের নাম (স্বত্বাধিকারী) *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="উদাঃ মোঃ আনিসুর রহমান"
+                    value={proprietor}
+                    onChange={(e) => setProprietor(e.target.value)}
+                    className="w-full px-3.5 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-purple-700 font-medium"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    লগইন মোবাইল নম্বর *
+                  </label>
+                  <input
+                    type="tel"
+                    required
+                    placeholder="017XXXXXXXX"
+                    value={shopPhone}
+                    onChange={(e) => setShopPhone(e.target.value)}
+                    className="w-full px-3.5 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-purple-700 font-medium"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    মালিকের ৪-সংখ্যার পিন *
+                  </label>
+                  <input
+                    type="password"
+                    required
+                    maxLength={4}
+                    placeholder="••••"
+                    value={shopPin}
+                    onChange={(e) => setShopPin(e.target.value)}
+                    className="w-full px-3.5 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-purple-700 font-mono text-center tracking-widest font-bold"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  দোকানের ঠিকানা (বাজার, এলাকা ও জেলা)
+                </label>
+                <input
+                  type="text"
+                  placeholder="উদাঃ দোকান নং ৪, কাওরান বাজার, ঢাকা"
+                  value={shopAddress}
+                  onChange={(e) => setShopAddress(e.target.value)}
+                  className="w-full px-3.5 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-purple-700 font-medium"
+                />
+              </div>
+
+              {/* Trade Licence & Tax verification */}
+              <div className="p-3.5 rounded-xl bg-purple-50/50 border border-purple-100 space-y-3">
+                <span className="text-xs font-bold text-purple-900 flex items-center gap-1.5">
+                  <FileText className="w-4 h-4 text-purple-700" />
+                  ব্যবসার নিরাপত্তা ও ভেরিফিকেশন (Trade Licence & TIN)
+                </span>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+                      ট্রেড লাইসেন্স নম্বর
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="TRAD/DNCC/2026/XXXXXX"
+                      value={tradeLicence}
+                      onChange={(e) => setTradeLicence(e.target.value)}
+                      className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-purple-700 font-mono"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+                      টিআইএন (TIN Number)
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="১২-সংখ্যার ই-টিআইএন"
+                      value={tinNumber}
+                      onChange={(e) => setTinNumber(e.target.value)}
+                      className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-purple-700 font-mono"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+                    ট্রেড লাইসেন্স স্ক্যান কপি লিংক বা ফটো URL (ঐচ্ছিক)
+                  </label>
+                  <input
+                    type="url"
+                    placeholder="https://..."
+                    value={tradeLicenceUrl}
+                    onChange={(e) => setTradeLicenceUrl(e.target.value)}
+                    className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-purple-700 font-mono text-[11px]"
+                  />
+                </div>
+              </div>
+
+              {/* Status switch: Auto Approve or Keep Pending */}
+              <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-200">
+                <div>
+                  <span className="text-xs font-bold text-slate-800 block">তাত্ক্ষণিক অনুমোদন</span>
+                  <span className="text-[11px] text-slate-500">
+                    {autoApprove ? 'সরাসরি অনুমোদিত ও সক্রিয় হবে' : 'অপেক্ষমাণ তালিকায় সংরক্ষিত থাকবে'}
+                  </span>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={autoApprove}
+                    onChange={(e) => setAutoApprove(e.target.checked)}
+                    className="sr-only peer"
+                  />
+                  <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
+                </label>
+              </div>
+
+              <div className="pt-2 flex items-center justify-end gap-2 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setIsAddShopModalOpen(false)}
+                  className="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 text-xs font-bold cursor-pointer"
+                >
+                  বাতিল
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmittingShop}
+                  className="px-5 py-2.5 rounded-xl bg-purple-700 hover:bg-purple-800 active:bg-purple-900 text-white text-xs font-bold shadow-sm transition-all disabled:opacity-50 cursor-pointer"
+                >
+                  {isSubmittingShop ? 'সংরক্ষণ হচ্ছে...' : 'দোকান নথিভুক্ত করুন'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

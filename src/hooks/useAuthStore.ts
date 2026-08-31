@@ -235,6 +235,8 @@ export const useAuthStore = create<AuthState>()(
         set({
           currentUser: null,
           isAuthenticated: false,
+          inspectingStore: null,
+          activeStoreId: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
           loginError: null,
           isLoading: false,
         });

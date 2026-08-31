@@ -21,13 +21,21 @@ import { WifiOff, Store } from 'lucide-react';
 import { toBanglaDigits } from './lib/banglaNumberFormatter';
 
 export const App: React.FC = () => {
-  const { isAuthenticated, hasAccess, isSuperAdmin, inspectingStore } = useAuthStore();
+  const { currentUser, isAuthenticated, hasAccess, isSuperAdmin, inspectingStore } = useAuthStore();
   const [activeTab, setActiveTab] = useState<ActiveTab>('POS');
   const [isDbReady, setIsDbReady] = useState(false);
 
-  // Set default tab for super admin to SUPER_ADMIN, unless inspecting a store (then INVENTORY - products)
+  // Set default tab on user login or role change:
+  // - Super Admin without inspection -> SUPER_ADMIN
+  // - Super Admin inspecting -> INVENTORY
+  // - Normal users (owner, manager, cashier) -> POS
   useEffect(() => {
-    if (isSuperAdmin()) {
+    if (!isAuthenticated || !currentUser) {
+      setActiveTab('POS');
+      return;
+    }
+
+    if (currentUser.role === 'super_admin') {
       if (inspectingStore) {
         setActiveTab('INVENTORY');
       } else {
@@ -36,7 +44,7 @@ export const App: React.FC = () => {
     } else {
       setActiveTab('POS');
     }
-  }, [isSuperAdmin, inspectingStore]);
+  }, [isAuthenticated, currentUser?.id, currentUser?.role, inspectingStore]);
 
   const {
     isOnline,
