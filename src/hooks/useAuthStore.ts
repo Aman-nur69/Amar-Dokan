@@ -5,7 +5,7 @@
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { UserRole, UserSession, Profile } from '../@types/database.types';
+import { UserRole, UserSession, Profile, Store } from '../@types/database.types';
 import { db, INITIAL_PROFILES } from '../db/offlineDb';
 
 interface AuthState {
@@ -14,6 +14,7 @@ interface AuthState {
   loginError: string | null;
   isLoading: boolean;
   activeStoreId: string;
+  inspectingStore: Store | null;
 
   // Authentication actions
   loginWithPhoneAndPin: (phone: string, pin: string) => Promise<boolean>;
@@ -29,6 +30,8 @@ interface AuthState {
     tinNumber: string;
   }) => Promise<{ success: boolean; message: string }>;
   switchActiveStore: (storeId: string) => void;
+  enterStoreInspection: (store: Store) => void;
+  exitStoreInspection: () => void;
   logout: () => void;
   clearError: () => void;
 
@@ -47,6 +50,7 @@ export const useAuthStore = create<AuthState>()(
       loginError: null,
       isLoading: false,
       activeStoreId: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
+      inspectingStore: null,
 
       clearError: () => set({ loginError: null }),
 
@@ -54,6 +58,22 @@ export const useAuthStore = create<AuthState>()(
         set((state) => ({
           activeStoreId: storeId,
           currentUser: state.currentUser ? { ...state.currentUser, store_id: storeId } : null,
+        }));
+      },
+
+      enterStoreInspection: (store: Store) => {
+        set((state) => ({
+          activeStoreId: store.id,
+          inspectingStore: store,
+          currentUser: state.currentUser ? { ...state.currentUser, store_id: store.id } : null,
+        }));
+      },
+
+      exitStoreInspection: () => {
+        set((state) => ({
+          inspectingStore: null,
+          activeStoreId: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
+          currentUser: state.currentUser ? { ...state.currentUser, store_id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11' } : null,
         }));
       },
 

@@ -21,18 +21,22 @@ import { WifiOff, Store } from 'lucide-react';
 import { toBanglaDigits } from './lib/banglaNumberFormatter';
 
 export const App: React.FC = () => {
-  const { isAuthenticated, hasAccess, isSuperAdmin } = useAuthStore();
+  const { isAuthenticated, hasAccess, isSuperAdmin, inspectingStore } = useAuthStore();
   const [activeTab, setActiveTab] = useState<ActiveTab>('POS');
   const [isDbReady, setIsDbReady] = useState(false);
 
-  // Set default tab for super admin to SUPER_ADMIN
+  // Set default tab for super admin to SUPER_ADMIN, unless inspecting a store
   useEffect(() => {
     if (isSuperAdmin()) {
-      setActiveTab('SUPER_ADMIN');
+      if (inspectingStore) {
+        setActiveTab('POS');
+      } else {
+        setActiveTab('SUPER_ADMIN');
+      }
     } else {
       setActiveTab('POS');
     }
-  }, [isSuperAdmin]);
+  }, [isSuperAdmin, inspectingStore]);
 
   const {
     isOnline,
@@ -130,7 +134,9 @@ export const App: React.FC = () => {
 
       {/* 4. Active View Content */}
       <main className="flex-1 max-w-7xl w-full mx-auto p-3 sm:p-6">
-        {activeTab === 'SUPER_ADMIN' && <SuperAdminDashboardView />}
+        {activeTab === 'SUPER_ADMIN' && (
+          <SuperAdminDashboardView onNavigateToShop={() => setActiveTab('POS')} />
+        )}
         {activeTab === 'POS' && <POSView />}
         {activeTab === 'BAKI' && <BakiKhataView />}
         {activeTab === 'INVENTORY' && <InventoryView />}

@@ -26,8 +26,12 @@ import {
   TrendingUp,
 } from 'lucide-react';
 
-export const SuperAdminDashboardView: React.FC = () => {
-  const { switchActiveStore } = useAuthStore();
+interface SuperAdminDashboardViewProps {
+  onNavigateToShop?: () => void;
+}
+
+export const SuperAdminDashboardView: React.FC<SuperAdminDashboardViewProps> = ({ onNavigateToShop }) => {
+  const { enterStoreInspection } = useAuthStore();
   const [stores, setStores] = useState<Store[]>([]);
   const [sales, setSales] = useState<Sale[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -86,8 +90,10 @@ export const SuperAdminDashboardView: React.FC = () => {
   };
 
   const handleEnterShop = (store: Store) => {
-    switchActiveStore(store.id);
-    alert(`আপনি সফলভাবে "${store.name}" দোকানের অ্যাডমিন ভিউতে প্রবেশ করেছেন।`);
+    enterStoreInspection(store);
+    if (onNavigateToShop) {
+      onNavigateToShop();
+    }
   };
 
   // Platform Metrics

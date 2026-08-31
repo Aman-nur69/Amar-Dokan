@@ -21,46 +21,50 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({
   onTabChange,
   cartItemCount,
 }) => {
-  const { hasAccess, isSuperAdmin } = useAuthStore();
+  const { hasAccess, isSuperAdmin, inspectingStore } = useAuthStore();
 
   // Clean, focused tabs list based on role
+  // If Super Admin is NOT inspecting a specific shop, show ONLY the Super Admin portal tab to prevent ambiguity!
+  const isSuperAdminWithoutShop = isSuperAdmin() && !inspectingStore;
+
   const allTabs = [
     {
       id: 'SUPER_ADMIN' as ActiveTab,
-      label: 'সব দোকান (ওভারভিউ)',
+      label: 'কেন্দ্রীয় কন্ট্রোল প্যানেল (সব দোকান)',
       icon: Users,
       show: isSuperAdmin(),
+      isSpecial: true,
     },
     {
       id: 'POS' as ActiveTab,
       label: 'বিক্রি (POS)',
       icon: ShoppingCart,
       badge: cartItemCount > 0 ? toBanglaDigits(cartItemCount) : undefined,
-      show: hasAccess('POS'),
+      show: !isSuperAdminWithoutShop && hasAccess('POS'),
     },
     {
       id: 'BAKI' as ActiveTab,
       label: 'বাকির খাতা',
       icon: BookOpen,
-      show: hasAccess('BAKI'),
+      show: !isSuperAdminWithoutShop && hasAccess('BAKI'),
     },
     {
       id: 'INVENTORY' as ActiveTab,
       label: 'পণ্য ও মজুদ',
       icon: Boxes,
-      show: hasAccess('INVENTORY_VIEW'),
+      show: !isSuperAdminWithoutShop && hasAccess('INVENTORY_VIEW'),
     },
     {
       id: 'DASHBOARD' as ActiveTab,
       label: 'দৈনিক রিপোর্ট',
       icon: BarChart3,
-      show: hasAccess('REPORTS'),
+      show: !isSuperAdminWithoutShop && hasAccess('REPORTS'),
     },
     {
       id: 'STAFF' as ActiveTab,
       label: 'স্টাফ ও রোল',
       icon: Users,
-      show: hasAccess('STAFF'),
+      show: !isSuperAdminWithoutShop && hasAccess('STAFF'),
     },
   ];
 
@@ -84,12 +88,16 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({
                     flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm transition-colors cursor-pointer select-none
                     ${
                       isActive
-                        ? 'bg-slate-900 text-white'
+                        ? tab.isSpecial
+                          ? 'bg-purple-900 text-white shadow-xs'
+                          : 'bg-slate-900 text-white'
+                        : tab.isSpecial
+                        ? 'bg-purple-50 text-purple-800 hover:bg-purple-100 border border-purple-200'
                         : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
                     }
                   `}
                 >
-                  <Icon className="w-4 h-4" />
+                  <Icon className={`w-4 h-4 ${tab.isSpecial && !isActive ? 'text-purple-700' : ''}`} />
                   <span>{tab.label}</span>
                   {tab.badge && (
                     <span
@@ -106,7 +114,13 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({
           </div>
 
           <div className="text-xs text-slate-500 font-medium">
-            আমার দোকান • সহজ রিটেইল পিওএস
+            {isSuperAdmin() ? (
+              <span className="px-2.5 py-1 rounded-lg bg-purple-50 text-purple-800 font-bold border border-purple-200">
+                সুপার অ্যাডমিন প্ল্যাটফর্ম মোড
+              </span>
+            ) : (
+              'আমার দোকান • সহজ রিটেইল পিওএস'
+            )}
           </div>
         </div>
       </nav>
