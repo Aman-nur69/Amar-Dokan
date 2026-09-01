@@ -5,6 +5,11 @@
 import { Product, Customer, ProductUnit, PaymentMethod, MfsProvider } from './database.types';
 
 export interface CartItem {
+<<<<<<< HEAD
+=======
+  /** Stable per-line id. The same product can sit on two lines in two units. */
+  id: string;
+>>>>>>> c18622f (Bug Fix)
   product: Product;
   quantity: number;
   selectedUnit: ProductUnit;
@@ -32,6 +37,10 @@ export interface ThermalReceiptData {
   storePhone: string;
   storeAddress: string;
   bkashNumber?: string;
+<<<<<<< HEAD
+=======
+  nagadNumber?: string;
+>>>>>>> c18622f (Bug Fix)
   invoiceNo: string;
   date: string;
   customerName?: string;

@@ -3,7 +3,11 @@
 // ==============================================================================
 
 import React from 'react';
+<<<<<<< HEAD
 import { Wifi, WifiOff, RefreshCw } from 'lucide-react';
+=======
+import { Wifi, WifiOff, RefreshCw, AlertTriangle } from 'lucide-react';
+>>>>>>> c18622f (Bug Fix)
 import { toBanglaDigits } from '../../lib/banglaNumberFormatter';
 
 interface SyncStatusIndicatorProps {
@@ -11,8 +15,16 @@ interface SyncStatusIndicatorProps {
   isSimulatedOffline: boolean;
   onToggleSimulatedOffline: () => void;
   pendingCount: number;
+<<<<<<< HEAD
   isSyncing: boolean;
   onTriggerSync: () => void;
+=======
+  failedCount: number;
+  isSyncing: boolean;
+  isStoragePersisted: boolean;
+  onTriggerSync: () => void;
+  onRetryFailed: () => void;
+>>>>>>> c18622f (Bug Fix)
 }
 
 export const SyncStatusIndicator: React.FC<SyncStatusIndicatorProps> = ({
@@ -20,8 +32,16 @@ export const SyncStatusIndicator: React.FC<SyncStatusIndicatorProps> = ({
   isSimulatedOffline,
   onToggleSimulatedOffline,
   pendingCount,
+<<<<<<< HEAD
   isSyncing,
   onTriggerSync,
+=======
+  failedCount,
+  isSyncing,
+  isStoragePersisted,
+  onTriggerSync,
+  onRetryFailed,
+>>>>>>> c18622f (Bug Fix)
 }) => {
   return (
     <div className="flex items-center gap-1.5 sm:gap-2">
@@ -47,6 +67,7 @@ export const SyncStatusIndicator: React.FC<SyncStatusIndicatorProps> = ({
         </div>
       )}
 
+<<<<<<< HEAD
       {/* Storage Persistence Guaranteed Badge (Hidden on very narrow screens) */}
       <div
         title="মেমরি সুরক্ষা সক্রিয়: ব্রাউজার বা মোবাইল এই ডেটা কখনো মুছবে না"
@@ -54,6 +75,34 @@ export const SyncStatusIndicator: React.FC<SyncStatusIndicatorProps> = ({
       >
         <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
         <span>মেমরি সুরক্ষিত</span>
+=======
+      {/* Failed mutations need a human, so they get their own affordance. */}
+      {failedCount > 0 && (
+        <button
+          onClick={onRetryFailed}
+          title="কিছু তথ্য ক্লাউডে পাঠানো যায়নি"
+          className="flex items-center gap-1 px-2 py-1 rounded-xl bg-rose-50 border border-rose-300 text-[11px] font-bold text-rose-700 hover:bg-rose-100 transition-colors cursor-pointer"
+        >
+          <AlertTriangle className="w-3.5 h-3.5" />
+          <span>{toBanglaDigits(failedCount)} টি আটকে আছে</span>
+        </button>
+      )}
+
+      {/* Real storage-persistence state. This badge was hardcoded, so it claimed
+          the data was protected even when the browser had refused. */}
+      <div
+        title={isStoragePersisted ? 'মেমরি সুরক্ষা সক্রিয়' : 'সতর্কতা: ব্রাউজার স্টোরেজ সুরক্ষা দেয়নি। নিয়মিত ব্যাকআপ নিন।'}
+        className={`hidden lg:flex items-center gap-1 px-2 py-1 rounded-xl border text-[11px] font-semibold cursor-help ${
+          isStoragePersisted
+            ? 'bg-slate-100 border-slate-200/80 text-slate-600'
+            : 'bg-amber-50 border-amber-300 text-amber-800'
+        }`}
+      >
+        <span
+          className={`w-1.5 h-1.5 rounded-full ${isStoragePersisted ? 'bg-emerald-500' : 'bg-amber-500'}`}
+        />
+        <span>{isStoragePersisted ? 'মেমরি সুরক্ষিত' : 'মেমরি অরক্ষিত'}</span>
+>>>>>>> c18622f (Bug Fix)
       </div>
 
       {/* Offline Test Simulation Button */}

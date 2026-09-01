@@ -4,7 +4,11 @@
 -- ==============================================================================
 
 -- 1. Create Demo Store
+<<<<<<< HEAD
 INSERT INTO stores (id, name, proprietor, phone, address, bkash_number, nagad_number, currency_symbol)
+=======
+INSERT INTO stores (id, name, proprietor, phone, address, bkash_number, nagad_number, currency_symbol, verification_status, is_active)
+>>>>>>> c18622f (Bug Fix)
 VALUES (
     'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
     'ভাই ভাই স্টোর (Bhai Bhai Store)',
@@ -13,7 +17,13 @@ VALUES (
     'দোকান নং ১২, মীরপুর-১০ গোলচত্বর বাজার, ঢাকা-১২১৬',
     '01711998877',
     '01811998877',
+<<<<<<< HEAD
     '৳'
+=======
+    '৳',
+    'approved',
+    TRUE
+>>>>>>> c18622f (Bug Fix)
 ) ON CONFLICT (id) DO NOTHING;
 
 -- 2. Categories
@@ -46,12 +56,23 @@ INSERT INTO products (id, store_id, category_id, barcode, name_bn, name_en, unit
 ON CONFLICT (id) DO NOTHING;
 
 -- 4. Regular Credit Customers (Bakir Khata)
+<<<<<<< HEAD
 INSERT INTO customers (id, store_id, name, phone, address, current_balance, credit_limit) VALUES
 ('d1111111-1111-1111-1111-111111111111', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'হাজী শামসুল হক (বাড়িয়ালা)', '01819234567', 'বাড়ি নং ৪২, রোড ৭, মীরপুর ১০', 2450.00, 10000.00),
 ('d2222222-2222-2222-2222-222222222222', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'মাওলানা আব্দুর রশিদ', '01712345678', 'বায়তুল আমান মসজিদ গলি', 850.00, 5000.00),
 ('d3333333-3333-3333-3333-333333333333', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'মোঃ কবির হোসেন (রিকশাচালক)', '01918765432', 'পূর্ব বস্তি, মিরপুর ১০', 320.00, 1500.00),
 ('d4444444-4444-4444-4444-444444444444', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'সুমন আহমেদ (চাকরিজীবী)', '01611223344', 'ফ্ল্যাট ৩বি, মীম টাওয়ার', 0.00, 8000.00),
 ('d5555555-5555-5555-5555-555555555555', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'নাসরীন আক্তার (গৃহিণী)', '01511998844', 'হাউজিং স্টাফ কোয়ার্টার', 1420.00, 5000.00)
+=======
+-- current_balance is intentionally 0.00 for every row: fn_rebalance_baki_on_transaction
+-- derives it from the ledger entries seeded in section 5.
+INSERT INTO customers (id, store_id, name, phone, address, current_balance, credit_limit) VALUES
+('d1111111-1111-1111-1111-111111111111', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'হাজী শামসুল হক (বাড়িয়ালা)', '01819234567', 'বাড়ি নং ৪২, রোড ৭, মীরপুর ১০', 0.00, 10000.00),
+('d2222222-2222-2222-2222-222222222222', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'মাওলানা আব্দুর রশিদ', '01712345678', 'বায়তুল আমান মসজিদ গলি', 0.00, 5000.00),
+('d3333333-3333-3333-3333-333333333333', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'মোঃ কবির হোসেন (রিকশাচালক)', '01918765432', 'পূর্ব বস্তি, মিরপুর ১০', 0.00, 1500.00),
+('d4444444-4444-4444-4444-444444444444', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'সুমন আহমেদ (চাকরিজীবী)', '01611223344', 'ফ্ল্যাট ৩বি, মীম টাওয়ার', 0.00, 8000.00),
+('d5555555-5555-5555-5555-555555555555', 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'নাসরীন আক্তার (গৃহিণী)', '01511998844', 'হাউজিং স্টাফ কোয়ার্টার', 0.00, 5000.00)
+>>>>>>> c18622f (Bug Fix)
 ON CONFLICT (id) DO NOTHING;
 
 -- 5. Historical Baki Transactions

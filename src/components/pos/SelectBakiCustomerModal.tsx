@@ -5,6 +5,10 @@
 // ==============================================================================
 
 import React, { useState, useMemo } from 'react';
+<<<<<<< HEAD
+=======
+import { useModalDismiss } from '../../hooks/useModalDismiss';
+>>>>>>> c18622f (Bug Fix)
 import { Customer } from '../../@types/database.types';
 import {
   formatBengaliCurrency,
@@ -63,6 +67,11 @@ export const SelectBakiCustomerModal: React.FC<SelectBakiCustomerModalProps> = (
     });
   }, [customers, search]);
 
+<<<<<<< HEAD
+=======
+  const dialogRef = useModalDismiss<HTMLDivElement>(isOpen, onClose);
+
+>>>>>>> c18622f (Bug Fix)
   if (!isOpen) return null;
 
   const handleSelect = (customer: Customer) => {
@@ -77,7 +86,18 @@ export const SelectBakiCustomerModal: React.FC<SelectBakiCustomerModalProps> = (
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-900/80 backdrop-blur-sm animate-in fade-in overflow-y-auto">
+<<<<<<< HEAD
       <div className="bg-white rounded-3xl w-full max-w-lg shadow-2xl border border-slate-200 my-auto overflow-hidden flex flex-col max-h-[90vh]">
+=======
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label="বাকির খাতা নির্বাচন"
+        tabIndex={-1}
+        className="bg-white rounded-3xl w-full max-w-lg shadow-2xl border border-slate-200 my-auto overflow-hidden flex flex-col max-h-[90vh]"
+      >
+>>>>>>> c18622f (Bug Fix)
         {/* Header */}
         <div className="p-4 sm:p-5 bg-slate-900 text-white flex justify-between items-center flex-shrink-0">
           <div className="flex items-center gap-3">

@@ -5,9 +5,16 @@
 // ==============================================================================
 
 import { useState, useEffect, useCallback } from 'react';
+<<<<<<< HEAD
 import { db } from '../db/offlineDb';
 import { useAuthStore } from './useAuthStore';
 import { Customer, BakiTransaction, SyncQueueItem, MfsProvider } from '../@types/database.types';
+=======
+import { db, buildSyncItem } from '../db/offlineDb';
+import { useAuthStore } from './useAuthStore';
+import { Customer, BakiTransaction, MfsProvider } from '../@types/database.types';
+import { round2 } from '../lib/units';
+>>>>>>> c18622f (Bug Fix)
 
 export function useBakiKhata() {
   const { activeStoreId } = useAuthStore();
@@ -103,6 +110,19 @@ export function useBakiKhata() {
     await db.transaction('rw', [db.customers, db.baki_transactions, db.sync_queue], async () => {
       await db.customers.add(newCustomer);
 
+<<<<<<< HEAD
+=======
+      // The cloud rebalances the khata from the ledger via trigger, so the
+      // customer row must sync with a ZERO balance whenever an opening DEBIT is
+      // queued alongside it - otherwise the opening due is applied twice.
+      await db.sync_queue.add(
+        buildSyncItem('customers', 'INSERT', {
+          ...newCustomer,
+          current_balance: 0,
+        } as unknown as Record<string, unknown>)
+      );
+
+>>>>>>> c18622f (Bug Fix)
       // If opening due is provided, create initial DEBIT transaction in ledger
       if (cleanOpeningDue > 0) {
         const initialTx: BakiTransaction = {
@@ -118,6 +138,7 @@ export function useBakiKhata() {
           created_at: now,
         };
         await db.baki_transactions.add(initialTx);
+<<<<<<< HEAD
 
         await db.sync_queue.add({
           id: crypto.randomUUID(),
@@ -141,6 +162,12 @@ export function useBakiKhata() {
         status: 'PENDING',
       };
       await db.sync_queue.add(syncItem);
+=======
+        await db.sync_queue.add(
+          buildSyncItem('baki_transactions', 'INSERT', initialTx as unknown as Record<string, unknown>)
+        );
+      }
+>>>>>>> c18622f (Bug Fix)
     });
 
     await refreshData();
@@ -164,7 +191,11 @@ export function useBakiKhata() {
       const customer = await db.customers.get(customerId);
       if (!customer) return false;
 
+<<<<<<< HEAD
       const newBalance = customer.current_balance - amount;
+=======
+      const newBalance = round2(customer.current_balance - amount);
+>>>>>>> c18622f (Bug Fix)
 
       const txRecord: BakiTransaction = {
         id: crypto.randomUUID(),
@@ -186,6 +217,7 @@ export function useBakiKhata() {
           updated_at: now,
         });
 
+<<<<<<< HEAD
         // Sync queue
         await db.sync_queue.add({
           id: crypto.randomUUID(),
@@ -196,6 +228,12 @@ export function useBakiKhata() {
           retry_count: 0,
           status: 'PENDING',
         });
+=======
+        // Only the ledger row syncs; the server trigger rebalances the khata.
+        await db.sync_queue.add(
+          buildSyncItem('baki_transactions', 'INSERT', txRecord as unknown as Record<string, unknown>)
+        );
+>>>>>>> c18622f (Bug Fix)
       });
 
       await refreshData();
@@ -221,7 +259,11 @@ export function useBakiKhata() {
       const customer = await db.customers.get(customerId);
       if (!customer) return { success: false, error: 'গ্রাহক খুঁজে পাওয়া যায়নি।' };
 
+<<<<<<< HEAD
       const newBalance = customer.current_balance + amount;
+=======
+      const newBalance = round2(customer.current_balance + amount);
+>>>>>>> c18622f (Bug Fix)
 
       const targetStoreId = activeStoreId || 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11';
       const txRecord: BakiTransaction = {
@@ -244,6 +286,7 @@ export function useBakiKhata() {
           updated_at: now,
         });
 
+<<<<<<< HEAD
         await db.sync_queue.add({
           id: crypto.randomUUID(),
           table_name: 'baki_transactions',
@@ -253,6 +296,11 @@ export function useBakiKhata() {
           retry_count: 0,
           status: 'PENDING',
         });
+=======
+        await db.sync_queue.add(
+          buildSyncItem('baki_transactions', 'INSERT', txRecord as unknown as Record<string, unknown>)
+        );
+>>>>>>> c18622f (Bug Fix)
       });
 
       await refreshData();

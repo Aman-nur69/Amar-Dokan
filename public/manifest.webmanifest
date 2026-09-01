@@ -1,0 +1,22 @@
+{
+  "name": "আমার দোকান — Amar Dokan POS ও বাকির খাতা",
+  "short_name": "আমার দোকান",
+  "description": "মুদিদোকান ও সুপার শপের জন্য অফলাইন-ফার্স্ট বিক্রি, বাকি ও ইনভেন্টরি সফটওয়্যার।",
+  "lang": "bn",
+  "dir": "ltr",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0F172A",
+  "theme_color": "#059669",
+  "categories": ["business", "finance", "productivity"],
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

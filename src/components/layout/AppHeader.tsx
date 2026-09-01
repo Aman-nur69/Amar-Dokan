@@ -4,18 +4,33 @@
 // ==============================================================================
 
 import React, { useState, useEffect } from 'react';
+<<<<<<< HEAD
 import { DEFAULT_STORE, db } from '../../db/offlineDb';
 import { SyncStatusIndicator } from './SyncStatusIndicator';
 import { useAuthStore, getRoleInfo } from '../../hooks/useAuthStore';
 import { Store, LogOut, ChevronDown, User, ShieldCheck } from 'lucide-react';
+=======
+import { SyncStatusIndicator } from './SyncStatusIndicator';
+import { useAuthStore, getRoleInfo } from '../../hooks/useAuthStore';
+import { useActiveStore } from '../../hooks/useActiveStore';
+import { Store, LogOut, ChevronDown, User, Lock } from 'lucide-react';
+>>>>>>> c18622f (Bug Fix)
 
 interface AppHeaderProps {
   isOnline: boolean;
   isSimulatedOffline: boolean;
   onToggleSimulatedOffline: () => void;
   pendingCount: number;
+<<<<<<< HEAD
   isSyncing: boolean;
   onTriggerSync: () => void;
+=======
+  failedCount: number;
+  isSyncing: boolean;
+  isStoragePersisted: boolean;
+  onTriggerSync: () => void;
+  onRetryFailed: () => void;
+>>>>>>> c18622f (Bug Fix)
 }
 
 export const AppHeader: React.FC<AppHeaderProps> = ({
@@ -23,12 +38,21 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
   isSimulatedOffline,
   onToggleSimulatedOffline,
   pendingCount,
+<<<<<<< HEAD
   isSyncing,
   onTriggerSync,
+=======
+  failedCount,
+  isSyncing,
+  isStoragePersisted,
+  onTriggerSync,
+  onRetryFailed,
+>>>>>>> c18622f (Bug Fix)
 }) => {
   const {
     currentUser,
     logout,
+<<<<<<< HEAD
     activeStoreId,
     isSuperAdmin,
     inspectingStore,
@@ -48,6 +72,17 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
     loadCurrentStore();
   }, [activeStoreId]);
 
+=======
+    isSuperAdmin,
+    inspectingStore,
+    exitStoreInspection,
+    lockRegister,
+  } = useAuthStore();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const currentStore = useActiveStore();
+  const roleInfo = getRoleInfo(currentUser?.role);
+
+>>>>>>> c18622f (Bug Fix)
   // Close menu on click outside
   useEffect(() => {
     const closeMenu = () => setIsMenuOpen(false);
@@ -122,10 +157,32 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
             isSimulatedOffline={isSimulatedOffline}
             onToggleSimulatedOffline={onToggleSimulatedOffline}
             pendingCount={pendingCount}
+<<<<<<< HEAD
             isSyncing={isSyncing}
             onTriggerSync={onTriggerSync}
           />
 
+=======
+            failedCount={failedCount}
+            isSyncing={isSyncing}
+            isStoragePersisted={isStoragePersisted}
+            onTriggerSync={onTriggerSync}
+            onRetryFailed={onRetryFailed}
+          />
+
+          {/* Register lock - documented in the README but never implemented. */}
+          {!isSuperAdmin() && (
+            <button
+              onClick={lockRegister}
+              title="ক্যাশ রেজিস্টার লক করুন"
+              aria-label="ক্যাশ রেজিস্টার লক করুন"
+              className="p-2 rounded-xl border border-slate-200 text-slate-500 hover:text-slate-900 hover:bg-slate-50 active:bg-slate-100 transition-colors cursor-pointer flex-shrink-0"
+            >
+              <Lock className="w-4 h-4" />
+            </button>
+          )}
+
+>>>>>>> c18622f (Bug Fix)
           {/* User Account / Role Badge & Menu */}
           <div className="relative flex-shrink-0">
             <button

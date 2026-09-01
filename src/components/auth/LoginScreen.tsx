@@ -4,7 +4,12 @@
 // ==============================================================================
 
 import React, { useState } from 'react';
+<<<<<<< HEAD
 import { useAuthStore } from '../../hooks/useAuthStore';
+=======
+import { useAuthStore, DEMO_LOGINS_ENABLED } from '../../hooks/useAuthStore';
+import { toast } from '../../hooks/useToastStore';
+>>>>>>> c18622f (Bug Fix)
 import { UserRole } from '../../@types/database.types';
 import {
   Store,
@@ -28,8 +33,13 @@ export const LoginScreen: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'LOGIN' | 'REGISTER'>('LOGIN');
 
   // Login Form states
+<<<<<<< HEAD
   const [phone, setPhone] = useState('01711998877');
   const [password, setPassword] = useState('dokan123');
+=======
+  const [phone, setPhone] = useState(DEMO_LOGINS_ENABLED ? '01711998877' : '');
+  const [password, setPassword] = useState('');
+>>>>>>> c18622f (Bug Fix)
   const [showPassword, setShowPassword] = useState(false);
 
   // Register Form states
@@ -63,7 +73,11 @@ export const LoginScreen: React.FC = () => {
     if (!regShopName || !regProprietor || !regPhone || !regPassword || !regTradeLicence) return;
 
     if (regPassword.length < 6) {
+<<<<<<< HEAD
       alert('পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে।');
+=======
+      toast.error('পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে।');
+>>>>>>> c18622f (Bug Fix)
       return;
     }
 
@@ -235,7 +249,12 @@ export const LoginScreen: React.FC = () => {
                 </button>
               </form>
 
+<<<<<<< HEAD
               {/* Quick Demo Role Picker Section */}
+=======
+              {/* Quick Demo Role Picker - development builds only. */}
+              {DEMO_LOGINS_ENABLED && (
+>>>>>>> c18622f (Bug Fix)
               <div className="mt-8 pt-6 border-t border-slate-100">
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
@@ -306,6 +325,10 @@ export const LoginScreen: React.FC = () => {
                   </button>
                 </div>
               </div>
+<<<<<<< HEAD
+=======
+              )}
+>>>>>>> c18622f (Bug Fix)
             </div>
           ) : (
             /* TAB 2: SHOP REGISTRATION */

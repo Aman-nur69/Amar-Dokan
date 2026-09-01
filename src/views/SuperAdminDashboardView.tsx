@@ -1,9 +1,17 @@
 import React, { useState, useEffect } from 'react';
+<<<<<<< HEAD
 import { db } from '../db/offlineDb';
+=======
+import { db, buildSyncItem } from '../db/offlineDb';
+>>>>>>> c18622f (Bug Fix)
 import { Store, ShopVerificationStatus, Sale } from '../@types/database.types';
 import { useAuthStore } from '../hooks/useAuthStore';
 import { useSuperAdminNavStore } from '../hooks/useSuperAdminNavStore';
 import { formatBengaliCurrency, toBanglaDigits } from '../lib/banglaNumberFormatter';
+<<<<<<< HEAD
+=======
+import { hashSecret } from '../lib/secureHash';
+>>>>>>> c18622f (Bug Fix)
 import {
   ShieldCheck,
   Store as StoreIcon,
@@ -83,11 +91,26 @@ export const SuperAdminDashboardView: React.FC<SuperAdminDashboardViewProps> = (
   ) => {
     try {
       const isApproved = newStatus === 'approved';
+<<<<<<< HEAD
       await db.stores.update(storeId, {
         verification_status: newStatus,
         is_active: isApproved,
         verification_notes: notes || (isApproved ? 'যাচাই শেষে অনুমোদিত ও সক্রিয়' : 'স্থগিত'),
         updated_at: new Date().toISOString(),
+=======
+      const changedAt = new Date().toISOString();
+      const statusPatch = {
+        verification_status: newStatus,
+        is_active: isApproved,
+        verification_notes: notes || (isApproved ? 'যাচাই শেষে অনুমোদিত ও সক্রিয়' : 'স্থগিত'),
+        updated_at: changedAt,
+      };
+
+      await db.transaction('rw', [db.stores, db.sync_queue], async () => {
+        await db.stores.update(storeId, statusPatch);
+        // Approvals used to live only in this admin's browser.
+        await db.sync_queue.add(buildSyncItem('stores', 'UPDATE', { id: storeId, ...statusPatch }));
+>>>>>>> c18622f (Bug Fix)
       });
 
       // If approved, make sure owner profiles for this store are active
@@ -161,7 +184,11 @@ export const SuperAdminDashboardView: React.FC<SuperAdminDashboardViewProps> = (
 
     setIsSubmittingShop(true);
     try {
+<<<<<<< HEAD
       const storeId = `store-${Date.now()}`;
+=======
+      const storeId = crypto.randomUUID();
+>>>>>>> c18622f (Bug Fix)
       const status: ShopVerificationStatus = autoApprove ? 'approved' : 'pending';
       const newStore: Store = {
         id: storeId,
@@ -181,20 +208,49 @@ export const SuperAdminDashboardView: React.FC<SuperAdminDashboardViewProps> = (
       };
 
       const newProfile = {
+<<<<<<< HEAD
         id: `p-${Date.now()}`,
+=======
+        id: crypto.randomUUID(),
+>>>>>>> c18622f (Bug Fix)
         store_id: storeId,
         full_name: proprietor.trim(),
         phone: shopPhone.trim(),
         role: 'owner' as const,
+<<<<<<< HEAD
         password: shopPassword.trim(),
         pin_code: shopPassword.trim().slice(0, 4),
+=======
+        password_hash: await hashSecret(shopPhone.trim(), shopPassword.trim()),
+        pin_hash: await hashSecret(shopPhone.trim(), shopPassword.trim().slice(0, 4)),
+>>>>>>> c18622f (Bug Fix)
         is_active: true,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       };
 
+<<<<<<< HEAD
       await db.stores.put(newStore);
       await db.profiles.put(newProfile);
+=======
+      await db.transaction('rw', [db.stores, db.profiles, db.sync_queue], async () => {
+        await db.stores.put(newStore);
+        await db.profiles.put(newProfile);
+        await db.sync_queue.bulkAdd([
+          buildSyncItem('stores', 'INSERT', newStore as unknown as Record<string, unknown>),
+          buildSyncItem('profiles', 'INSERT', {
+            id: newProfile.id,
+            store_id: newProfile.store_id,
+            full_name: newProfile.full_name,
+            phone: newProfile.phone,
+            role: newProfile.role,
+            is_active: newProfile.is_active,
+            created_at: newProfile.created_at,
+            updated_at: newProfile.updated_at,
+          }),
+        ]);
+      });
+>>>>>>> c18622f (Bug Fix)
 
       await loadPlatformData();
 
@@ -211,7 +267,11 @@ export const SuperAdminDashboardView: React.FC<SuperAdminDashboardViewProps> = (
       setTinNumber('');
       setTradeLicenceUrl('');
       closeAddShopModal();
+<<<<<<< HEAD
     } catch (err: any) {
+=======
+    } catch (err) {
+>>>>>>> c18622f (Bug Fix)
       console.error('Error creating shop:', err);
       setShopError('দোকান তৈরি করতে সমস্যা হয়েছে। দয়া করে আবার চেষ্টা করুন।');
     } finally {

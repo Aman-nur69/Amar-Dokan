@@ -3,9 +3,21 @@
 // High-fidelity thermal receipt closing summary and 1-tap WhatsApp export
 // ==============================================================================
 
+<<<<<<< HEAD
 import React from 'react';
 import { DailyMetrics } from './DailyProfitWidget';
 import { DEFAULT_STORE } from '../../db/offlineDb';
+=======
+import React, { useState } from 'react';
+import { DailyMetrics } from './DailyProfitWidget';
+import { db, buildSyncItem } from '../../db/offlineDb';
+import { useActiveStore } from '../../hooks/useActiveStore';
+import { useAuthStore } from '../../hooks/useAuthStore';
+import { toast } from '../../hooks/useToastStore';
+import { useModalDismiss } from '../../hooks/useModalDismiss';
+import { DayClosing } from '../../@types/database.types';
+import { round2 } from '../../lib/units';
+>>>>>>> c18622f (Bug Fix)
 import {
   formatBengaliCurrency,
   toBanglaDigits,
@@ -19,6 +31,14 @@ interface DayClosingModalProps {
   onClose: () => void;
   metrics: DailyMetrics;
   selectedDate: string;
+<<<<<<< HEAD
+=======
+  /** Cash carried in from the previous closing. */
+  openingFloat?: number;
+  /** Most recent physical count for this date, if the drawer was counted. */
+  countedCash?: number;
+  onClosed?: () => void;
+>>>>>>> c18622f (Bug Fix)
 }
 
 export const DayClosingModal: React.FC<DayClosingModalProps> = ({
@@ -26,15 +46,86 @@ export const DayClosingModal: React.FC<DayClosingModalProps> = ({
   onClose,
   metrics,
   selectedDate,
+<<<<<<< HEAD
 }) => {
+=======
+  openingFloat = 0,
+  countedCash,
+  onClosed,
+}) => {
+  const store = useActiveStore();
+  const { currentUser, activeStoreId } = useAuthStore();
+  const [isSaving, setIsSaving] = useState(false);
+  const dialogRef = useModalDismiss<HTMLDivElement>(isOpen, onClose);
+
+>>>>>>> c18622f (Bug Fix)
   if (!isOpen) return null;
 
   const handlePrint = () => {
     window.print();
   };
 
+<<<<<<< HEAD
   const handleShareWhatsApp = () => {
     const text = `📊 *${DEFAULT_STORE.name} — দৈনিক হিসাব ক্লোজিং রিপোর্ট*
+=======
+  /**
+   * Persists the closing. Without this the whole reconciliation vanished when
+   * the dialog closed, and tomorrow had no opening float to start from.
+   */
+  const handleSaveClosing = async () => {
+    if (!activeStoreId) return;
+    setIsSaving(true);
+    try {
+      const now = new Date().toISOString();
+      const existing = await db.day_closings
+        .where('store_id')
+        .equals(activeStoreId)
+        .and((c) => c.business_date === selectedDate)
+        .first();
+
+      const record: DayClosing = {
+        id: existing?.id || crypto.randomUUID(),
+        store_id: activeStoreId,
+        business_date: selectedDate,
+        opening_float: round2(openingFloat),
+        total_sales: round2(metrics.totalSales),
+        cash_collected: round2(metrics.totalCashCollected),
+        due_collected: round2(metrics.totalDueCollected),
+        new_due: round2(metrics.totalNewDue),
+        total_expenses: round2(metrics.totalExpenses),
+        supplier_paid: round2(metrics.totalChalanCashPaid + (metrics.totalSupplierDuePaid || 0)),
+        net_profit: round2(metrics.netProfit),
+        counted_cash: countedCash !== undefined ? round2(countedCash) : undefined,
+        variance:
+          countedCash !== undefined
+            ? round2(countedCash - (openingFloat + metrics.totalCashCollected))
+            : undefined,
+        closed_by: currentUser?.id,
+        created_at: now,
+      };
+
+      await db.transaction('rw', [db.day_closings, db.sync_queue], async () => {
+        await db.day_closings.put(record);
+        await db.sync_queue.add(
+          buildSyncItem('day_closings', 'INSERT', record as unknown as Record<string, unknown>)
+        );
+      });
+
+      toast.success('দিনের ক্লোজিং সংরক্ষিত হয়েছে');
+      onClosed?.();
+      onClose();
+    } catch (err) {
+      console.error('[DayClosing] Save error:', err);
+      toast.error('ক্লোজিং সংরক্ষণ করা যায়নি।');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleShareWhatsApp = () => {
+    const text = `📊 *${store.name} — দৈনিক হিসাব ক্লোজিং রিপোর্ট*
+>>>>>>> c18622f (Bug Fix)
 📅 তারিখ: ${toBanglaDigits(new Date(selectedDate).toLocaleDateString('bn-BD'))}
 
 🔹 *আজকের মোট বিক্রি:* ${formatBengaliCurrency(metrics.totalSales)} (মোট ${toBanglaDigits(metrics.saleCount)} টি ইনভয়েস)
@@ -59,7 +150,17 @@ export const DayClosingModal: React.FC<DayClosingModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-900/80 backdrop-blur-sm animate-in fade-in overflow-y-auto">
+<<<<<<< HEAD
       <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl border border-slate-200 my-auto overflow-hidden flex flex-col max-h-[92vh]">
+=======
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        tabIndex={-1}
+        className="bg-white rounded-3xl w-full max-w-md shadow-2xl border border-slate-200 my-auto overflow-hidden flex flex-col max-h-[92vh]"
+      >
+>>>>>>> c18622f (Bug Fix)
         {/* Modal Header */}
         <div className="p-4 bg-slate-900 text-white flex justify-between items-center flex-shrink-0">
           <div className="flex items-center gap-2.5">
@@ -83,12 +184,21 @@ export const DayClosingModal: React.FC<DayClosingModalProps> = ({
 
         {/* Printable Slip Container */}
         <div className="flex-1 overflow-y-auto p-5 bg-slate-100 flex justify-center">
+<<<<<<< HEAD
           <div className="bg-white w-full max-w-[340px] p-5 rounded-2xl shadow-md border border-slate-200 font-mono text-xs text-slate-800 space-y-3">
             {/* Store Header */}
             <div className="text-center border-b border-dashed border-slate-300 pb-3">
               <h4 className="font-black text-base tracking-wide font-sans">{DEFAULT_STORE.name}</h4>
               <p className="text-[11px] text-slate-500 font-sans mt-0.5">{DEFAULT_STORE.address}</p>
               <p className="text-[11px] text-slate-500 font-sans">প্রোপাইটর: {DEFAULT_STORE.proprietor}</p>
+=======
+          <div className="printable-sheet bg-white w-full max-w-[340px] p-5 rounded-2xl shadow-md border border-slate-200 font-mono text-xs text-slate-800 space-y-3">
+            {/* Store Header */}
+            <div className="text-center border-b border-dashed border-slate-300 pb-3">
+              <h4 className="font-black text-base tracking-wide font-sans">{store.name}</h4>
+              <p className="text-[11px] text-slate-500 font-sans mt-0.5">{store.address}</p>
+              <p className="text-[11px] text-slate-500 font-sans">প্রোপাইটর: {store.proprietor}</p>
+>>>>>>> c18622f (Bug Fix)
               <div className="mt-2 inline-block px-2.5 py-0.5 rounded-full bg-slate-100 text-[10px] font-bold uppercase tracking-wider text-slate-700">
                 ★ দৈনিক ক্লোজিং স্টেটমেন্ট ★
               </div>
@@ -148,12 +258,31 @@ export const DayClosingModal: React.FC<DayClosingModalProps> = ({
 
             {/* Bottom Net Totals */}
             <div className="border-t-2 border-slate-900 pt-3 space-y-2 font-sans">
+<<<<<<< HEAD
+=======
+              <div className="flex justify-between text-xs text-slate-600">
+                <span>দিন শুরুর জের (ওপেনিং):</span>
+                <span>{formatBengaliCurrency(openingFloat)}</span>
+              </div>
+>>>>>>> c18622f (Bug Fix)
               <div className="flex justify-between text-base font-black text-slate-900">
                 <span>ড্রয়ারে ক্যাশ জমা:</span>
                 <span className="text-emerald-700">
                   {formatBengaliCurrency(metrics.totalCashCollected)}
                 </span>
               </div>
+<<<<<<< HEAD
+=======
+              {countedCash !== undefined && (
+                <div className="flex justify-between text-xs font-bold text-slate-700">
+                  <span>গোনা নগদ / পার্থক্য:</span>
+                  <span>
+                    {formatBengaliCurrency(countedCash)} (
+                    {formatBengaliCurrency(countedCash - (openingFloat + metrics.totalCashCollected))})
+                  </span>
+                </div>
+              )}
+>>>>>>> c18622f (Bug Fix)
               <div className="flex justify-between text-sm font-bold text-slate-800">
                 <span>আনুমানিক নিট লাভ:</span>
                 <span className="text-emerald-600">
@@ -187,6 +316,18 @@ export const DayClosingModal: React.FC<DayClosingModalProps> = ({
           >
             স্লিপ প্রিন্ট করুন
           </BigButton>
+<<<<<<< HEAD
+=======
+          <BigButton
+            variant="primary"
+            onClick={handleSaveClosing}
+            icon={CheckCircle2}
+            disabled={isSaving}
+            className="flex-1"
+          >
+            {isSaving ? 'সংরক্ষণ হচ্ছে...' : 'দিন ক্লোজ করুন'}
+          </BigButton>
+>>>>>>> c18622f (Bug Fix)
         </div>
       </div>
     </div>

@@ -12,7 +12,11 @@ import {
 } from '../../lib/banglaNumberFormatter';
 import { Search, UserPlus, HandCoins, Eye, MessageCircle, Phone } from 'lucide-react';
 import { generateWhatsAppReminderUrl } from '../../lib/printService';
+<<<<<<< HEAD
 import { DEFAULT_STORE } from '../../db/offlineDb';
+=======
+import { useActiveStore } from '../../hooks/useActiveStore';
+>>>>>>> c18622f (Bug Fix)
 
 interface CustomerLedgerTableProps {
   customers: Customer[];
@@ -35,16 +39,31 @@ export const CustomerLedgerTable: React.FC<CustomerLedgerTableProps> = ({
   onViewStatement,
   onAddNewCustomer,
 }) => {
+<<<<<<< HEAD
+=======
+  // Reminders must go out under THIS shop's name and mobile-money numbers.
+  // They previously always used the bundled demo shop.
+  const store = useActiveStore();
+
+>>>>>>> c18622f (Bug Fix)
   const handleQuickWhatsApp = (customer: Customer, e: React.MouseEvent) => {
     e.stopPropagation();
     const url = generateWhatsAppReminderUrl({
       customerName: customer.name,
       customerPhone: customer.phone,
+<<<<<<< HEAD
       storeName: DEFAULT_STORE.name,
       storePhone: DEFAULT_STORE.phone,
       dueAmount: customer.current_balance,
       bkashNumber: DEFAULT_STORE.bkash_number,
       nagadNumber: DEFAULT_STORE.nagad_number,
+=======
+      storeName: store.name,
+      storePhone: store.phone,
+      dueAmount: customer.current_balance,
+      bkashNumber: store.bkash_number,
+      nagadNumber: store.nagad_number,
+>>>>>>> c18622f (Bug Fix)
     });
     window.open(url, '_blank');
   };

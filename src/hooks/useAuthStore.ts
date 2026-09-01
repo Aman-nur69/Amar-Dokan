@@ -1,13 +1,30 @@
 // ==============================================================================
 // Amar Dokan (আমার দোকান) Authentication & Role-Based Access Control Store
 // Zustand-powered persistent state with offline profile authentication
+<<<<<<< HEAD
+=======
+//
+// Secrets are never kept in the clear: a salted SHA-256 digest is stored and
+// legacy plaintext records are upgraded the first time they are used.
+>>>>>>> c18622f (Bug Fix)
 // ==============================================================================
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { UserRole, UserSession, Profile, Store } from '../@types/database.types';
+<<<<<<< HEAD
 import { db, INITIAL_PROFILES } from '../db/offlineDb';
 import { isSupabaseConfigured, supabase } from '../lib/supabaseClient';
+=======
+import { db, INITIAL_PROFILES, buildSyncItem } from '../db/offlineDb';
+import { isSupabaseConfigured, supabase } from '../lib/supabaseClient';
+import { hashSecret, verifySecret } from '../lib/secureHash';
+
+export const DEMO_STORE_ID = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11';
+
+/** Demo shortcuts must never reach a real till. */
+export const DEMO_LOGINS_ENABLED = import.meta.env.DEV;
+>>>>>>> c18622f (Bug Fix)
 
 interface AuthState {
   currentUser: UserSession | null;
@@ -16,6 +33,12 @@ interface AuthState {
   isLoading: boolean;
   activeStoreId: string;
   inspectingStore: Store | null;
+<<<<<<< HEAD
+=======
+  /** Register lock — the till is on screen but requires a PIN to use. */
+  isLocked: boolean;
+  lockError: string | null;
+>>>>>>> c18622f (Bug Fix)
 
   // Authentication actions
   loginWithPhoneAndPassword: (phone: string, password: string) => Promise<boolean>;
@@ -38,6 +61,14 @@ interface AuthState {
   logout: () => void;
   clearError: () => void;
 
+<<<<<<< HEAD
+=======
+  // Register lock
+  lockRegister: () => void;
+  unlockRegister: (pin: string) => Promise<boolean>;
+  clearLockError: () => void;
+
+>>>>>>> c18622f (Bug Fix)
   // Permissions helpers
   hasAccess: (feature: 'POS' | 'BAKI' | 'INVENTORY_VIEW' | 'INVENTORY_MANAGE' | 'CHALAN' | 'REPORTS' | 'NET_PROFIT' | 'STAFF' | 'SUPER_ADMIN') => boolean;
   isSuperAdmin: () => boolean;
@@ -52,10 +83,20 @@ export const useAuthStore = create<AuthState>()(
       isAuthenticated: false,
       loginError: null,
       isLoading: false,
+<<<<<<< HEAD
       activeStoreId: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
       inspectingStore: null,
 
       clearError: () => set({ loginError: null }),
+=======
+      activeStoreId: DEMO_STORE_ID,
+      inspectingStore: null,
+      isLocked: false,
+      lockError: null,
+
+      clearError: () => set({ loginError: null }),
+      clearLockError: () => set({ lockError: null }),
+>>>>>>> c18622f (Bug Fix)
 
       switchActiveStore: (storeId: string) => {
         set((state) => ({
@@ -75,8 +116,13 @@ export const useAuthStore = create<AuthState>()(
       exitStoreInspection: () => {
         set((state) => ({
           inspectingStore: null,
+<<<<<<< HEAD
           activeStoreId: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
           currentUser: state.currentUser ? { ...state.currentUser, store_id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11' } : null,
+=======
+          activeStoreId: DEMO_STORE_ID,
+          currentUser: state.currentUser ? { ...state.currentUser, store_id: DEMO_STORE_ID } : null,
+>>>>>>> c18622f (Bug Fix)
         }));
       },
 
@@ -89,7 +135,10 @@ export const useAuthStore = create<AuthState>()(
           // 1. If Supabase is configured, attempt cloud authentication to establish RLS token session
           if (isSupabaseConfigured()) {
             try {
+<<<<<<< HEAD
               // Convert phone to compliant format or email pseudo-identity for Supabase auth
+=======
+>>>>>>> c18622f (Bug Fix)
               const authEmail = `${cleanPhone}@mudidokan.internal`;
               const { error: sbAuthError } = await supabase.auth.signInWithPassword({
                 email: authEmail,
@@ -113,13 +162,25 @@ export const useAuthStore = create<AuthState>()(
           }
 
           if (!profile) {
+<<<<<<< HEAD
             set({
               isLoading: false,
               loginError: 'এই ফোন নম্বরে কোনো অ্যাকাউন্ট পাওয়া যায়নি।',
+=======
+            set({ isLoading: false, loginError: 'এই ফোন নম্বরে কোনো অ্যাকাউন্ট পাওয়া যায়নি।' });
+            return false;
+          }
+
+          if (profile.is_active === false) {
+            set({
+              isLoading: false,
+              loginError: 'এই অ্যাকাউন্টটি নিষ্ক্রিয় করা হয়েছে। দোকান মালিকের সাথে যোগাযোগ করুন।',
+>>>>>>> c18622f (Bug Fix)
             });
             return false;
           }
 
+<<<<<<< HEAD
           // Verify either password or pin_code
           const isValidSecret =
             (profile.password && profile.password === cleanSecret) ||
@@ -133,20 +194,63 @@ export const useAuthStore = create<AuthState>()(
             return false;
           }
 
+=======
+          // Verify against the digest, falling back to a legacy plaintext record.
+          const stored = profile.password_hash || profile.password || profile.pin_hash || profile.pin_code;
+          const { valid, needsUpgrade } = await verifySecret(cleanPhone, cleanSecret, stored);
+
+          if (!valid) {
+            set({ isLoading: false, loginError: 'ভুল পাসওয়ার্ড! দয়া করে সঠিক পাসওয়ার্ড দিন।' });
+            return false;
+          }
+
+          // Migrate the record off plaintext now that we know the secret.
+          // Written with put() and the legacy keys destructured away: relying on
+          // update({ password: undefined }) to delete a key is not a guarantee
+          // worth making for a credential.
+          if (needsUpgrade) {
+            try {
+              const stored2 = await db.profiles.get(profile.id);
+              if (stored2) {
+                const { password: _legacyPassword, pin_code: _legacyPin, ...rest } = stored2;
+                await db.profiles.put({
+                  ...rest,
+                  password_hash: await hashSecret(cleanPhone, cleanSecret),
+                  pin_hash: _legacyPin
+                    ? await hashSecret(cleanPhone, _legacyPin)
+                    : rest.pin_hash,
+                  updated_at: new Date().toISOString(),
+                });
+              }
+            } catch (upgradeErr) {
+              console.warn('[AmarDokan Auth] Could not upgrade stored secret:', upgradeErr);
+            }
+          }
+
+>>>>>>> c18622f (Bug Fix)
           // Check if store is approved (non-super_admin roles)
           if (profile.role !== 'super_admin') {
             const store = await db.stores.get(profile.store_id);
             if (store && store.verification_status === 'pending') {
               set({
                 isLoading: false,
+<<<<<<< HEAD
                 loginError: 'আপনার দোকানটি এখনও সুপার অ্যাডমিন দ্বারা যাচাইাধীন। অনুগ্রহ করে অনুমোদন পর্যন্ত অপেক্ষা করুন।',
+=======
+                loginError:
+                  'আপনার দোকানটি এখনও সুপার অ্যাডমিন দ্বারা যাচাইাধীন। অনুগ্রহ করে অনুমোদন পর্যন্ত অপেক্ষা করুন।',
+>>>>>>> c18622f (Bug Fix)
               });
               return false;
             }
             if (store && store.verification_status === 'rejected') {
               set({
                 isLoading: false,
+<<<<<<< HEAD
                 loginError: `আবেদন প্রত্যাখ্যাত: ${store.verification_notes || 'কাগজপত্রে অসামঞ্জস্য রয়েছে।'}`,
+=======
+                loginError: `আবেদন প্রত্যাখ্যাত: ${store.verification_notes || 'কাগজপত্রে অসামঞ্জস্য রয়েছে।'}`,
+>>>>>>> c18622f (Bug Fix)
               });
               return false;
             }
@@ -165,16 +269,24 @@ export const useAuthStore = create<AuthState>()(
             currentUser: session,
             activeStoreId: profile.store_id,
             isAuthenticated: true,
+<<<<<<< HEAD
+=======
+            isLocked: false,
+>>>>>>> c18622f (Bug Fix)
             loginError: null,
             isLoading: false,
           });
           return true;
         } catch (error) {
           console.error('[AmarDokan Auth] Login error:', error);
+<<<<<<< HEAD
           set({
             isLoading: false,
             loginError: 'লগইন করতে সমস্যা হয়েছে। দয়া করে আবার চেষ্টা করুন।',
           });
+=======
+          set({ isLoading: false, loginError: 'লগইন করতে সমস্যা হয়েছে। দয়া করে আবার চেষ্টা করুন।' });
+>>>>>>> c18622f (Bug Fix)
           return false;
         }
       },
@@ -187,6 +299,7 @@ export const useAuthStore = create<AuthState>()(
       registerNewShop: async (shopData) => {
         set({ isLoading: true, loginError: null });
         try {
+<<<<<<< HEAD
           const storeId = `store-${Date.now()}`;
           const newStore = {
             id: storeId,
@@ -213,18 +326,72 @@ export const useAuthStore = create<AuthState>()(
             try {
               const { data: authData } = await supabase.auth.signUp({
                 email: `${shopData.phone.trim()}@mudidokan.internal`,
+=======
+          // Client-minted ids must be real UUIDs — `store-<timestamp>` is
+          // rejected by every uuid column in the cloud schema.
+          const storeId = crypto.randomUUID();
+          const cleanPhone = shopData.phone.trim();
+          const now = new Date().toISOString();
+
+          const existingProfile = await db.profiles.where('phone').equals(cleanPhone).first();
+          if (existingProfile) {
+            set({ isLoading: false });
+            return {
+              success: false,
+              message: 'এই মোবাইল নম্বরে ইতিমধ্যে একটি অ্যাকাউন্ট রয়েছে। সরাসরি লগইন করুন।',
+            };
+          }
+
+          const newStore: Store = {
+            id: storeId,
+            name: shopData.shopName.trim(),
+            proprietor: shopData.proprietor.trim(),
+            phone: cleanPhone,
+            address: shopData.address.trim(),
+            trade_licence_no: shopData.tradeLicenceNo.trim(),
+            trade_licence_doc_url: shopData.tradeLicenceDocUrl,
+            tin_number: shopData.tinNumber.trim(),
+            verification_status: 'pending',
+            verification_notes: 'ট্রেড লাইসেন্স ও টিআইএন যাচাই প্রক্রিয়াধীন',
+            currency_symbol: '৳',
+            is_active: false,
+            created_at: now,
+            updated_at: now,
+          };
+
+          const passwordVal = (shopData.password || shopData.pin || '').trim();
+          if (passwordVal.length < 6) {
+            set({ isLoading: false });
+            return { success: false, message: 'পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে।' };
+          }
+
+          // If Supabase is configured, create the Auth user so auth.uid() exists
+          let authUid: string = crypto.randomUUID();
+          if (isSupabaseConfigured()) {
+            try {
+              const { data: authData } = await supabase.auth.signUp({
+                email: `${cleanPhone}@mudidokan.internal`,
+>>>>>>> c18622f (Bug Fix)
                 password: passwordVal,
                 options: {
                   data: {
                     full_name: shopData.proprietor.trim(),
+<<<<<<< HEAD
                     phone: shopData.phone.trim(),
+=======
+                    phone: cleanPhone,
+>>>>>>> c18622f (Bug Fix)
                     role: 'owner',
                   },
                 },
               });
+<<<<<<< HEAD
               if (authData?.user?.id) {
                 authUid = authData.user.id;
               }
+=======
+              if (authData?.user?.id) authUid = authData.user.id;
+>>>>>>> c18622f (Bug Fix)
             } catch (sbErr) {
               console.warn('[AmarDokan Auth] Supabase cloud registration skipped/failed:', sbErr);
             }
@@ -234,6 +401,7 @@ export const useAuthStore = create<AuthState>()(
             id: authUid,
             store_id: storeId,
             full_name: shopData.proprietor.trim(),
+<<<<<<< HEAD
             phone: shopData.phone.trim(),
             role: 'owner',
             password: passwordVal,
@@ -245,10 +413,40 @@ export const useAuthStore = create<AuthState>()(
 
           await db.stores.put(newStore);
           await db.profiles.put(newProfile);
+=======
+            phone: cleanPhone,
+            role: 'owner',
+            password_hash: await hashSecret(cleanPhone, passwordVal),
+            pin_hash: await hashSecret(cleanPhone, passwordVal.slice(0, 4)),
+            is_active: true,
+            created_at: now,
+            updated_at: now,
+          };
+
+          await db.transaction('rw', [db.stores, db.profiles, db.sync_queue], async () => {
+            await db.stores.put(newStore);
+            await db.profiles.put(newProfile);
+            // Registration used to live only in this browser.
+            await db.sync_queue.bulkAdd([
+              buildSyncItem('stores', 'INSERT', newStore as unknown as Record<string, unknown>),
+              buildSyncItem('profiles', 'INSERT', {
+                id: newProfile.id,
+                store_id: newProfile.store_id,
+                full_name: newProfile.full_name,
+                phone: newProfile.phone,
+                role: newProfile.role,
+                is_active: true,
+                created_at: now,
+                updated_at: now,
+              }),
+            ]);
+          });
+>>>>>>> c18622f (Bug Fix)
 
           set({ isLoading: false });
           return {
             success: true,
+<<<<<<< HEAD
             message: 'আপনার দোকান সফলভাবে নথিভুক্ত হয়েছে! সুপার অ্যাডমিনের যাচাই শেষে অ্যাকাউন্ট সক্রিয় হবে।',
           };
         } catch (error) {
@@ -282,6 +480,46 @@ export const useAuthStore = create<AuthState>()(
           currentUser: session,
           activeStoreId: target.store_id,
           isAuthenticated: true,
+=======
+            message: 'আপনার দোকান সফলভাবে নথিভুক্ত হয়েছে! সুপার অ্যাডমিনের যাচাই শেষে অ্যাকাউন্ট সক্রিয় হবে।',
+          };
+        } catch (error) {
+          console.error('Registration error:', error);
+          set({ isLoading: false, loginError: 'নিবন্ধন সম্পন্ন করা যায়নি।' });
+          return { success: false, message: 'নিবন্ধন করতে সমস্যা হয়েছে। দয়া করে আবার চেষ্টা করুন।' };
+        }
+      },
+
+      /**
+       * Development-only role switcher. In a production build this refuses:
+       * it used to hand out a super-admin session with no credential at all.
+       */
+      quickLoginDemoRole: async (role: UserRole): Promise<boolean> => {
+        if (!DEMO_LOGINS_ENABLED) {
+          set({ loginError: 'ডেমো লগইন বন্ধ রয়েছে। মোবাইল নম্বর ও পাসওয়ার্ড দিয়ে প্রবেশ করুন।' });
+          return false;
+        }
+
+        set({ isLoading: true, loginError: null });
+        const target = INITIAL_PROFILES.find((p) => p.role === role);
+        if (!target) {
+          set({ isLoading: false, loginError: 'ডেমো রোল পাওয়া যায়নি।' });
+          return false;
+        }
+
+        set({
+          currentUser: {
+            id: target.id,
+            store_id: target.store_id,
+            full_name: target.full_name,
+            phone: target.phone || '',
+            role: target.role,
+            logged_at: new Date().toISOString(),
+          },
+          activeStoreId: target.store_id,
+          isAuthenticated: true,
+          isLocked: false,
+>>>>>>> c18622f (Bug Fix)
           loginError: null,
           isLoading: false,
         });
@@ -289,16 +527,79 @@ export const useAuthStore = create<AuthState>()(
       },
 
       logout: () => {
+<<<<<<< HEAD
+=======
+        if (isSupabaseConfigured()) {
+          supabase.auth.signOut().catch(() => {});
+        }
+>>>>>>> c18622f (Bug Fix)
         set({
           currentUser: null,
           isAuthenticated: false,
           inspectingStore: null,
+<<<<<<< HEAD
           activeStoreId: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
           loginError: null,
           isLoading: false,
         });
       },
 
+=======
+          activeStoreId: DEMO_STORE_ID,
+          loginError: null,
+          isLoading: false,
+          isLocked: false,
+          lockError: null,
+        });
+      },
+
+      lockRegister: () => set({ isLocked: true, lockError: null }),
+
+      unlockRegister: async (pin: string): Promise<boolean> => {
+        const user = get().currentUser;
+        if (!user) return false;
+
+        const entered = pin.trim();
+        if (!entered) {
+          set({ lockError: 'পিন দিন।' });
+          return false;
+        }
+
+        try {
+          const profile =
+            (await db.profiles.get(user.id)) || INITIAL_PROFILES.find((p) => p.id === user.id);
+          if (!profile) {
+            set({ lockError: 'প্রোফাইল পাওয়া যায়নি।' });
+            return false;
+          }
+
+          const stored = profile.pin_hash || profile.pin_code || profile.password_hash || profile.password;
+          const { valid, needsUpgrade } = await verifySecret(user.phone, entered, stored);
+
+          if (!valid) {
+            set({ lockError: 'পিন মেলেনি। আবার চেষ্টা করুন।' });
+            return false;
+          }
+
+          if (needsUpgrade) {
+            const { pin_code: _legacyPin, ...rest } = profile;
+            await db.profiles.put({
+              ...rest,
+              pin_hash: await hashSecret(user.phone, entered),
+              updated_at: new Date().toISOString(),
+            });
+          }
+
+          set({ isLocked: false, lockError: null });
+          return true;
+        } catch (err) {
+          console.error('[AmarDokan Auth] Unlock error:', err);
+          set({ lockError: 'পিন যাচাই করা যায়নি।' });
+          return false;
+        }
+      },
+
+>>>>>>> c18622f (Bug Fix)
       hasAccess: (feature) => {
         const user = get().currentUser;
         if (!user) return false;
@@ -306,6 +607,7 @@ export const useAuthStore = create<AuthState>()(
 
         // Super Admin permissions:
         // Central management: SUPER_ADMIN
+<<<<<<< HEAD
         // Shop inspection: strictly read-only for INVENTORY_VIEW (products) and REPORTS (daily reports)
         // Strictly FORBIDDEN: POS (sell), BAKI (payment/credit), INVENTORY_MANAGE (maintain stock), CHALAN (supplier memos), STAFF
         if (role === 'super_admin') {
@@ -324,6 +626,18 @@ export const useAuthStore = create<AuthState>()(
             case 'STAFF':
             default:
               return false; // Cannot sell, payment, maintain stock, or manage staff
+=======
+        // Shop inspection: strictly read-only for INVENTORY_VIEW and REPORTS
+        // Strictly FORBIDDEN: POS, BAKI, INVENTORY_MANAGE, CHALAN, STAFF
+        if (role === 'super_admin') {
+          switch (feature) {
+            case 'SUPER_ADMIN':
+            case 'INVENTORY_VIEW':
+            case 'REPORTS':
+              return true;
+            default:
+              return false;
+>>>>>>> c18622f (Bug Fix)
           }
         }
 
@@ -335,8 +649,11 @@ export const useAuthStore = create<AuthState>()(
 
           case 'INVENTORY_MANAGE':
           case 'CHALAN':
+<<<<<<< HEAD
             return role === 'owner' || role === 'manager';
 
+=======
+>>>>>>> c18622f (Bug Fix)
           case 'REPORTS':
             return role === 'owner' || role === 'manager';
 
@@ -345,16 +662,23 @@ export const useAuthStore = create<AuthState>()(
             return role === 'owner';
 
           case 'SUPER_ADMIN':
+<<<<<<< HEAD
             return false;
 
+=======
+>>>>>>> c18622f (Bug Fix)
           default:
             return false;
         }
       },
 
+<<<<<<< HEAD
       isSuperAdmin: () => {
         return get().currentUser?.role === 'super_admin';
       },
+=======
+      isSuperAdmin: () => get().currentUser?.role === 'super_admin',
+>>>>>>> c18622f (Bug Fix)
 
       isOwnerOrAbove: () => {
         const role = get().currentUser?.role;
@@ -371,7 +695,23 @@ export const useAuthStore = create<AuthState>()(
       partialize: (state) => ({
         currentUser: state.currentUser,
         isAuthenticated: state.isAuthenticated,
+<<<<<<< HEAD
       }),
+=======
+        // activeStoreId must survive a reload. Without it the store reset to the
+        // bundled demo shop while the session still belonged to a real shop, so
+        // a refresh showed another tenant's stock and khata.
+        activeStoreId: state.activeStoreId,
+        isLocked: state.isLocked,
+      }),
+      onRehydrateStorage: () => (state) => {
+        if (!state) return;
+        // Belt and braces: always trust the session's own store on restore.
+        if (state.currentUser?.store_id) {
+          state.activeStoreId = state.currentUser.store_id;
+        }
+      },
+>>>>>>> c18622f (Bug Fix)
     }
   )
 );

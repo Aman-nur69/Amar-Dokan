@@ -3,7 +3,11 @@
 // Tailored for 58mm / 80mm ESC/POS Rolls with Pure CSS Print Media Formatting
 // ==============================================================================
 
+<<<<<<< HEAD
 import React, { useState } from 'react';
+=======
+import React, { useEffect, useState } from 'react';
+>>>>>>> c18622f (Bug Fix)
 import { ThermalReceiptData } from '../../@types/pos.types';
 import {
   formatBengaliCurrency,
@@ -14,6 +18,11 @@ import {
 import { triggerThermalPrint, generateWhatsAppReminderUrl, generateSmsReminderUrl } from '../../lib/printService';
 import { Printer, Share2, MessageSquare, X, CheckCircle } from 'lucide-react';
 import { BigButton } from '../common/BigButton';
+<<<<<<< HEAD
+=======
+import { toast } from '../../hooks/useToastStore';
+import { useModalDismiss } from '../../hooks/useModalDismiss';
+>>>>>>> c18622f (Bug Fix)
 
 interface PrintableThermalReceiptProps {
   receipt: ThermalReceiptData | null;
@@ -24,7 +33,32 @@ export const PrintableThermalReceipt: React.FC<PrintableThermalReceiptProps> = (
   receipt,
   onClose,
 }) => {
+<<<<<<< HEAD
   const [paperWidth, setPaperWidth] = useState<'58mm' | '80mm'>('80mm');
+=======
+  const [paperWidth, setPaperWidth] = useState<'58mm' | '80mm'>(() => {
+    try {
+      return (localStorage.getItem('amar_dokan_paper_width') as '58mm' | '80mm') || '80mm';
+    } catch {
+      return '80mm';
+    }
+  });
+  const dialogRef = useModalDismiss<HTMLDivElement>(Boolean(receipt), onClose);
+
+  // The print stylesheet reads this variable, so the 58/80 toggle now actually
+  // changes the printed roll width instead of only the on-screen preview.
+  useEffect(() => {
+    document.documentElement.style.setProperty(
+      '--thermal-print-width',
+      paperWidth === '58mm' ? '54mm' : '76mm'
+    );
+    try {
+      localStorage.setItem('amar_dokan_paper_width', paperWidth);
+    } catch {
+      // ignore
+    }
+  }, [paperWidth]);
+>>>>>>> c18622f (Bug Fix)
 
   if (!receipt) return null;
 
@@ -34,7 +68,11 @@ export const PrintableThermalReceipt: React.FC<PrintableThermalReceiptProps> = (
 
   const handleWhatsApp = () => {
     if (!receipt.customerPhone) {
+<<<<<<< HEAD
       alert('গ্রাহকের মোবাইল নম্বর যুক্ত নেই!');
+=======
+      toast.warning('গ্রাহকের মোবাইল নম্বর যুক্ত নেই!');
+>>>>>>> c18622f (Bug Fix)
       return;
     }
     const url = generateWhatsAppReminderUrl({
@@ -44,13 +82,21 @@ export const PrintableThermalReceipt: React.FC<PrintableThermalReceiptProps> = (
       storePhone: receipt.storePhone,
       dueAmount: receipt.customerTotalDue || receipt.dueAmount,
       bkashNumber: receipt.bkashNumber,
+<<<<<<< HEAD
+=======
+      nagadNumber: receipt.nagadNumber,
+>>>>>>> c18622f (Bug Fix)
     });
     window.open(url, '_blank');
   };
 
   const handleSms = () => {
     if (!receipt.customerPhone) {
+<<<<<<< HEAD
       alert('গ্রাহকের মোবাইল নম্বর যুক্ত নেই!');
+=======
+      toast.warning('গ্রাহকের মোবাইল নম্বর যুক্ত নেই!');
+>>>>>>> c18622f (Bug Fix)
       return;
     }
     const url = generateSmsReminderUrl({
@@ -60,6 +106,10 @@ export const PrintableThermalReceipt: React.FC<PrintableThermalReceiptProps> = (
       storePhone: receipt.storePhone,
       dueAmount: receipt.customerTotalDue || receipt.dueAmount,
       bkashNumber: receipt.bkashNumber,
+<<<<<<< HEAD
+=======
+      nagadNumber: receipt.nagadNumber,
+>>>>>>> c18622f (Bug Fix)
     });
     window.open(url, '_blank');
   };
@@ -68,7 +118,18 @@ export const PrintableThermalReceipt: React.FC<PrintableThermalReceiptProps> = (
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-950/80 backdrop-blur-md animate-in fade-in overflow-y-auto">
+<<<<<<< HEAD
       <div className="bg-slate-900 rounded-3xl p-5 w-full max-w-lg shadow-2xl border border-slate-700 my-auto text-white flex flex-col">
+=======
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label="বিক্রির রসিদ"
+        tabIndex={-1}
+        className="bg-slate-900 rounded-3xl p-5 w-full max-w-lg shadow-2xl border border-slate-700 my-auto text-white flex flex-col"
+      >
+>>>>>>> c18622f (Bug Fix)
         {/* Top Header & Paper Size Toggle */}
         <div className="flex items-center justify-between pb-3 border-b border-slate-800 mb-4">
           <div className="flex items-center gap-2">

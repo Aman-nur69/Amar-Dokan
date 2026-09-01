@@ -4,6 +4,11 @@
 // ==============================================================================
 
 import React, { useState, useEffect } from 'react';
+<<<<<<< HEAD
+=======
+import { useModalDismiss } from '../../hooks/useModalDismiss';
+import { toast } from '../../hooks/useToastStore';
+>>>>>>> c18622f (Bug Fix)
 import { Customer } from '../../@types/database.types';
 import { useCartStore } from '../../hooks/useCartStore';
 import { formatBengaliCurrency, toBanglaDigits } from '../../lib/banglaNumberFormatter';
@@ -35,7 +40,11 @@ export const PaymentActionSheet: React.FC<PaymentActionSheetProps> = ({
 
   const totalAmount = getTotalAmount();
 
+<<<<<<< HEAD
   const [cashAmount, setCashAmount] = useState<number>(totalAmount);
+=======
+  const [cashAmount, setCashAmount] = useState<number>(0);
+>>>>>>> c18622f (Bug Fix)
   const [customerCashTendered, setCustomerCashTendered] = useState<number>(0);
   const [mfsAmount, setMfsAmount] = useState<number>(0);
   const [mfsProvider, setMfsProvider] = useState<'BKASH' | 'NAGAD'>('BKASH');
@@ -46,6 +55,22 @@ export const PaymentActionSheet: React.FC<PaymentActionSheetProps> = ({
   const paidAmount = (cashAmount || 0) + (mfsAmount || 0);
   const dueAmount = Math.max(0, totalAmount - paidAmount);
 
+<<<<<<< HEAD
+=======
+  const dialogRef = useModalDismiss<HTMLDivElement>(isOpen, onClose);
+
+  // The sheet stays mounted and returns null when closed, so the amounts have
+  // to be re-seeded on every open or they keep the previous bill's values.
+  useEffect(() => {
+    if (!isOpen) return;
+    setCashAmount(totalAmount);
+    setMfsAmount(0);
+    setMfsTxnId('');
+    setCustomerCashTendered(0);
+    setCustomerSearch('');
+  }, [isOpen, totalAmount]);
+
+>>>>>>> c18622f (Bug Fix)
   // Sync to store when amounts change
   useEffect(() => {
     setPaymentDetails({
@@ -73,7 +98,11 @@ export const PaymentActionSheet: React.FC<PaymentActionSheetProps> = ({
 
   const handleComplete = () => {
     if (dueAmount > 0 && !selectedCustomer) {
+<<<<<<< HEAD
       alert('বাকি থাকলে অবশ্যই একজন গ্রাহকের খাতা নির্বাচন করতে হবে!');
+=======
+      toast.error('বাকি থাকলে অবশ্যই একজন গ্রাহকের খাতা নির্বাচন করতে হবে!');
+>>>>>>> c18622f (Bug Fix)
       return;
     }
 
@@ -83,7 +112,18 @@ export const PaymentActionSheet: React.FC<PaymentActionSheetProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm animate-in fade-in">
+<<<<<<< HEAD
       <div className="bg-white rounded-3xl w-full max-w-lg shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[90vh]">
+=======
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label="পেমেন্ট ও হিসাব নিষ্পত্তি"
+        tabIndex={-1}
+        className="bg-white rounded-3xl w-full max-w-lg shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[90vh]"
+      >
+>>>>>>> c18622f (Bug Fix)
         {/* Header */}
         <div className="p-5 bg-slate-900 text-white flex justify-between items-center">
           <div>

@@ -3,12 +3,21 @@
 // Fast Cash/MFS Collection with Real-Time Customer Balance Recalculation
 // ==============================================================================
 
+<<<<<<< HEAD
 import React, { useState } from 'react';
+=======
+import React, { useEffect, useState } from 'react';
+>>>>>>> c18622f (Bug Fix)
 import { Customer, MfsProvider } from '../../@types/database.types';
 import { formatBengaliCurrency, toBanglaDigits, formatBengaliPhone } from '../../lib/banglaNumberFormatter';
 import { X, Check, HandCoins, Smartphone, Sparkles } from 'lucide-react';
 import { BigButton } from '../common/BigButton';
 import confetti from 'canvas-confetti';
+<<<<<<< HEAD
+=======
+import { toast } from '../../hooks/useToastStore';
+import { useModalDismiss } from '../../hooks/useModalDismiss';
+>>>>>>> c18622f (Bug Fix)
 
 interface PaymentCollectModalProps {
   customer: Customer | null;
@@ -28,6 +37,18 @@ export const PaymentCollectModal: React.FC<PaymentCollectModalProps> = ({
   const [note, setNote] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
+<<<<<<< HEAD
+=======
+  const dialogRef = useModalDismiss<HTMLDivElement>(isOpen && Boolean(customer), onClose);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    setAmount(0);
+    setMethod('CASH');
+    setNote('');
+  }, [isOpen, customer?.id]);
+
+>>>>>>> c18622f (Bug Fix)
   if (!isOpen || !customer) return null;
 
   const currentDue = customer.current_balance;
@@ -40,10 +61,21 @@ export const PaymentCollectModal: React.FC<PaymentCollectModalProps> = ({
 
   const handleSubmit = async () => {
     if (amount <= 0) {
+<<<<<<< HEAD
       alert('দয়া করে আদায়ের সঠিক টাকার পরিমাণ লিখুন।');
       return;
     }
 
+=======
+      toast.error('দয়া করে আদায়ের সঠিক টাকার পরিমাণ লিখুন।');
+      return;
+    }
+
+    if (currentDue > 0 && amount > currentDue) {
+      toast.warning('বকেয়ার চেয়ে বেশি জমা হচ্ছে — অতিরিক্ত টাকা অগ্রিম হিসেবে জমা হবে।');
+    }
+
+>>>>>>> c18622f (Bug Fix)
     setIsSubmitting(true);
     const success = await onConfirm(customer.id, amount, method, note);
     setIsSubmitting(false);
@@ -66,7 +98,17 @@ export const PaymentCollectModal: React.FC<PaymentCollectModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm animate-in fade-in">
+<<<<<<< HEAD
       <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl border border-slate-200 overflow-hidden flex flex-col">
+=======
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        tabIndex={-1}
+        className="bg-white rounded-3xl w-full max-w-md shadow-2xl border border-slate-200 overflow-hidden flex flex-col"
+      >
+>>>>>>> c18622f (Bug Fix)
         {/* Header */}
         <div className="p-5 bg-slate-900 text-white flex justify-between items-center">
           <div className="flex items-center gap-2.5">

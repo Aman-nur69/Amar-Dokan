@@ -24,6 +24,16 @@ import {
 } from '../lib/banglaNumberFormatter';
 import { useAuthStore } from '../hooks/useAuthStore';
 import {
+<<<<<<< HEAD
+=======
+  todayDhakaKey,
+  shiftDhakaDateKey,
+  isOnDhakaDate,
+  isWithinDhakaRange,
+} from '../lib/dateUtils';
+import { DayClosing } from '../@types/database.types';
+import {
+>>>>>>> c18622f (Bug Fix)
   Calendar,
   Receipt,
   ShoppingBag,
@@ -49,6 +59,11 @@ export const DashboardView: React.FC = () => {
   const [saleItems, setSaleItems] = useState<SaleItem[]>([]);
   const [chalans, setChalans] = useState<SupplierChalan[]>([]);
   const [supplierPayments, setSupplierPayments] = useState<SupplierPayment[]>([]);
+<<<<<<< HEAD
+=======
+  const [previousClosing, setPreviousClosing] = useState<DayClosing | null>(null);
+  const [countedCashToday, setCountedCashToday] = useState<number | undefined>(undefined);
+>>>>>>> c18622f (Bug Fix)
 
   // Modals state
   const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false);
@@ -56,7 +71,13 @@ export const DashboardView: React.FC = () => {
   const [isDayClosingModalOpen, setIsDayClosingModalOpen] = useState(false);
 
   // Date and filter states
+<<<<<<< HEAD
   const todayStr = new Date().toISOString().split('T')[0];
+=======
+  // Bangladesh is UTC+6: a 05:30 AM sale is stored as 23:30 UTC the day before,
+  // so every date boundary here must be computed in Dhaka time.
+  const todayStr = todayDhakaKey();
+>>>>>>> c18622f (Bug Fix)
   const [selectedDate, setSelectedDate] = useState<string>(todayStr);
   const [dateFilterPreset, setDateFilterPreset] = useState<'TODAY' | 'YESTERDAY' | 'WEEK' | 'CUSTOM'>('TODAY');
   const [activityTab, setActivityTab] = useState<ActivityTab>('ALL');
@@ -80,6 +101,20 @@ export const DashboardView: React.FC = () => {
     const allChalans = await db.supplier_chalans.where('store_id').equals(activeStoreId).toArray();
     const allPayments = await db.supplier_payments.where('store_id').equals(activeStoreId).toArray();
 
+<<<<<<< HEAD
+=======
+    // Yesterday's counted cash is today's opening float.
+    const closings = await db.day_closings.where('store_id').equals(activeStoreId).toArray();
+    closings.sort((a, b) => b.business_date.localeCompare(a.business_date));
+    setPreviousClosing(closings.find((c) => c.business_date < selectedDate) || null);
+
+    const counts = await db.cash_counts.where('store_id').equals(activeStoreId).toArray();
+    const todaysCounts = counts
+      .filter((c) => c.business_date === selectedDate)
+      .sort((a, b) => b.created_at.localeCompare(a.created_at));
+    setCountedCashToday(todaysCounts[0]?.counted_amount);
+
+>>>>>>> c18622f (Bug Fix)
     // Sort newest first
     allSales.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
     allExpenses.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
@@ -93,7 +128,11 @@ export const DashboardView: React.FC = () => {
     setSaleItems(allItems);
     setChalans(allChalans);
     setSupplierPayments(allPayments);
+<<<<<<< HEAD
   }, [activeStoreId]);
+=======
+  }, [activeStoreId, selectedDate]);
+>>>>>>> c18622f (Bug Fix)
 
   useEffect(() => {
     loadData();
@@ -102,6 +141,7 @@ export const DashboardView: React.FC = () => {
   // Handle Preset Date Selection
   const handleSelectPreset = (preset: 'TODAY' | 'YESTERDAY' | 'WEEK' | 'CUSTOM') => {
     setDateFilterPreset(preset);
+<<<<<<< HEAD
     const today = new Date();
 
     if (preset === 'TODAY') {
@@ -115,10 +155,20 @@ export const DashboardView: React.FC = () => {
       const past = new Date(today);
       past.setDate(past.getDate() - 6);
       setSelectedDate(past.toISOString().split('T')[0]);
+=======
+
+    if (preset === 'TODAY') {
+      setSelectedDate(todayDhakaKey());
+    } else if (preset === 'YESTERDAY') {
+      setSelectedDate(shiftDhakaDateKey(todayDhakaKey(), -1));
+    } else if (preset === 'WEEK') {
+      setSelectedDate(shiftDhakaDateKey(todayDhakaKey(), -6));
+>>>>>>> c18622f (Bug Fix)
     }
   };
 
   // Filter checker
+<<<<<<< HEAD
   const matchesDateFilter = (dateStr?: string) => {
     if (!dateStr) return false;
     if (dateFilterPreset === 'WEEK') {
@@ -129,31 +179,65 @@ export const DashboardView: React.FC = () => {
     }
     return dateStr.startsWith(selectedDate);
   };
+=======
+  const matchesDateFilter = useCallback(
+    (dateStr?: string) => {
+      if (!dateStr) return false;
+      if (dateFilterPreset === 'WEEK') {
+        return isWithinDhakaRange(dateStr, selectedDate, todayStr);
+      }
+      // Comparing the raw UTC prefix pushed every pre-6 AM sale into the
+      // previous day's হিসাব.
+      return isOnDhakaDate(dateStr, selectedDate);
+    },
+    [dateFilterPreset, selectedDate, todayStr]
+  );
+>>>>>>> c18622f (Bug Fix)
 
   // Filtered dataset
   const filteredSales = useMemo(
     () => sales.filter((s) => matchesDateFilter(s.created_at)),
+<<<<<<< HEAD
     [sales, selectedDate, dateFilterPreset]
+=======
+    [sales, matchesDateFilter]
+>>>>>>> c18622f (Bug Fix)
   );
 
   const filteredExpenses = useMemo(
     () => expenses.filter((e) => matchesDateFilter(e.expense_date || e.created_at)),
+<<<<<<< HEAD
     [expenses, selectedDate, dateFilterPreset]
+=======
+    [expenses, matchesDateFilter]
+>>>>>>> c18622f (Bug Fix)
   );
 
   const filteredBakiCollections = useMemo(
     () => bakiTx.filter((b) => b.type === 'CREDIT' && matchesDateFilter(b.created_at)),
+<<<<<<< HEAD
     [bakiTx, selectedDate, dateFilterPreset]
+=======
+    [bakiTx, matchesDateFilter]
+>>>>>>> c18622f (Bug Fix)
   );
 
   const filteredChalans = useMemo(
     () => chalans.filter((c) => matchesDateFilter(c.chalan_date || c.created_at)),
+<<<<<<< HEAD
     [chalans, selectedDate, dateFilterPreset]
+=======
+    [chalans, matchesDateFilter]
+>>>>>>> c18622f (Bug Fix)
   );
 
   const filteredSupplierPayments = useMemo(
     () => supplierPayments.filter((p) => matchesDateFilter(p.payment_date || p.created_at)),
+<<<<<<< HEAD
     [supplierPayments, selectedDate, dateFilterPreset]
+=======
+    [supplierPayments, matchesDateFilter]
+>>>>>>> c18622f (Bug Fix)
   );
 
   // Financial Metrics Calculation
@@ -207,6 +291,11 @@ export const DashboardView: React.FC = () => {
   // Estimated Net Profit: Revenue - (COGS + Expenses)
   const netProfit = totalSales - (totalCogs + totalExpenses);
 
+<<<<<<< HEAD
+=======
+  const openingFloat = previousClosing?.counted_cash ?? previousClosing?.cash_collected ?? 0;
+
+>>>>>>> c18622f (Bug Fix)
   const metrics = {
     totalSales,
     totalCashCollected,
@@ -360,8 +449,12 @@ export const DashboardView: React.FC = () => {
     filteredBakiCollections,
     bakiTx,
     filteredExpenses,
+<<<<<<< HEAD
     selectedDate,
     dateFilterPreset,
+=======
+    matchesDateFilter,
+>>>>>>> c18622f (Bug Fix)
   ]);
 
   // Tab and search filter on activity feed
@@ -718,6 +811,15 @@ export const DashboardView: React.FC = () => {
         isOpen={isCashCountModalOpen}
         onClose={() => setIsCashCountModalOpen(false)}
         expectedCash={totalCashCollected}
+<<<<<<< HEAD
+=======
+        openingFloat={openingFloat}
+        businessDate={selectedDate}
+        onCounted={(amount) => {
+          setCountedCashToday(amount);
+          loadData();
+        }}
+>>>>>>> c18622f (Bug Fix)
       />
 
       <DayClosingModal
@@ -725,6 +827,12 @@ export const DashboardView: React.FC = () => {
         onClose={() => setIsDayClosingModalOpen(false)}
         metrics={metrics}
         selectedDate={selectedDate}
+<<<<<<< HEAD
+=======
+        openingFloat={openingFloat}
+        countedCash={countedCashToday}
+        onClosed={loadData}
+>>>>>>> c18622f (Bug Fix)
       />
     </div>
   );

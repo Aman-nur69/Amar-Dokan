@@ -30,6 +30,10 @@ import {
 import { BigButton } from '../components/common/BigButton';
 import { SupplierChalanSection } from '../components/inventory/SupplierChalanSection';
 import { useAuthStore } from '../hooks/useAuthStore';
+<<<<<<< HEAD
+=======
+import { toast } from '../hooks/useToastStore';
+>>>>>>> c18622f (Bug Fix)
 
 const getCategoryEmoji = (name?: string) => {
   if (!name) return '📦';
@@ -116,6 +120,7 @@ export const InventoryView: React.FC = () => {
     if (!adjustProduct) return;
     const qty = Number(adjustAmount);
     if (isNaN(qty) || qty === 0) {
+<<<<<<< HEAD
       alert('সঠিক পরিমাণ লিখুন');
       return;
     }
@@ -123,13 +128,33 @@ export const InventoryView: React.FC = () => {
     const ok = await adjustStock(
       adjustProduct.id,
       qty,
+=======
+      toast.error('সঠিক পরিমাণ লিখুন');
+      return;
+    }
+
+    // The mode is passed through explicitly now: "ADD" adds to the existing
+    // balance, "SET" replaces it. They used to collapse into a replace.
+    const ok = await adjustStock(
+      adjustProduct.id,
+      qty,
+      adjustMode,
+>>>>>>> c18622f (Bug Fix)
       adjustMode === 'ADD' ? 'PURCHASE' : 'AUDIT_CORRECTION'
     );
 
     if (ok) {
+<<<<<<< HEAD
       setAdjustProduct(null);
     } else {
       alert('মজুদ আপডেট করতে সমস্যা হয়েছে');
+=======
+      const label = adjustMode === 'ADD' ? 'নতুন মাল যোগ হয়েছে' : 'মজুদ সংশোধন হয়েছে';
+      toast.success(`${adjustProduct.name_bn}: ${label}`);
+      setAdjustProduct(null);
+    } else {
+      toast.error('মজুদ আপডেট করতে সমস্যা হয়েছে');
+>>>>>>> c18622f (Bug Fix)
     }
   };
 
@@ -162,7 +187,11 @@ export const InventoryView: React.FC = () => {
       setMinStockAlert(5);
       setIsQuickItem(false);
     } else {
+<<<<<<< HEAD
       alert(res.error);
+=======
+      toast.error(res.error || 'সমস্যা হয়েছে');
+>>>>>>> c18622f (Bug Fix)
     }
   };
 

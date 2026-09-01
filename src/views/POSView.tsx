@@ -17,11 +17,23 @@ import { SelectBakiCustomerModal } from '../components/pos/SelectBakiCustomerMod
 import { NewCustomerModal } from '../components/baki/NewCustomerModal';
 import { Product, Customer } from '../@types/database.types';
 import { formatBengaliCurrency, toBanglaDigits } from '../lib/banglaNumberFormatter';
+<<<<<<< HEAD
 import { ShoppingBag, ArrowRight, Check, Zap, Layers, Boxes } from 'lucide-react';
 
 export const POSView: React.FC = () => {
   const { allProducts, searchQuery, setSearchQuery } = useInventory();
   const { allCustomers, addCustomer } = useBakiKhata();
+=======
+import { matchesProduct } from '../lib/phoneticSearch';
+import { useAuthStore } from '../hooks/useAuthStore';
+import { useModalDismiss } from '../hooks/useModalDismiss';
+import { ShoppingBag, Zap, Boxes, AlertTriangle } from 'lucide-react';
+
+export const POSView: React.FC = () => {
+  const { allProducts, searchQuery, setSearchQuery, refreshInventory } = useInventory();
+  const { allCustomers, addCustomer, refreshData: refreshKhata } = useBakiKhata();
+  const { isManagerOrAbove } = useAuthStore();
+>>>>>>> c18622f (Bug Fix)
   const {
     items,
     addItem,
@@ -35,7 +47,13 @@ export const POSView: React.FC = () => {
     getItemCount,
   } = useCartStore();
 
+<<<<<<< HEAD
   const { completeCheckout, lastReceipt, setLastReceipt } = useSalesEngine();
+=======
+  const { completeCheckout, lastReceipt, setLastReceipt, isProcessing, blockedBy, clearBlock } =
+    useSalesEngine();
+  const overrideDialogRef = useModalDismiss<HTMLDivElement>(Boolean(blockedBy), clearBlock);
+>>>>>>> c18622f (Bug Fix)
 
   // Customer Selection & Creation Modal States
   const [isSelectCustomerModalOpen, setIsSelectCustomerModalOpen] = useState(false);
@@ -48,6 +66,7 @@ export const POSView: React.FC = () => {
   const quickItems = allProducts.filter((p) => p.is_quick_item);
 
   // Filtered search list if search query entered
+<<<<<<< HEAD
   const searchResults = searchQuery
     ? allProducts.filter(
         (p) =>
@@ -55,15 +74,34 @@ export const POSView: React.FC = () => {
           (p.name_en && p.name_en.toLowerCase().includes(searchQuery.toLowerCase())) ||
           (p.barcode && p.barcode.includes(searchQuery))
       )
+=======
+  // Matches Bengali, English, barcode AND English phonetics ("chini", "tel"),
+  // which the product promised but never implemented.
+  const searchResults = searchQuery
+    ? allProducts.filter((p) => matchesProduct(p, searchQuery))
+>>>>>>> c18622f (Bug Fix)
     : [];
 
   const handleProductSelect = (product: Product) => {
     addItem(product, 1, product.unit);
   };
 
+<<<<<<< HEAD
   const handleCashCheckout = async () => {
     if (items.length === 0) return;
     await completeCheckout('CASH');
+=======
+  // Stock badges and khata balances are separate hook instances, so they went
+  // stale the moment a sale committed. Refresh both after every checkout.
+  const afterCheckout = async () => {
+    await Promise.all([refreshInventory(), refreshKhata()]);
+  };
+
+  const handleCashCheckout = async () => {
+    if (items.length === 0) return;
+    const receipt = await completeCheckout('CASH');
+    if (receipt) await afterCheckout();
+>>>>>>> c18622f (Bug Fix)
   };
 
   const handleBakiCheckout = async () => {
@@ -73,7 +111,12 @@ export const POSView: React.FC = () => {
       setIsSelectCustomerModalOpen(true);
       return;
     }
+<<<<<<< HEAD
     await completeCheckout('BAKI');
+=======
+    const receipt = await completeCheckout('BAKI');
+    if (receipt) await afterCheckout();
+>>>>>>> c18622f (Bug Fix)
   };
 
   const handleCustomerSelected = (customer: Customer) => {
@@ -87,7 +130,19 @@ export const POSView: React.FC = () => {
   };
 
   const handleSplitConfirm = async (method: 'CASH' | 'BAKI' | 'SPLIT') => {
+<<<<<<< HEAD
     await completeCheckout(method);
+=======
+    const receipt = await completeCheckout(method);
+    if (receipt) await afterCheckout();
+  };
+
+  // Credit limit is a real gate now; an owner or manager may still override it.
+  const handleOverrideCreditLimit = async () => {
+    clearBlock();
+    const receipt = await completeCheckout(undefined, { allowOverLimit: true });
+    if (receipt) await afterCheckout();
+>>>>>>> c18622f (Bug Fix)
   };
 
   const totalAmount = getTotalAmount();
@@ -211,7 +266,12 @@ export const POSView: React.FC = () => {
             {/* Direct 1-Tap Cash Sale Button on Mobile */}
             <button
               onClick={handleCashCheckout}
+<<<<<<< HEAD
               className="flex-1 h-14 px-4 rounded-2xl bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-black text-sm flex items-center justify-between shadow-xl border border-emerald-500 animate-in slide-in-from-bottom-2"
+=======
+              disabled={isProcessing}
+              className="flex-1 h-14 px-4 rounded-2xl disabled:opacity-60 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-black text-sm flex items-center justify-between shadow-xl border border-emerald-500 animate-in slide-in-from-bottom-2"
+>>>>>>> c18622f (Bug Fix)
             >
               <div className="flex items-center gap-2">
                 <Zap className="w-5 h-5 fill-white" />
@@ -273,6 +333,67 @@ export const POSView: React.FC = () => {
         receipt={lastReceipt}
         onClose={() => setLastReceipt(null)}
       />
+<<<<<<< HEAD
+=======
+
+      {/* 5. Credit limit gate */}
+      {blockedBy && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm animate-in fade-in">
+          <div
+            ref={overrideDialogRef}
+            role="alertdialog"
+            aria-modal="true"
+            tabIndex={-1}
+            className="bg-white rounded-3xl w-full max-w-sm shadow-2xl border border-amber-300 overflow-hidden"
+          >
+            <div className="p-5 bg-amber-500 text-slate-950 flex items-center gap-3">
+              <AlertTriangle className="w-6 h-6 flex-shrink-0" />
+              <div>
+                <h3 className="font-black text-base">বাকির সীমা ছাড়িয়ে যাচ্ছে</h3>
+                <p className="text-xs font-semibold opacity-80">{blockedBy.customerName}</p>
+              </div>
+            </div>
+
+            <div className="p-5 space-y-3">
+              <div className="flex justify-between text-sm">
+                <span className="text-slate-500 font-semibold">নির্ধারিত সীমা</span>
+                <span className="font-black text-slate-900">
+                  {formatBengaliCurrency(blockedBy.limit)}
+                </span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-slate-500 font-semibold">এই বিক্রির পর মোট বাকি</span>
+                <span className="font-black text-rose-600">
+                  {formatBengaliCurrency(blockedBy.projectedBalance)}
+                </span>
+              </div>
+
+              <p className="text-xs text-slate-500 pt-1">
+                {isManagerOrAbove()
+                  ? 'আপনি চাইলে সীমা অগ্রাহ্য করে বিক্রিটি সম্পন্ন করতে পারেন।'
+                  : 'সীমা অগ্রাহ্য করতে দোকান মালিক বা ম্যানেজারের অনুমোদন প্রয়োজন।'}
+              </p>
+
+              <div className="flex gap-2 pt-2">
+                <button
+                  onClick={clearBlock}
+                  className="flex-1 h-12 rounded-2xl border border-slate-300 text-slate-700 font-bold text-sm hover:bg-slate-50"
+                >
+                  বাতিল
+                </button>
+                <button
+                  onClick={handleOverrideCreditLimit}
+                  disabled={!isManagerOrAbove() || isProcessing}
+                  className="flex-1 h-12 rounded-2xl bg-slate-900 text-white font-bold text-sm disabled:opacity-40 hover:bg-slate-800"
+                >
+                  সীমা অগ্রাহ্য করুন
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+>>>>>>> c18622f (Bug Fix)
     </div>
   );
 };

@@ -4,6 +4,11 @@
 // ==============================================================================
 
 import React, { useState, useEffect } from 'react';
+<<<<<<< HEAD
+=======
+import { toast } from '../../hooks/useToastStore';
+import { useModalDismiss } from '../../hooks/useModalDismiss';
+>>>>>>> c18622f (Bug Fix)
 import { SupplierChalan } from '../../@types/database.types';
 import { formatBengaliCurrency, toBanglaDigits } from '../../lib/banglaNumberFormatter';
 import { X, Check, HandCoins, Truck, AlertCircle, CheckCircle2 } from 'lucide-react';
@@ -41,6 +46,11 @@ export const SupplierDuePayModal: React.FC<SupplierDuePayModalProps> = ({
     }
   }, [chalan, isOpen]);
 
+<<<<<<< HEAD
+=======
+  const dialogRef = useModalDismiss<HTMLDivElement>(isOpen, onClose);
+
+>>>>>>> c18622f (Bug Fix)
   if (!isOpen || !chalan) return null;
 
   const currentDue = Number(chalan.due_amount || 0);
@@ -54,7 +64,11 @@ export const SupplierDuePayModal: React.FC<SupplierDuePayModalProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (cleanPayAmount <= 0) {
+<<<<<<< HEAD
       alert('দয়া করে সঠিক পরিশোধের পরিমাণ লিখুন।');
+=======
+      toast.error('দয়া করে সঠিক পরিশোধের পরিমাণ লিখুন।');
+>>>>>>> c18622f (Bug Fix)
       return;
     }
 
@@ -70,13 +84,28 @@ export const SupplierDuePayModal: React.FC<SupplierDuePayModalProps> = ({
     if (res.success) {
       onClose();
     } else {
+<<<<<<< HEAD
       alert(res.error || 'বাকি পরিশোধ রেকর্ড করতে সমস্যা হয়েছে।');
+=======
+      toast.error(res.error || 'বাকি পরিশোধ রেকর্ড করতে সমস্যা হয়েছে।');
+>>>>>>> c18622f (Bug Fix)
     }
   };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-900/80 backdrop-blur-sm animate-in fade-in overflow-y-auto">
+<<<<<<< HEAD
       <div className="bg-white rounded-3xl w-full max-w-lg shadow-2xl border border-slate-200 my-auto overflow-hidden flex flex-col max-h-[92vh]">
+=======
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label="চালানের বকেয়া পরিশোধ"
+        tabIndex={-1}
+        className="bg-white rounded-3xl w-full max-w-lg shadow-2xl border border-slate-200 my-auto overflow-hidden flex flex-col max-h-[92vh]"
+      >
+>>>>>>> c18622f (Bug Fix)
         {/* Header */}
         <div className="p-4 sm:p-5 bg-slate-900 text-white flex justify-between items-center flex-shrink-0">
           <div className="flex items-center gap-3">
