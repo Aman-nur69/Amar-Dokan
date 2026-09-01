@@ -3,11 +3,7 @@
 // ==============================================================================
 
 import React from 'react';
-<<<<<<< HEAD
-import { Wifi, WifiOff, RefreshCw } from 'lucide-react';
-=======
 import { Wifi, WifiOff, RefreshCw, AlertTriangle } from 'lucide-react';
->>>>>>> c18622f (Bug Fix)
 import { toBanglaDigits } from '../../lib/banglaNumberFormatter';
 
 interface SyncStatusIndicatorProps {
@@ -15,16 +11,11 @@ interface SyncStatusIndicatorProps {
   isSimulatedOffline: boolean;
   onToggleSimulatedOffline: () => void;
   pendingCount: number;
-<<<<<<< HEAD
-  isSyncing: boolean;
-  onTriggerSync: () => void;
-=======
   failedCount: number;
   isSyncing: boolean;
   isStoragePersisted: boolean;
   onTriggerSync: () => void;
   onRetryFailed: () => void;
->>>>>>> c18622f (Bug Fix)
 }
 
 export const SyncStatusIndicator: React.FC<SyncStatusIndicatorProps> = ({
@@ -32,16 +23,11 @@ export const SyncStatusIndicator: React.FC<SyncStatusIndicatorProps> = ({
   isSimulatedOffline,
   onToggleSimulatedOffline,
   pendingCount,
-<<<<<<< HEAD
-  isSyncing,
-  onTriggerSync,
-=======
   failedCount,
   isSyncing,
   isStoragePersisted,
   onTriggerSync,
   onRetryFailed,
->>>>>>> c18622f (Bug Fix)
 }) => {
   return (
     <div className="flex items-center gap-1.5 sm:gap-2">
@@ -67,15 +53,6 @@ export const SyncStatusIndicator: React.FC<SyncStatusIndicatorProps> = ({
         </div>
       )}
 
-<<<<<<< HEAD
-      {/* Storage Persistence Guaranteed Badge (Hidden on very narrow screens) */}
-      <div
-        title="মেমরি সুরক্ষা সক্রিয়: ব্রাউজার বা মোবাইল এই ডেটা কখনো মুছবে না"
-        className="hidden lg:flex items-center gap-1 px-2 py-1 rounded-xl bg-slate-100 border border-slate-200/80 text-[11px] font-semibold text-slate-600 cursor-help"
-      >
-        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-        <span>মেমরি সুরক্ষিত</span>
-=======
       {/* Failed mutations need a human, so they get their own affordance. */}
       {failedCount > 0 && (
         <button
@@ -102,7 +79,6 @@ export const SyncStatusIndicator: React.FC<SyncStatusIndicatorProps> = ({
           className={`w-1.5 h-1.5 rounded-full ${isStoragePersisted ? 'bg-emerald-500' : 'bg-amber-500'}`}
         />
         <span>{isStoragePersisted ? 'মেমরি সুরক্ষিত' : 'মেমরি অরক্ষিত'}</span>
->>>>>>> c18622f (Bug Fix)
       </div>
 
       {/* Offline Test Simulation Button */}

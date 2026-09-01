@@ -4,33 +4,21 @@
 // ==============================================================================
 
 import React, { useState, useEffect } from 'react';
-<<<<<<< HEAD
-import { DEFAULT_STORE, db } from '../../db/offlineDb';
-import { SyncStatusIndicator } from './SyncStatusIndicator';
-import { useAuthStore, getRoleInfo } from '../../hooks/useAuthStore';
-import { Store, LogOut, ChevronDown, User, ShieldCheck } from 'lucide-react';
-=======
 import { SyncStatusIndicator } from './SyncStatusIndicator';
 import { useAuthStore, getRoleInfo } from '../../hooks/useAuthStore';
 import { useActiveStore } from '../../hooks/useActiveStore';
 import { Store, LogOut, ChevronDown, User, Lock } from 'lucide-react';
->>>>>>> c18622f (Bug Fix)
 
 interface AppHeaderProps {
   isOnline: boolean;
   isSimulatedOffline: boolean;
   onToggleSimulatedOffline: () => void;
   pendingCount: number;
-<<<<<<< HEAD
-  isSyncing: boolean;
-  onTriggerSync: () => void;
-=======
   failedCount: number;
   isSyncing: boolean;
   isStoragePersisted: boolean;
   onTriggerSync: () => void;
   onRetryFailed: () => void;
->>>>>>> c18622f (Bug Fix)
 }
 
 export const AppHeader: React.FC<AppHeaderProps> = ({
@@ -38,41 +26,15 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
   isSimulatedOffline,
   onToggleSimulatedOffline,
   pendingCount,
-<<<<<<< HEAD
-  isSyncing,
-  onTriggerSync,
-=======
   failedCount,
   isSyncing,
   isStoragePersisted,
   onTriggerSync,
   onRetryFailed,
->>>>>>> c18622f (Bug Fix)
 }) => {
   const {
     currentUser,
     logout,
-<<<<<<< HEAD
-    activeStoreId,
-    isSuperAdmin,
-    inspectingStore,
-    exitStoreInspection,
-  } = useAuthStore();
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [currentStore, setCurrentStore] = useState<any>(DEFAULT_STORE);
-  const roleInfo = getRoleInfo(currentUser?.role);
-
-  useEffect(() => {
-    async function loadCurrentStore() {
-      if (activeStoreId) {
-        const s = await db.stores.get(activeStoreId);
-        if (s) setCurrentStore(s);
-      }
-    }
-    loadCurrentStore();
-  }, [activeStoreId]);
-
-=======
     isSuperAdmin,
     inspectingStore,
     exitStoreInspection,
@@ -82,7 +44,6 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
   const currentStore = useActiveStore();
   const roleInfo = getRoleInfo(currentUser?.role);
 
->>>>>>> c18622f (Bug Fix)
   // Close menu on click outside
   useEffect(() => {
     const closeMenu = () => setIsMenuOpen(false);
@@ -157,12 +118,6 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
             isSimulatedOffline={isSimulatedOffline}
             onToggleSimulatedOffline={onToggleSimulatedOffline}
             pendingCount={pendingCount}
-<<<<<<< HEAD
-            isSyncing={isSyncing}
-            onTriggerSync={onTriggerSync}
-          />
-
-=======
             failedCount={failedCount}
             isSyncing={isSyncing}
             isStoragePersisted={isStoragePersisted}
@@ -182,7 +137,6 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
             </button>
           )}
 
->>>>>>> c18622f (Bug Fix)
           {/* User Account / Role Badge & Menu */}
           <div className="relative flex-shrink-0">
             <button

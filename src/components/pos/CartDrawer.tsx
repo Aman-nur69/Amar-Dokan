@@ -137,11 +137,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
           </div>
         ) : (
           items.map((item) => (
-<<<<<<< HEAD
-            <div key={`${item.product.id}-${item.selectedUnit}`} className="pt-3 first:pt-0">
-=======
             <div key={item.id} className="pt-3 first:pt-0">
->>>>>>> c18622f (Bug Fix)
               <div className="flex justify-between items-start mb-2">
                 <div>
                   <h4 className="font-bold text-slate-900 text-sm">{item.product.name_bn}</h4>
@@ -160,12 +156,8 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-2xl border border-slate-200">
                   <button
-<<<<<<< HEAD
-                    onClick={() => incrementQuantity(item.product.id, -1)}
-=======
                     onClick={() => incrementQuantity(item.id, -1)}
                     aria-label="পরিমাণ কমান"
->>>>>>> c18622f (Bug Fix)
                     className="w-11 h-11 rounded-xl bg-white hover:bg-slate-200 active:bg-rose-100 active:text-rose-600 flex items-center justify-center font-bold text-slate-700 shadow-sm transition-colors"
                   >
                     <Minus className="w-4 h-4" />
@@ -173,12 +165,6 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
 
                   <span className="min-w-[56px] text-center font-black text-base text-slate-900">
                     {toBanglaDigits(item.quantity)} {unitLabels[item.selectedUnit] || item.selectedUnit}
-<<<<<<< HEAD
-                  </span>
-
-                  <button
-                    onClick={() => incrementQuantity(item.product.id, 1)}
-=======
                     {item.selectedUnit === 'gm' && (
                       <span className="block text-[10px] font-semibold text-slate-400">
                         ± ৫০ গ্রাম
@@ -189,7 +175,6 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                   <button
                     onClick={() => incrementQuantity(item.id, 1)}
                     aria-label="পরিমাণ বাড়ান"
->>>>>>> c18622f (Bug Fix)
                     className="w-11 h-11 rounded-xl bg-white hover:bg-slate-200 active:bg-emerald-100 active:text-emerald-700 flex items-center justify-center font-bold text-slate-700 shadow-sm transition-colors"
                   >
                     <Plus className="w-4 h-4" />
@@ -197,11 +182,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                 </div>
 
                 <button
-<<<<<<< HEAD
-                  onClick={() => removeItem(item.product.id)}
-=======
                   onClick={() => removeItem(item.id)}
->>>>>>> c18622f (Bug Fix)
                   className="p-2.5 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
                   title="আইটেম মুছুন"
                 >

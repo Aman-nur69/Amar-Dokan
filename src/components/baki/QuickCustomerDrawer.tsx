@@ -5,12 +5,8 @@
 
 import React, { useState } from 'react';
 import { Customer, BakiTransaction } from '../../@types/database.types';
-<<<<<<< HEAD
-import { DEFAULT_STORE } from '../../db/offlineDb';
-=======
 import { useActiveStore } from '../../hooks/useActiveStore';
 import { toast } from '../../hooks/useToastStore';
->>>>>>> c18622f (Bug Fix)
 import {
   formatBengaliCurrency,
   toBanglaDigits,
@@ -69,11 +65,8 @@ export const QuickCustomerDrawer: React.FC<QuickCustomerDrawerProps> = ({
   onOpenPaymentCollect,
   onAddManualDue,
 }) => {
-<<<<<<< HEAD
-=======
   const store = useActiveStore();
 
->>>>>>> c18622f (Bug Fix)
   // Create form state
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
@@ -121,11 +114,7 @@ export const QuickCustomerDrawer: React.FC<QuickCustomerDrawerProps> = ({
     if (!selectedCustomer || !onAddManualDue) return;
 
     if (manualDueAmount <= 0) {
-<<<<<<< HEAD
-      alert('দয়া করে সঠিক টাকার পরিমাণ লিখুন।');
-=======
       toast.error('দয়া করে সঠিক টাকার পরিমাণ লিখুন।');
->>>>>>> c18622f (Bug Fix)
       return;
     }
 
@@ -142,11 +131,7 @@ export const QuickCustomerDrawer: React.FC<QuickCustomerDrawerProps> = ({
       setManualDueAmount(0);
       setManualDueNote('');
     } else {
-<<<<<<< HEAD
-      alert(res.error || 'বাকি যোগ করতে সমস্যা হয়েছে।');
-=======
       toast.error(res.error || 'বাকি যোগ করতে সমস্যা হয়েছে।');
->>>>>>> c18622f (Bug Fix)
     }
   };
 
@@ -155,11 +140,7 @@ export const QuickCustomerDrawer: React.FC<QuickCustomerDrawerProps> = ({
     const text = generateCustomerBakiStatementText(
       selectedCustomer,
       customerTransactions,
-<<<<<<< HEAD
-      DEFAULT_STORE
-=======
       store
->>>>>>> c18622f (Bug Fix)
     );
     navigator.clipboard.writeText(text);
     setCopied(true);
@@ -171,19 +152,11 @@ export const QuickCustomerDrawer: React.FC<QuickCustomerDrawerProps> = ({
     const url = generateWhatsAppReminderUrl({
       customerName: selectedCustomer.name,
       customerPhone: selectedCustomer.phone,
-<<<<<<< HEAD
-      storeName: DEFAULT_STORE.name,
-      storePhone: DEFAULT_STORE.phone,
-      dueAmount: selectedCustomer.current_balance,
-      bkashNumber: DEFAULT_STORE.bkash_number,
-      nagadNumber: DEFAULT_STORE.nagad_number,
-=======
       storeName: store.name,
       storePhone: store.phone,
       dueAmount: selectedCustomer.current_balance,
       bkashNumber: store.bkash_number,
       nagadNumber: store.nagad_number,
->>>>>>> c18622f (Bug Fix)
     });
     window.open(url, '_blank');
   };
@@ -193,17 +166,10 @@ export const QuickCustomerDrawer: React.FC<QuickCustomerDrawerProps> = ({
     const url = generateSmsReminderUrl({
       customerName: selectedCustomer.name,
       customerPhone: selectedCustomer.phone,
-<<<<<<< HEAD
-      storeName: DEFAULT_STORE.name,
-      storePhone: DEFAULT_STORE.phone,
-      dueAmount: selectedCustomer.current_balance,
-      bkashNumber: DEFAULT_STORE.bkash_number,
-=======
       storeName: store.name,
       storePhone: store.phone,
       dueAmount: selectedCustomer.current_balance,
       bkashNumber: store.bkash_number,
->>>>>>> c18622f (Bug Fix)
     });
     window.open(url, '_blank');
   };

@@ -1,10 +1,5 @@
-<<<<<<< HEAD
-@import url('https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&display=swap');
-
-=======
 /* Hind Siliguri is linked from index.html; importing it again here blocked
    CSS parsing on every load and fetched the family twice. */
->>>>>>> c18622f (Bug Fix)
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -59,12 +54,6 @@
   }
 
   #thermal-receipt,
-<<<<<<< HEAD
-  #thermal-receipt * {
-    visibility: visible;
-  }
-
-=======
   #thermal-receipt *,
   .printable-sheet,
   .printable-sheet * {
@@ -82,18 +71,13 @@
     background: #fff !important;
   }
 
->>>>>>> c18622f (Bug Fix)
   #thermal-receipt {
     position: absolute;
     left: 0;
     top: 0;
     width: 100% !important;
-<<<<<<< HEAD
-    max-width: 76mm !important; /* Standard 80mm receipt roll */
-=======
     /* Driven by the 58mm / 80mm toggle instead of being pinned to one roll. */
     max-width: var(--thermal-print-width, 76mm) !important;
->>>>>>> c18622f (Bug Fix)
     margin: 0 !important;
     padding: 2mm !important;
     font-family: 'Courier New', Courier, monospace !important;

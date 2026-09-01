@@ -4,23 +4,16 @@
 // ==============================================================================
 
 import React, { useState } from 'react';
-<<<<<<< HEAD
-import { db } from '../../db/offlineDb';
-=======
 import { db, buildSyncItem } from '../../db/offlineDb';
->>>>>>> c18622f (Bug Fix)
 import { useAuthStore } from '../../hooks/useAuthStore';
 import { Expense } from '../../@types/database.types';
 import { toBanglaDigits } from '../../lib/banglaNumberFormatter';
 import { X, Receipt, Check } from 'lucide-react';
 import { BigButton } from '../common/BigButton';
-<<<<<<< HEAD
-=======
 import { toast } from '../../hooks/useToastStore';
 import { useModalDismiss } from '../../hooks/useModalDismiss';
 import { todayDhakaKey } from '../../lib/dateUtils';
 import { round2 } from '../../lib/units';
->>>>>>> c18622f (Bug Fix)
 
 interface ExpenseLoggerModalProps {
   isOpen: boolean;
@@ -44,14 +37,6 @@ export const ExpenseLoggerModal: React.FC<ExpenseLoggerModalProps> = ({
   onClose,
   onExpenseAdded,
 }) => {
-<<<<<<< HEAD
-  const { activeStoreId } = useAuthStore();
-  const [category, setCategory] = useState(EXPENSE_CATEGORIES[0]);
-  const [amount, setAmount] = useState<number>(0);
-  const [note, setNote] = useState('');
-  const [expenseDate, setExpenseDate] = useState(new Date().toISOString().split('T')[0]);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-=======
   const { activeStoreId, currentUser } = useAuthStore();
   const [category, setCategory] = useState(EXPENSE_CATEGORIES[0]);
   const [amount, setAmount] = useState<number>(0);
@@ -60,18 +45,13 @@ export const ExpenseLoggerModal: React.FC<ExpenseLoggerModalProps> = ({
   const [expenseDate, setExpenseDate] = useState(todayDhakaKey());
   const [isSubmitting, setIsSubmitting] = useState(false);
   const dialogRef = useModalDismiss<HTMLDivElement>(isOpen, onClose);
->>>>>>> c18622f (Bug Fix)
 
   if (!isOpen) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (amount <= 0) {
-<<<<<<< HEAD
-      alert('দয়া করে খরচের সঠিক টাকার পরিমাণ লিখুন।');
-=======
       toast.error('দয়া করে খরচের সঠিক টাকার পরিমাণ লিখুন।');
->>>>>>> c18622f (Bug Fix)
       return;
     }
 
@@ -83,27 +63,6 @@ export const ExpenseLoggerModal: React.FC<ExpenseLoggerModalProps> = ({
         id: crypto.randomUUID(),
         store_id: targetStoreId,
         category,
-<<<<<<< HEAD
-        amount,
-        note: note.trim() || undefined,
-        expense_date: expenseDate,
-        created_at: now,
-      };
-
-      await db.expenses.add(expenseItem);
-
-      // Queue sync
-      await db.sync_queue.add({
-        id: crypto.randomUUID(),
-        table_name: 'expenses',
-        action: 'INSERT',
-        payload: expenseItem as unknown as Record<string, unknown>,
-        created_at: now,
-        retry_count: 0,
-        status: 'PENDING',
-      });
-
-=======
         amount: round2(amount),
         note: note.trim() || undefined,
         expense_date: expenseDate,
@@ -121,15 +80,11 @@ export const ExpenseLoggerModal: React.FC<ExpenseLoggerModalProps> = ({
       toast.success('খরচ সংরক্ষিত হয়েছে');
       setAmount(0);
       setNote('');
->>>>>>> c18622f (Bug Fix)
       onExpenseAdded();
       onClose();
     } catch (err) {
       console.error('[ExpenseLogger] Error saving expense:', err);
-<<<<<<< HEAD
-=======
       toast.error('খরচ সংরক্ষণ করা যায়নি।');
->>>>>>> c18622f (Bug Fix)
     } finally {
       setIsSubmitting(false);
     }
@@ -137,9 +92,6 @@ export const ExpenseLoggerModal: React.FC<ExpenseLoggerModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm animate-in fade-in">
-<<<<<<< HEAD
-      <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl border border-slate-200 overflow-hidden flex flex-col">
-=======
       <div
         ref={dialogRef}
         role="dialog"
@@ -147,7 +99,6 @@ export const ExpenseLoggerModal: React.FC<ExpenseLoggerModalProps> = ({
         tabIndex={-1}
         className="bg-white rounded-3xl w-full max-w-md shadow-2xl border border-slate-200 overflow-hidden flex flex-col"
       >
->>>>>>> c18622f (Bug Fix)
         {/* Header */}
         <div className="p-5 bg-slate-900 text-white flex justify-between items-center">
           <div className="flex items-center gap-2.5">

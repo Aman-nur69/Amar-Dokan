@@ -3,11 +3,6 @@
 // Bilingual Search (Bangla & English Phonetic) + Hardware HID Barcode Scanner
 // ==============================================================================
 
-<<<<<<< HEAD
-import React, { useEffect, useRef, useState } from 'react';
-import { Search, Barcode, X } from 'lucide-react';
-import { Product } from '../../@types/database.types';
-=======
 import React, { useEffect, useRef } from 'react';
 import { Search, Barcode, X } from 'lucide-react';
 import { Product } from '../../@types/database.types';
@@ -16,7 +11,6 @@ import { isAnyModalOpen } from '../../hooks/useModalDismiss';
 /** Scanners burst-type; humans do not. */
 const SCAN_GAP_MS = 50;
 const MIN_BARCODE_LENGTH = 8;
->>>>>>> c18622f (Bug Fix)
 
 interface ProductSearchBarProps {
   products: Product[];
@@ -31,40 +25,6 @@ export const ProductSearchBar: React.FC<ProductSearchBarProps> = ({
   searchQuery,
   onSearchChange,
 }) => {
-<<<<<<< HEAD
-  const [barcodeBuffer, setBarcodeBuffer] = useState('');
-  const lastKeyTimeRef = useRef<number>(0);
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  // Hardware Barcode Scanner Listener (detects continuous high-speed keystrokes <= 40ms)
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // Ignore keystrokes if focused inside an active form input (unless it's the barcode scan)
-      const target = e.target as HTMLElement;
-      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') {
-        if (target !== inputRef.current) return;
-      }
-
-      const currentTime = Date.now();
-      const interval = currentTime - lastKeyTimeRef.current;
-      lastKeyTimeRef.current = currentTime;
-
-      if (e.key === 'Enter') {
-        if (barcodeBuffer.length >= 3) {
-          e.preventDefault();
-          // Find matching barcode
-          const matchedProduct = products.find(
-            (p) => p.barcode && p.barcode.trim() === barcodeBuffer.trim()
-          );
-
-          if (matchedProduct) {
-            onSelectProduct(matchedProduct);
-            onSearchChange('');
-          } else {
-            console.warn('[Barcode Scanner] Product not found for code:', barcodeBuffer);
-          }
-          setBarcodeBuffer('');
-=======
   const inputRef = useRef<HTMLInputElement>(null);
 
   // The buffer lives in a ref, not state: as state it re-registered the window
@@ -105,37 +65,19 @@ export const ProductSearchBar: React.FC<ProductSearchBarProps> = ({
         } else {
           console.warn('[Barcode Scanner] Product not found for code:', code);
           onSearchChange(code);
->>>>>>> c18622f (Bug Fix)
         }
         return;
       }
 
-<<<<<<< HEAD
-      // Normal printable characters
-      if (e.key.length === 1) {
-        if (interval < 50) {
-          // Fast keystroke -> typical of hardware scanner
-          setBarcodeBuffer((prev) => prev + e.key);
-        } else {
-          // Slower manual keystroke -> reset buffer
-          setBarcodeBuffer(e.key);
-        }
-      }
-=======
       if (e.key.length !== 1) return;
 
       // A human types slower than SCAN_GAP_MS between characters.
       bufferRef.current = gap < SCAN_GAP_MS ? bufferRef.current + e.key : e.key;
->>>>>>> c18622f (Bug Fix)
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-<<<<<<< HEAD
-  }, [barcodeBuffer, products, onSelectProduct, onSearchChange]);
-=======
   }, [products, onSelectProduct, onSearchChange]);
->>>>>>> c18622f (Bug Fix)
 
   return (
     <div className="relative w-full">
@@ -157,10 +99,7 @@ export const ProductSearchBar: React.FC<ProductSearchBarProps> = ({
           {searchQuery && (
             <button
               onClick={() => onSearchChange('')}
-<<<<<<< HEAD
-=======
               aria-label="খোঁজা মুছুন"
->>>>>>> c18622f (Bug Fix)
               className="p-2 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100"
               title="মুছে ফেলুন"
             >

@@ -131,16 +131,12 @@ export const BakiKhataView: React.FC = () => {
       <PaymentCollectModal
         customer={selectedCustomerForPayment}
         isOpen={isPaymentModalOpen}
-<<<<<<< HEAD
-        onClose={() => setSelectedCustomerForPayment(null)}
-=======
         onClose={() => {
           // Both pieces of state have to reset, otherwise isPaymentModalOpen
           // stays true for the rest of the session.
           setIsPaymentModalOpen(false);
           setSelectedCustomerForPayment(null);
         }}
->>>>>>> c18622f (Bug Fix)
         onConfirm={collectPayment}
       />
 

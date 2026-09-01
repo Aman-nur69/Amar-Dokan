@@ -131,13 +131,6 @@ export function formatBengaliDate(dateInput: string | Date | null | undefined): 
   const month = monthsBn[d.getMonth()];
   const year = toBanglaDigits(d.getFullYear().toString());
 
-<<<<<<< HEAD
-  let hours = d.getHours();
-  const minutes = toBanglaDigits(d.getMinutes().toString().padStart(2, '0'));
-  const period = hours >= 12 ? 'দুপুর/বিকাল' : 'সকাল';
-  if (hours > 12) hours -= 12;
-  if (hours === 0) hours = 12;
-=======
   // Bengali time-of-day bands. Everything from noon onward used to be labelled
   // "দুপুর/বিকাল", so 11 PM read as afternoon and midnight as সকাল ১২.
   const rawHours = d.getHours();
@@ -153,7 +146,6 @@ export function formatBengaliDate(dateInput: string | Date | null | undefined): 
   let hours = rawHours % 12;
   if (hours === 0) hours = 12;
   const minutes = toBanglaDigits(d.getMinutes().toString().padStart(2, '0'));
->>>>>>> c18622f (Bug Fix)
   const bnHours = toBanglaDigits(hours.toString());
 
   return `${day} ${month} ${year}, ${period} ${bnHours}:${minutes}`;

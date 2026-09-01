@@ -4,15 +4,12 @@
 // ==============================================================================
 
 import React, { useState, useMemo } from 'react';
-<<<<<<< HEAD
-=======
 import { db, buildSyncItem } from '../../db/offlineDb';
 import { useAuthStore } from '../../hooks/useAuthStore';
 import { toast } from '../../hooks/useToastStore';
 import { useModalDismiss } from '../../hooks/useModalDismiss';
 import { CashCount } from '../../@types/database.types';
 import { round2 } from '../../lib/units';
->>>>>>> c18622f (Bug Fix)
 import { formatBengaliCurrency, toBanglaDigits } from '../../lib/banglaNumberFormatter';
 import { X, CheckCircle2, AlertTriangle, Calculator, Sparkles, RefreshCw } from 'lucide-react';
 import { BigButton } from '../common/BigButton';
@@ -20,16 +17,12 @@ import { BigButton } from '../common/BigButton';
 interface CashCountModalProps {
   isOpen: boolean;
   onClose: () => void;
-<<<<<<< HEAD
-  expectedCash: number;
-=======
   /** Net cash movement for the selected business day. */
   expectedCash: number;
   /** Cash left in the drawer at the previous closing. */
   openingFloat?: number;
   businessDate: string;
   onCounted?: (countedAmount: number) => void;
->>>>>>> c18622f (Bug Fix)
 }
 
 interface Denomination {
@@ -54,9 +47,6 @@ export const CashCountModal: React.FC<CashCountModalProps> = ({
   isOpen,
   onClose,
   expectedCash,
-<<<<<<< HEAD
-}) => {
-=======
   openingFloat = 0,
   businessDate,
   onCounted,
@@ -64,7 +54,6 @@ export const CashCountModal: React.FC<CashCountModalProps> = ({
   const { activeStoreId, currentUser } = useAuthStore();
   const [isSaving, setIsSaving] = useState(false);
   const dialogRef = useModalDismiss<HTMLDivElement>(isOpen, onClose);
->>>>>>> c18622f (Bug Fix)
   const [counts, setCounts] = useState<Record<number, number>>({
     1000: 0,
     500: 0,
@@ -112,19 +101,13 @@ export const CashCountModal: React.FC<CashCountModalProps> = ({
     return DENOMINATIONS.reduce((acc, d) => acc + d.value * (counts[d.value] || 0), 0);
   }, [counts, useManualTotal, directAmount]);
 
-<<<<<<< HEAD
-  const difference = totalPhysicalCash - expectedCash;
-=======
   // The drawer does not start empty: yesterday's closing cash is still in it.
   const expectedTotal = round2(openingFloat + expectedCash);
   const difference = round2(totalPhysicalCash - expectedTotal);
->>>>>>> c18622f (Bug Fix)
   const isMatch = Math.abs(difference) < 1;
   const isSurplus = difference > 0;
   const isShort = difference < 0;
 
-<<<<<<< HEAD
-=======
   /**
    * Saves the count. Previously the variance a shopkeeper had just discovered
    * disappeared the moment this dialog closed.
@@ -167,14 +150,10 @@ export const CashCountModal: React.FC<CashCountModalProps> = ({
     }
   };
 
->>>>>>> c18622f (Bug Fix)
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-900/80 backdrop-blur-sm animate-in fade-in overflow-y-auto">
-<<<<<<< HEAD
-      <div className="bg-white rounded-3xl w-full max-w-xl shadow-2xl border border-slate-200 my-auto overflow-hidden flex flex-col max-h-[92vh]">
-=======
       <div
         ref={dialogRef}
         role="dialog"
@@ -182,7 +161,6 @@ export const CashCountModal: React.FC<CashCountModalProps> = ({
         tabIndex={-1}
         className="bg-white rounded-3xl w-full max-w-xl shadow-2xl border border-slate-200 my-auto overflow-hidden flex flex-col max-h-[92vh]"
       >
->>>>>>> c18622f (Bug Fix)
         {/* Header */}
         <div className="p-5 bg-slate-900 text-white flex justify-between items-center flex-shrink-0">
           <div className="flex items-center gap-3">
@@ -212,10 +190,6 @@ export const CashCountModal: React.FC<CashCountModalProps> = ({
                 সফটওয়্যার অনুযায়ী থাকার কথা
               </span>
               <span className="text-xl font-black text-slate-900">
-<<<<<<< HEAD
-                {formatBengaliCurrency(expectedCash)}
-              </span>
-=======
                 {formatBengaliCurrency(expectedTotal)}
               </span>
               {openingFloat > 0 && (
@@ -223,7 +197,6 @@ export const CashCountModal: React.FC<CashCountModalProps> = ({
                   (গতকালের জের {formatBengaliCurrency(openingFloat)} সহ)
                 </span>
               )}
->>>>>>> c18622f (Bug Fix)
             </div>
 
             <div className="p-3.5 rounded-2xl bg-white border border-slate-200 shadow-sm">
@@ -367,10 +340,6 @@ export const CashCountModal: React.FC<CashCountModalProps> = ({
 
         {/* Modal Footer */}
         <div className="p-4 bg-slate-100 border-t border-slate-200 flex gap-3">
-<<<<<<< HEAD
-          <BigButton variant="secondary" onClick={onClose} className="flex-1">
-            হিসাব শেষ ও বন্ধ
-=======
           <BigButton variant="outline" onClick={onClose} className="flex-1">
             বন্ধ করুন
           </BigButton>
@@ -381,7 +350,6 @@ export const CashCountModal: React.FC<CashCountModalProps> = ({
             className="flex-1"
           >
             {isSaving ? 'সংরক্ষণ হচ্ছে...' : 'গণনা সংরক্ষণ করুন'}
->>>>>>> c18622f (Bug Fix)
           </BigButton>
         </div>
       </div>

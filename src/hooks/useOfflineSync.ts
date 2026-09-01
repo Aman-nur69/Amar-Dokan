@@ -3,11 +3,7 @@
 // Reconnects & Replays Mutations to Supabase with Conflict Resolution
 // ==============================================================================
 
-<<<<<<< HEAD
-import { useState, useEffect, useCallback } from 'react';
-=======
 import { useState, useEffect, useCallback, useRef } from 'react';
->>>>>>> c18622f (Bug Fix)
 import { db } from '../db/offlineDb';
 import { isSupabaseConfigured, supabase } from '../lib/supabaseClient';
 import { SyncQueueItem } from '../@types/database.types';
@@ -27,19 +23,6 @@ const TABLE_HIERARCHY_RANK: Record<string, number> = {
   supplier_chalans: 10,
   chalan_items: 11,
   supplier_payments: 12,
-<<<<<<< HEAD
-};
-
-export function useOfflineSync() {
-  const [isOnline, setIsOnline] = useState<boolean>(navigator.onLine);
-  const [isSimulatedOffline, setIsSimulatedOffline] = useState<boolean>(false);
-  const [pendingCount, setPendingCount] = useState<number>(0);
-  const [isSyncing, setIsSyncing] = useState<boolean>(false);
-  const [lastSyncTime, setLastSyncTime] = useState<Date | null>(null);
-  const [isStoragePersisted, setIsStoragePersisted] = useState<boolean>(true);
-
-  // Effective online status: True only if real network is online AND simulation is off
-=======
   cash_counts: 13,
   day_closings: 14,
 };
@@ -73,7 +56,6 @@ export function useOfflineSync() {
   // instantly — burning all five retries in a couple of seconds.
   const syncingRef = useRef(false);
 
->>>>>>> c18622f (Bug Fix)
   const effectiveOnline = isOnline && !isSimulatedOffline;
 
   // Check storage persistence status
@@ -81,29 +63,15 @@ export function useOfflineSync() {
     async function checkPersist() {
       if (navigator.storage && navigator.storage.persisted) {
         try {
-<<<<<<< HEAD
-          const persisted = await navigator.storage.persisted();
-          setIsStoragePersisted(persisted);
-        } catch {
-          // ignore
-=======
           setIsStoragePersisted(await navigator.storage.persisted());
         } catch {
           setIsStoragePersisted(false);
->>>>>>> c18622f (Bug Fix)
         }
       }
     }
     checkPersist();
   }, []);
 
-<<<<<<< HEAD
-  // Check pending mutation count
-  const checkPendingQueue = useCallback(async () => {
-    try {
-      const count = await db.sync_queue.where('status').equals('PENDING').count();
-      setPendingCount(count);
-=======
   const checkPendingQueue = useCallback(async () => {
     try {
       const [pending, failed] = await Promise.all([
@@ -126,19 +94,11 @@ export function useOfflineSync() {
         .filter((item) => new Date(item.synced_at || item.created_at).getTime() < cutoff)
         .map((item) => item.id);
       if (expired.length > 0) await db.sync_queue.bulkDelete(expired);
->>>>>>> c18622f (Bug Fix)
     } catch {
       // ignore
     }
   }, []);
 
-<<<<<<< HEAD
-  // Process Dependency-Ordered Sync Queue when online
-  const processSyncQueue = useCallback(async () => {
-    if (!effectiveOnline || isSyncing) return;
-
-    try {
-=======
   const processSyncQueue = useCallback(async () => {
     if (!effectiveOnline || syncingRef.current) return;
 
@@ -147,48 +107,11 @@ export function useOfflineSync() {
 
     try {
       const now = Date.now();
->>>>>>> c18622f (Bug Fix)
       const rawPendingItems: SyncQueueItem[] = await db.sync_queue
         .where('status')
         .equals('PENDING')
         .toArray();
 
-<<<<<<< HEAD
-      if (rawPendingItems.length === 0) {
-        setPendingCount(0);
-        return;
-      }
-
-      // Sort items topologically to guarantee Foreign Key integrity:
-      // - For INSERT and UPDATE: lowest rank first (parent -> child)
-      // - For DELETE: highest rank first (child -> parent)
-      const sortedItems = [...rawPendingItems].sort((a, b) => {
-        const rankA = TABLE_HIERARCHY_RANK[a.table_name] || 99;
-        const rankB = TABLE_HIERARCHY_RANK[b.table_name] || 99;
-
-        if (a.action === 'DELETE' && b.action === 'DELETE') {
-          return rankB - rankA; // child before parent
-        }
-        if (a.action === 'DELETE') return 1;
-        if (b.action === 'DELETE') return -1;
-
-        if (rankA !== rankB) return rankA - rankB; // parent before child
-        return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
-      });
-
-      setIsSyncing(true);
-      console.log(`[AmarDokan Sync] Processing ${sortedItems.length} ordered mutations...`);
-
-      const hasLiveSupabase = isSupabaseConfigured();
-
-      for (const item of sortedItems) {
-        // Poison pill guard: quarantine mutations that exceeded retry threshold
-        if (item.retry_count >= 5) {
-          console.warn(`[AmarDokan Sync] Item ${item.id} quarantined due to excessive retries.`);
-          await db.sync_queue.update(item.id, {
-            status: 'FAILED',
-            error_message: 'Max retry attempts (5) reached.',
-=======
       // Respect backoff windows.
       const dueItems = rawPendingItems.filter(
         (item) => !item.next_attempt_at || item.next_attempt_at <= now
@@ -231,42 +154,11 @@ export function useOfflineSync() {
           await db.sync_queue.update(item.id, {
             status: 'FAILED',
             error_message: `Max retry attempts (${MAX_RETRIES}) reached.`,
->>>>>>> c18622f (Bug Fix)
           });
           continue;
         }
 
         try {
-<<<<<<< HEAD
-          if (hasLiveSupabase) {
-            const recordId = (item.payload as { id?: string })?.id;
-
-            if (item.action === 'INSERT') {
-              // Upsert to handle offline idempotent replays smoothly
-              await supabase.from(item.table_name).upsert(item.payload, { onConflict: 'id' });
-            } else if (item.action === 'UPDATE') {
-              if (recordId) {
-                await supabase.from(item.table_name).update(item.payload).eq('id', recordId);
-              }
-            } else if (item.action === 'DELETE') {
-              if (recordId) {
-                await supabase.from(item.table_name).delete().eq('id', recordId);
-              }
-            }
-          }
-
-          // Mark locally as SYNCED
-          await db.sync_queue.update(item.id, {
-            status: 'SYNCED',
-          });
-        } catch (err) {
-          console.warn(`[AmarDokan Sync] Failed to sync item ${item.id}:`, err);
-          const nextRetry = (item.retry_count || 0) + 1;
-          await db.sync_queue.update(item.id, {
-            retry_count: nextRetry,
-            status: nextRetry >= 5 ? 'FAILED' : 'PENDING',
-            error_message: String(err),
-=======
           const recordId = (item.payload as { id?: string })?.id;
 
           // supabase-js resolves with { data, error }; it does NOT throw.
@@ -303,31 +195,10 @@ export function useOfflineSync() {
             status: nextRetry >= MAX_RETRIES ? 'FAILED' : 'PENDING',
             next_attempt_at: Date.now() + backoffDelayMs(nextRetry),
             error_message: message,
->>>>>>> c18622f (Bug Fix)
           });
         }
       }
 
-<<<<<<< HEAD
-      setLastSyncTime(new Date());
-      await checkPendingQueue();
-    } catch (err) {
-      console.error('[AmarDokan Sync] Sync queue processing error:', err);
-    } finally {
-      setIsSyncing(false);
-    }
-  }, [effectiveOnline, isSyncing, checkPendingQueue]);
-
-  // Network event listeners
-  useEffect(() => {
-    const handleOnline = () => {
-      setIsOnline(true);
-    };
-
-    const handleOffline = () => {
-      setIsOnline(false);
-    };
-=======
       setLastSyncError(firstError);
       setLastSyncTime(new Date());
       await pruneSyncedHistory();
@@ -345,30 +216,16 @@ export function useOfflineSync() {
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
     const handleOffline = () => setIsOnline(false);
->>>>>>> c18622f (Bug Fix)
 
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
 
-<<<<<<< HEAD
-    // Initial check
-    checkPendingQueue();
-
-    // Periodic sync poll every 10 seconds
-    const interval = setInterval(() => {
-      checkPendingQueue();
-      if (effectiveOnline) {
-        processSyncQueue();
-      }
-    }, 10000);
-=======
     checkPendingQueue();
 
     const interval = setInterval(() => {
       checkPendingQueue();
       if (effectiveOnline) processSyncQueue();
     }, 15000);
->>>>>>> c18622f (Bug Fix)
 
     return () => {
       window.removeEventListener('online', handleOnline);
@@ -377,19 +234,6 @@ export function useOfflineSync() {
     };
   }, [effectiveOnline, checkPendingQueue, processSyncQueue]);
 
-<<<<<<< HEAD
-  // When network transitions back to online, immediately trigger FIFO queue processing
-  useEffect(() => {
-    if (effectiveOnline) {
-      processSyncQueue();
-    }
-  }, [effectiveOnline, processSyncQueue]);
-
-  const toggleSimulatedOffline = () => {
-    setIsSimulatedOffline((prev) => !prev);
-  };
-
-=======
   // Immediately drain the queue when connectivity returns.
   useEffect(() => {
     if (effectiveOnline) processSyncQueue();
@@ -419,20 +263,12 @@ export function useOfflineSync() {
     await processSyncQueue();
   }, [checkPendingQueue, processSyncQueue]);
 
->>>>>>> c18622f (Bug Fix)
   return {
     isOnline: effectiveOnline,
     isRealOnline: isOnline,
     isSimulatedOffline,
     toggleSimulatedOffline,
     pendingCount,
-<<<<<<< HEAD
-    isSyncing,
-    lastSyncTime,
-    isStoragePersisted,
-    triggerSync: processSyncQueue,
-    checkPendingQueue,
-=======
     failedCount,
     isSyncing,
     lastSyncTime,
@@ -441,6 +277,5 @@ export function useOfflineSync() {
     triggerSync: processSyncQueue,
     checkPendingQueue,
     retryFailedItems,
->>>>>>> c18622f (Bug Fix)
   };
 }

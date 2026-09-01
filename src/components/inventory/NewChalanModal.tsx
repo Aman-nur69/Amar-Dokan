@@ -4,12 +4,9 @@
 // ==============================================================================
 
 import React, { useState, useEffect } from 'react';
-<<<<<<< HEAD
-=======
 import { toast } from '../../hooks/useToastStore';
 import { useModalDismiss } from '../../hooks/useModalDismiss';
 import { round2 } from '../../lib/units';
->>>>>>> c18622f (Bug Fix)
 import { Product, ProductUnit } from '../../@types/database.types';
 import { formatBengaliCurrency, toBanglaDigits } from '../../lib/banglaNumberFormatter';
 import { X, Plus, Trash2, Check, Truck, Sparkles, CheckCircle2, CircleDollarSign } from 'lucide-react';
@@ -108,11 +105,8 @@ export const NewChalanModal: React.FC<NewChalanModalProps> = ({
     }
   }, [isOpen, products]);
 
-<<<<<<< HEAD
-=======
   const dialogRef = useModalDismiss<HTMLDivElement>(isOpen, onClose);
 
->>>>>>> c18622f (Bug Fix)
   if (!isOpen) return null;
 
   // Calculate totals
@@ -155,12 +149,8 @@ export const NewChalanModal: React.FC<NewChalanModalProps> = ({
 
     setLineItems((prev) => {
       const updated = [...prev];
-<<<<<<< HEAD
-      const item = updated[index];
-=======
       const item = { ...updated[index] };
       updated[index] = item;
->>>>>>> c18622f (Bug Fix)
       item.productId = matched.id;
       item.productName = matched.name_bn;
       item.unit = matched.unit;
@@ -175,12 +165,8 @@ export const NewChalanModal: React.FC<NewChalanModalProps> = ({
     const cleanQty = Math.max(0, qty);
     setLineItems((prev) => {
       const updated = [...prev];
-<<<<<<< HEAD
-      const item = updated[index];
-=======
       const item = { ...updated[index] };
       updated[index] = item;
->>>>>>> c18622f (Bug Fix)
       item.quantity = cleanQty;
       item.subtotal = cleanQty * Number(item.unitCostPrice || 0);
       return updated;
@@ -191,12 +177,8 @@ export const NewChalanModal: React.FC<NewChalanModalProps> = ({
     const cleanCost = Math.max(0, cost);
     setLineItems((prev) => {
       const updated = [...prev];
-<<<<<<< HEAD
-      const item = updated[index];
-=======
       const item = { ...updated[index] };
       updated[index] = item;
->>>>>>> c18622f (Bug Fix)
       item.unitCostPrice = cleanCost;
       item.subtotal = Number(item.quantity || 0) * cleanCost;
       return updated;
@@ -224,20 +206,12 @@ export const NewChalanModal: React.FC<NewChalanModalProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!supplierName.trim()) {
-<<<<<<< HEAD
-      alert('দয়া করে কোম্পানি বা ডিলারের নাম লিখুন।');
-=======
       toast.error('দয়া করে কোম্পানি বা ডিলারের নাম লিখুন।');
->>>>>>> c18622f (Bug Fix)
       return;
     }
 
     if (lineItems.length === 0 || totalChalanAmount <= 0) {
-<<<<<<< HEAD
-      alert('চালানে অন্তত একটি পণ্যের সঠিক পরিমাণ ও ক্রয় দর থাকতে হবে।');
-=======
       toast.error('চালানে অন্তত একটি পণ্যের সঠিক পরিমাণ ও ক্রয় দর থাকতে হবে।');
->>>>>>> c18622f (Bug Fix)
       return;
     }
 
@@ -276,19 +250,12 @@ export const NewChalanModal: React.FC<NewChalanModalProps> = ({
     if (res.success) {
       onClose();
     } else {
-<<<<<<< HEAD
-      alert(res.error || 'চালান এন্ট্রি করতে সমস্যা হয়েছে।');
-=======
       toast.error(res.error || 'চালান এন্ট্রি করতে সমস্যা হয়েছে।');
->>>>>>> c18622f (Bug Fix)
     }
   };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-900/80 backdrop-blur-sm animate-in fade-in overflow-y-auto">
-<<<<<<< HEAD
-      <div className="bg-white rounded-3xl w-full max-w-3xl shadow-2xl border border-slate-200 my-auto overflow-hidden flex flex-col max-h-[92vh]">
-=======
       <div
         ref={dialogRef}
         role="dialog"
@@ -297,7 +264,6 @@ export const NewChalanModal: React.FC<NewChalanModalProps> = ({
         tabIndex={-1}
         className="bg-white rounded-3xl w-full max-w-3xl shadow-2xl border border-slate-200 my-auto overflow-hidden flex flex-col max-h-[92vh]"
       >
->>>>>>> c18622f (Bug Fix)
         {/* Modal Header */}
         <div className="p-5 bg-slate-900 text-white flex justify-between items-center flex-shrink-0">
           <div className="flex items-center gap-3">

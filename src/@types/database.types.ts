@@ -45,10 +45,6 @@ export interface Profile {
   full_name: string;
   phone?: string;
   role: UserRole;
-<<<<<<< HEAD
-  password?: string;
-  pin_code?: string;
-=======
   /** @deprecated Legacy plaintext secret. Upgraded to password_hash on first login. */
   password?: string;
   /** Salted SHA-256 digest — see lib/secureHash.ts. Never render this. */
@@ -57,7 +53,6 @@ export interface Profile {
   pin_code?: string;
   /** Salted digest of the 4-digit register-lock PIN. */
   pin_hash?: string;
->>>>>>> c18622f (Bug Fix)
   is_active?: boolean;
   created_at: string;
   updated_at: string;
@@ -108,22 +103,12 @@ export interface Sale {
   store_id: string;
   customer_id?: string;
   invoice_no: string;
-<<<<<<< HEAD
-=======
   /** Dhaka-local business date (YYYY-MM-DD) this sale belongs to. */
   business_date: string;
->>>>>>> c18622f (Bug Fix)
   total_amount: number;
   discount_amount: number;
   paid_amount: number;
   due_amount: number;
-<<<<<<< HEAD
-  payment_method: PaymentMethod;
-  notes?: string;
-  created_at: string;
-  updated_at: string;
-  // Local enriched fields
-=======
   cash_amount: number;
   mfs_amount: number;
   mfs_provider?: MfsProvider;
@@ -134,7 +119,6 @@ export interface Sale {
   created_at: string;
   updated_at: string;
   // Local enriched fields — stripped before sync
->>>>>>> c18622f (Bug Fix)
   customer_name?: string;
   items?: SaleItem[];
 }
@@ -174,8 +158,6 @@ export interface Expense {
   amount: number;
   note?: string;
   expense_date: string;
-<<<<<<< HEAD
-=======
   created_by?: string;
   created_at: string;
 }
@@ -210,7 +192,6 @@ export interface DayClosing {
   counted_cash?: number;
   variance?: number;
   closed_by?: string;
->>>>>>> c18622f (Bug Fix)
   created_at: string;
 }
 
@@ -237,11 +218,6 @@ export interface ChalanItem {
   chalan_id: string;
   product_id: string;
   product_name_bn: string;
-<<<<<<< HEAD
-  quantity: number;
-  unit: ProductUnit;
-  unit_cost_price: number;
-=======
   /** As entered on the supplier's memo (e.g. 500 with unit 'gm'). */
   quantity: number;
   unit: ProductUnit;
@@ -249,7 +225,6 @@ export interface ChalanItem {
   /** Converted into the product's base unit so the server can replenish stock. */
   base_quantity?: number;
   base_unit_cost?: number;
->>>>>>> c18622f (Bug Fix)
   unit_selling_price?: number;
   subtotal: number;
   created_at: string;
@@ -270,20 +245,6 @@ export interface SupplierPayment {
 
 export type SyncStatus = 'PENDING' | 'SYNCED' | 'FAILED';
 
-<<<<<<< HEAD
-export interface SyncQueueItem {
-  id: string;
-  table_name:
-    | 'sales'
-    | 'sale_items'
-    | 'baki_transactions'
-    | 'customers'
-    | 'products'
-    | 'expenses'
-    | 'supplier_chalans'
-    | 'chalan_items'
-    | 'supplier_payments';
-=======
 export type SyncTableName =
   | 'stores'
   | 'profiles'
@@ -303,17 +264,13 @@ export type SyncTableName =
 export interface SyncQueueItem {
   id: string;
   table_name: SyncTableName;
->>>>>>> c18622f (Bug Fix)
   action: 'INSERT' | 'UPDATE' | 'DELETE';
   payload: Record<string, unknown>;
   created_at: string;
   retry_count: number;
   status: SyncStatus;
   error_message?: string;
-<<<<<<< HEAD
-=======
   /** Epoch ms before which this item must not be retried (exponential backoff). */
   next_attempt_at?: number;
   synced_at?: string;
->>>>>>> c18622f (Bug Fix)
 }

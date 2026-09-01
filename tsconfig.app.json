@@ -16,14 +16,11 @@
     "noEmit": true,
     "jsx": "react-jsx",
 
-<<<<<<< HEAD
-=======
     /* Type safety - this is a money-handling codebase, so strict is on. */
     "strict": true,
     "noImplicitOverride": true,
     "noUncheckedIndexedAccess": false,
 
->>>>>>> c18622f (Bug Fix)
     /* Linting */
     "noUnusedLocals": false,
     "noUnusedParameters": false,

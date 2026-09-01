@@ -17,13 +17,6 @@ import { SelectBakiCustomerModal } from '../components/pos/SelectBakiCustomerMod
 import { NewCustomerModal } from '../components/baki/NewCustomerModal';
 import { Product, Customer } from '../@types/database.types';
 import { formatBengaliCurrency, toBanglaDigits } from '../lib/banglaNumberFormatter';
-<<<<<<< HEAD
-import { ShoppingBag, ArrowRight, Check, Zap, Layers, Boxes } from 'lucide-react';
-
-export const POSView: React.FC = () => {
-  const { allProducts, searchQuery, setSearchQuery } = useInventory();
-  const { allCustomers, addCustomer } = useBakiKhata();
-=======
 import { matchesProduct } from '../lib/phoneticSearch';
 import { useAuthStore } from '../hooks/useAuthStore';
 import { useModalDismiss } from '../hooks/useModalDismiss';
@@ -33,7 +26,6 @@ export const POSView: React.FC = () => {
   const { allProducts, searchQuery, setSearchQuery, refreshInventory } = useInventory();
   const { allCustomers, addCustomer, refreshData: refreshKhata } = useBakiKhata();
   const { isManagerOrAbove } = useAuthStore();
->>>>>>> c18622f (Bug Fix)
   const {
     items,
     addItem,
@@ -47,13 +39,9 @@ export const POSView: React.FC = () => {
     getItemCount,
   } = useCartStore();
 
-<<<<<<< HEAD
-  const { completeCheckout, lastReceipt, setLastReceipt } = useSalesEngine();
-=======
   const { completeCheckout, lastReceipt, setLastReceipt, isProcessing, blockedBy, clearBlock } =
     useSalesEngine();
   const overrideDialogRef = useModalDismiss<HTMLDivElement>(Boolean(blockedBy), clearBlock);
->>>>>>> c18622f (Bug Fix)
 
   // Customer Selection & Creation Modal States
   const [isSelectCustomerModalOpen, setIsSelectCustomerModalOpen] = useState(false);
@@ -66,31 +54,16 @@ export const POSView: React.FC = () => {
   const quickItems = allProducts.filter((p) => p.is_quick_item);
 
   // Filtered search list if search query entered
-<<<<<<< HEAD
-  const searchResults = searchQuery
-    ? allProducts.filter(
-        (p) =>
-          p.name_bn.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          (p.name_en && p.name_en.toLowerCase().includes(searchQuery.toLowerCase())) ||
-          (p.barcode && p.barcode.includes(searchQuery))
-      )
-=======
   // Matches Bengali, English, barcode AND English phonetics ("chini", "tel"),
   // which the product promised but never implemented.
   const searchResults = searchQuery
     ? allProducts.filter((p) => matchesProduct(p, searchQuery))
->>>>>>> c18622f (Bug Fix)
     : [];
 
   const handleProductSelect = (product: Product) => {
     addItem(product, 1, product.unit);
   };
 
-<<<<<<< HEAD
-  const handleCashCheckout = async () => {
-    if (items.length === 0) return;
-    await completeCheckout('CASH');
-=======
   // Stock badges and khata balances are separate hook instances, so they went
   // stale the moment a sale committed. Refresh both after every checkout.
   const afterCheckout = async () => {
@@ -101,7 +74,6 @@ export const POSView: React.FC = () => {
     if (items.length === 0) return;
     const receipt = await completeCheckout('CASH');
     if (receipt) await afterCheckout();
->>>>>>> c18622f (Bug Fix)
   };
 
   const handleBakiCheckout = async () => {
@@ -111,12 +83,8 @@ export const POSView: React.FC = () => {
       setIsSelectCustomerModalOpen(true);
       return;
     }
-<<<<<<< HEAD
-    await completeCheckout('BAKI');
-=======
     const receipt = await completeCheckout('BAKI');
     if (receipt) await afterCheckout();
->>>>>>> c18622f (Bug Fix)
   };
 
   const handleCustomerSelected = (customer: Customer) => {
@@ -130,9 +98,6 @@ export const POSView: React.FC = () => {
   };
 
   const handleSplitConfirm = async (method: 'CASH' | 'BAKI' | 'SPLIT') => {
-<<<<<<< HEAD
-    await completeCheckout(method);
-=======
     const receipt = await completeCheckout(method);
     if (receipt) await afterCheckout();
   };
@@ -142,7 +107,6 @@ export const POSView: React.FC = () => {
     clearBlock();
     const receipt = await completeCheckout(undefined, { allowOverLimit: true });
     if (receipt) await afterCheckout();
->>>>>>> c18622f (Bug Fix)
   };
 
   const totalAmount = getTotalAmount();
@@ -266,12 +230,8 @@ export const POSView: React.FC = () => {
             {/* Direct 1-Tap Cash Sale Button on Mobile */}
             <button
               onClick={handleCashCheckout}
-<<<<<<< HEAD
-              className="flex-1 h-14 px-4 rounded-2xl bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-black text-sm flex items-center justify-between shadow-xl border border-emerald-500 animate-in slide-in-from-bottom-2"
-=======
               disabled={isProcessing}
               className="flex-1 h-14 px-4 rounded-2xl disabled:opacity-60 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-black text-sm flex items-center justify-between shadow-xl border border-emerald-500 animate-in slide-in-from-bottom-2"
->>>>>>> c18622f (Bug Fix)
             >
               <div className="flex items-center gap-2">
                 <Zap className="w-5 h-5 fill-white" />
@@ -333,8 +293,6 @@ export const POSView: React.FC = () => {
         receipt={lastReceipt}
         onClose={() => setLastReceipt(null)}
       />
-<<<<<<< HEAD
-=======
 
       {/* 5. Credit limit gate */}
       {blockedBy && (
@@ -393,7 +351,6 @@ export const POSView: React.FC = () => {
           </div>
         </div>
       )}
->>>>>>> c18622f (Bug Fix)
     </div>
   );
 };

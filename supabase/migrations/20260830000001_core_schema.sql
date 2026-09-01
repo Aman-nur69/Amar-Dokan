@@ -1,12 +1,4 @@
 -- ==============================================================================
-<<<<<<< HEAD
--- MudiDokan (মুদিদোকান) Core Relational Schema & Financial ACID Engine
--- Migration: 20260830000001_core_schema.sql
--- Targets: PostgreSQL 15+ (Supabase)
--- ==============================================================================
-
--- Enable UUID extension
-=======
 -- Amar Dokan / MudiDokan (আমার দোকান) Core Relational Schema & Financial Engine
 -- Migration: 20260830000001_core_schema.sql
 -- Targets: PostgreSQL 15+ (Supabase)
@@ -23,7 +15,6 @@
 -- those derived columns, otherwise the change lands twice.
 -- ==============================================================================
 
->>>>>>> c18622f (Bug Fix)
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- ------------------------------------------------------------------------------
@@ -36,11 +27,6 @@ CREATE TABLE IF NOT EXISTS stores (
     proprietor VARCHAR(255) NOT NULL,
     phone VARCHAR(15) NOT NULL,
     address TEXT NOT NULL,
-<<<<<<< HEAD
-    bkash_number VARCHAR(15),
-    nagad_number VARCHAR(15),
-    currency_symbol VARCHAR(5) DEFAULT '৳',
-=======
     -- Onboarding paperwork collected at registration.
     trade_licence_no VARCHAR(100),
     trade_licence_doc_url TEXT,
@@ -71,27 +57,13 @@ CREATE TABLE IF NOT EXISTS profiles (
     phone VARCHAR(15),
     role VARCHAR(50) NOT NULL DEFAULT 'owner'
         CHECK (role IN ('super_admin', 'owner', 'manager', 'cashier')),
->>>>>>> c18622f (Bug Fix)
     is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMPTZ DEFAULT TIMEZONE('Asia/Dhaka', NOW()),
     updated_at TIMESTAMPTZ DEFAULT TIMEZONE('Asia/Dhaka', NOW())
 );
 
-<<<<<<< HEAD
-CREATE TABLE IF NOT EXISTS profiles (
-    id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
-    store_id UUID NOT NULL REFERENCES stores(id) ON DELETE CASCADE,
-    full_name VARCHAR(255) NOT NULL,
-    phone VARCHAR(15),
-    role VARCHAR(50) DEFAULT 'owner' CHECK (role IN ('owner', 'manager', 'cashier')),
-    pin_code VARCHAR(6) DEFAULT '1234',
-    created_at TIMESTAMPTZ DEFAULT TIMEZONE('Asia/Dhaka', NOW()),
-    updated_at TIMESTAMPTZ DEFAULT TIMEZONE('Asia/Dhaka', NOW())
-);
-=======
 CREATE UNIQUE INDEX IF NOT EXISTS idx_profiles_phone ON profiles (phone) WHERE phone IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_profiles_store ON profiles (store_id);
->>>>>>> c18622f (Bug Fix)
 
 -- ------------------------------------------------------------------------------
 -- 2. PRODUCT CATALOG & INVENTORY
@@ -116,12 +88,9 @@ CREATE TABLE IF NOT EXISTS products (
     unit VARCHAR(20) DEFAULT 'piece' CHECK (unit IN ('kg', 'gm', 'litre', 'packet', 'piece', 'hali')),
     cost_price NUMERIC(12, 2) NOT NULL DEFAULT 0.00 CHECK (cost_price >= 0),
     selling_price NUMERIC(12, 2) NOT NULL DEFAULT 0.00 CHECK (selling_price >= 0),
-<<<<<<< HEAD
-=======
     -- Deliberately allowed to go negative: a shopkeeper must never be blocked
     -- from selling goods physically on the shelf, and a silent clamp to zero
     -- hides the discrepancy instead of surfacing it at the next count.
->>>>>>> c18622f (Bug Fix)
     stock_quantity NUMERIC(12, 3) NOT NULL DEFAULT 0.000,
     min_stock_alert NUMERIC(12, 3) NOT NULL DEFAULT 5.000,
     is_quick_item BOOLEAN DEFAULT FALSE,
@@ -143,12 +112,8 @@ CREATE TABLE IF NOT EXISTS customers (
     name VARCHAR(255) NOT NULL,
     phone VARCHAR(11) NOT NULL,
     address TEXT,
-<<<<<<< HEAD
-    current_balance NUMERIC(12, 2) NOT NULL DEFAULT 0.00, -- Positive = Customer owes shopkeeper (Due)
-=======
     -- Positive = customer owes the shop. Negative = customer paid in advance.
     current_balance NUMERIC(12, 2) NOT NULL DEFAULT 0.00,
->>>>>>> c18622f (Bug Fix)
     credit_limit NUMERIC(12, 2) NOT NULL DEFAULT 5000.00,
     is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMPTZ DEFAULT TIMEZONE('Asia/Dhaka', NOW()),
@@ -156,44 +121,24 @@ CREATE TABLE IF NOT EXISTS customers (
     CONSTRAINT chk_customer_phone CHECK (phone ~ '^01[3-9][0-9]{8}$')
 );
 
-<<<<<<< HEAD
-CREATE INDEX IF NOT EXISTS idx_customers_store_phone ON customers (store_id, phone);
-
--- ------------------------------------------------------------------------------
--- 4. SALES & CART TRANSACTIONS
-=======
 CREATE UNIQUE INDEX IF NOT EXISTS idx_customers_store_phone ON customers (store_id, phone);
 
 -- ------------------------------------------------------------------------------
 -- 4. SALES
->>>>>>> c18622f (Bug Fix)
 -- ------------------------------------------------------------------------------
 
 CREATE TABLE IF NOT EXISTS sales (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     store_id UUID NOT NULL REFERENCES stores(id) ON DELETE CASCADE,
     customer_id UUID REFERENCES customers(id) ON DELETE SET NULL,
-<<<<<<< HEAD
-    invoice_no VARCHAR(50) NOT NULL UNIQUE,
-=======
     invoice_no VARCHAR(50) NOT NULL,
     -- Dhaka-local business day. created_at is UTC, and comparing its prefix
     -- pushed every pre-6 AM sale into the previous day's হিসাব.
     business_date DATE NOT NULL DEFAULT (TIMEZONE('Asia/Dhaka', NOW()))::DATE,
->>>>>>> c18622f (Bug Fix)
     total_amount NUMERIC(12, 2) NOT NULL CHECK (total_amount >= 0),
     discount_amount NUMERIC(12, 2) NOT NULL DEFAULT 0.00 CHECK (discount_amount >= 0),
     paid_amount NUMERIC(12, 2) NOT NULL DEFAULT 0.00 CHECK (paid_amount >= 0),
     due_amount NUMERIC(12, 2) NOT NULL DEFAULT 0.00 CHECK (due_amount >= 0),
-<<<<<<< HEAD
-    payment_method VARCHAR(20) NOT NULL CHECK (payment_method IN ('CASH', 'MFS', 'BAKI', 'SPLIT')),
-    notes TEXT,
-    created_at TIMESTAMPTZ DEFAULT TIMEZONE('Asia/Dhaka', NOW()),
-    updated_at TIMESTAMPTZ DEFAULT TIMEZONE('Asia/Dhaka', NOW())
-);
-
-CREATE INDEX IF NOT EXISTS idx_sales_store_date ON sales (store_id, created_at DESC);
-=======
     cash_amount NUMERIC(12, 2) NOT NULL DEFAULT 0.00 CHECK (cash_amount >= 0),
     mfs_amount NUMERIC(12, 2) NOT NULL DEFAULT 0.00 CHECK (mfs_amount >= 0),
     mfs_provider VARCHAR(20) CHECK (mfs_provider IN ('BKASH', 'NAGAD', 'ROCKET', 'UPAY', 'CASH', 'OTHER')),
@@ -209,22 +154,17 @@ CREATE INDEX IF NOT EXISTS idx_sales_store_date ON sales (store_id, created_at D
 );
 
 CREATE INDEX IF NOT EXISTS idx_sales_store_date ON sales (store_id, business_date DESC);
->>>>>>> c18622f (Bug Fix)
 
 CREATE TABLE IF NOT EXISTS sale_items (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     store_id UUID NOT NULL REFERENCES stores(id) ON DELETE CASCADE,
     sale_id UUID NOT NULL REFERENCES sales(id) ON DELETE CASCADE,
     product_id UUID NOT NULL REFERENCES products(id) ON DELETE RESTRICT,
-<<<<<<< HEAD
-    quantity NUMERIC(12, 3) NOT NULL CHECK (quantity > 0),
-=======
     -- Denormalised so an old receipt still reads correctly after a rename.
     product_name_bn VARCHAR(255),
     -- Always stored in the product's BASE unit; `unit` records what was typed.
     quantity NUMERIC(12, 3) NOT NULL CHECK (quantity > 0),
     unit VARCHAR(20) CHECK (unit IN ('kg', 'gm', 'litre', 'packet', 'piece', 'hali')),
->>>>>>> c18622f (Bug Fix)
     unit_cost_price NUMERIC(12, 2) NOT NULL CHECK (unit_cost_price >= 0),
     unit_selling_price NUMERIC(12, 2) NOT NULL CHECK (unit_selling_price >= 0),
     subtotal NUMERIC(12, 2) NOT NULL CHECK (subtotal >= 0),
@@ -242,12 +182,6 @@ CREATE TABLE IF NOT EXISTS baki_transactions (
     store_id UUID NOT NULL REFERENCES stores(id) ON DELETE CASCADE,
     customer_id UUID NOT NULL REFERENCES customers(id) ON DELETE CASCADE,
     sale_id UUID REFERENCES sales(id) ON DELETE SET NULL,
-<<<<<<< HEAD
-    type VARCHAR(10) NOT NULL CHECK (type IN ('DEBIT', 'CREDIT')), -- DEBIT = Customer owes more (New Due), CREDIT = Customer paid (Payment collection)
-    amount NUMERIC(12, 2) NOT NULL CHECK (amount > 0),
-    payment_method VARCHAR(20) DEFAULT 'CASH' CHECK (payment_method IN ('CASH', 'BKASH', 'NAGAD', 'OTHER')),
-    note TEXT,
-=======
     type VARCHAR(10) NOT NULL CHECK (type IN ('DEBIT', 'CREDIT')),
     amount NUMERIC(12, 2) NOT NULL CHECK (amount > 0),
     payment_method VARCHAR(20) DEFAULT 'CASH'
@@ -255,7 +189,6 @@ CREATE TABLE IF NOT EXISTS baki_transactions (
     note TEXT,
     customer_name VARCHAR(255),
     customer_phone VARCHAR(15),
->>>>>>> c18622f (Bug Fix)
     created_at TIMESTAMPTZ DEFAULT TIMEZONE('Asia/Dhaka', NOW())
 );
 
@@ -268,32 +201,16 @@ CREATE INDEX IF NOT EXISTS idx_baki_tx_customer ON baki_transactions (customer_i
 CREATE TABLE IF NOT EXISTS expenses (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     store_id UUID NOT NULL REFERENCES stores(id) ON DELETE CASCADE,
-<<<<<<< HEAD
-    category VARCHAR(100) NOT NULL, -- e.g. দোকান ভাড়া, বিদ্যুৎ বিল, নাস্তা/চা, স্টাফ বেতন, পরিবহন
-    amount NUMERIC(12, 2) NOT NULL CHECK (amount > 0),
-    note TEXT,
-    expense_date DATE NOT NULL DEFAULT CURRENT_DATE,
-=======
     category VARCHAR(100) NOT NULL,
     amount NUMERIC(12, 2) NOT NULL CHECK (amount > 0),
     note TEXT,
     expense_date DATE NOT NULL DEFAULT (TIMEZONE('Asia/Dhaka', NOW()))::DATE,
     created_by UUID REFERENCES profiles(id) ON DELETE SET NULL,
->>>>>>> c18622f (Bug Fix)
     created_at TIMESTAMPTZ DEFAULT TIMEZONE('Asia/Dhaka', NOW())
 );
 
 CREATE INDEX IF NOT EXISTS idx_expenses_store_date ON expenses (store_id, expense_date DESC);
 
-<<<<<<< HEAD
--- ==============================================================================
--- 7. FINANCIAL INVARIANTS & ACID TRIGGERS
--- ==============================================================================
-
--- ------------------------------------------------------------------------------
--- Trigger 1: Inventory Depletion on Sale Item Insertion
--- ------------------------------------------------------------------------------
-=======
 -- ------------------------------------------------------------------------------
 -- 7. SUPPLIER CHALANS (কোম্পানির চালান) — these tables did not exist, so every
 --    chalan the client synced failed silently.
@@ -399,7 +316,6 @@ CREATE TABLE IF NOT EXISTS day_closings (
 
 -- Inventory depletion on sale item insertion. quantity is already in the
 -- product's base unit, converted client-side.
->>>>>>> c18622f (Bug Fix)
 CREATE OR REPLACE FUNCTION fn_deplete_inventory_on_sale()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -418,14 +334,6 @@ AFTER INSERT ON sale_items
 FOR EACH ROW
 EXECUTE FUNCTION fn_deplete_inventory_on_sale();
 
-<<<<<<< HEAD
--- ------------------------------------------------------------------------------
--- Trigger 2: Bakir Khata Rebalancing on Baki Transaction Insertion
--- Formula: Balance_new = Balance_old + (DEBIT - CREDIT)
--- DEBIT: New due added (increases money owed to store)
--- CREDIT: Payment collected (decreases money owed to store)
--- ------------------------------------------------------------------------------
-=======
 -- Inventory replenishment on chalan item insertion, mirroring what the client
 -- does locally. Without this the cloud only ever saw stock go down.
 CREATE OR REPLACE FUNCTION fn_replenish_inventory_on_chalan()
@@ -457,7 +365,6 @@ FOR EACH ROW
 EXECUTE FUNCTION fn_replenish_inventory_on_chalan();
 
 -- Bakir Khata rebalancing. Balance_new = Balance_old + (DEBIT - CREDIT).
->>>>>>> c18622f (Bug Fix)
 CREATE OR REPLACE FUNCTION fn_rebalance_baki_on_transaction()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -484,11 +391,7 @@ FOR EACH ROW
 EXECUTE FUNCTION fn_rebalance_baki_on_transaction();
 
 -- ==============================================================================
-<<<<<<< HEAD
--- 8. ROW LEVEL SECURITY (RLS) MULTI-TENANCY POLICIES
-=======
 -- 10. ROW LEVEL SECURITY (RLS) MULTI-TENANCY POLICIES
->>>>>>> c18622f (Bug Fix)
 -- ==============================================================================
 
 ALTER TABLE stores ENABLE ROW LEVEL SECURITY;
@@ -500,59 +403,6 @@ ALTER TABLE sales ENABLE ROW LEVEL SECURITY;
 ALTER TABLE sale_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE baki_transactions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE expenses ENABLE ROW LEVEL SECURITY;
-<<<<<<< HEAD
-
--- Helper to retrieve current authenticated user's store_id
-CREATE OR REPLACE FUNCTION get_current_store_id()
-RETURNS UUID AS $$
-    SELECT store_id FROM profiles WHERE id = auth.uid() LIMIT 1;
-$$ LANGUAGE sql STABLE SECURITY DEFINER;
-
--- Policies for Stores
-CREATE POLICY "Store owners view their own store"
-    ON stores FOR SELECT
-    USING (id = get_current_store_id());
-
-CREATE POLICY "Store owners update their own store"
-    ON stores FOR UPDATE
-    USING (id = get_current_store_id());
-
--- Policies for Operational Tables
-CREATE POLICY "Tenant Store Isolation on categories"
-    ON categories FOR ALL
-    USING (store_id = get_current_store_id())
-    WITH CHECK (store_id = get_current_store_id());
-
-CREATE POLICY "Tenant Store Isolation on products"
-    ON products FOR ALL
-    USING (store_id = get_current_store_id())
-    WITH CHECK (store_id = get_current_store_id());
-
-CREATE POLICY "Tenant Store Isolation on customers"
-    ON customers FOR ALL
-    USING (store_id = get_current_store_id())
-    WITH CHECK (store_id = get_current_store_id());
-
-CREATE POLICY "Tenant Store Isolation on sales"
-    ON sales FOR ALL
-    USING (store_id = get_current_store_id())
-    WITH CHECK (store_id = get_current_store_id());
-
-CREATE POLICY "Tenant Store Isolation on sale_items"
-    ON sale_items FOR ALL
-    USING (store_id = get_current_store_id())
-    WITH CHECK (store_id = get_current_store_id());
-
-CREATE POLICY "Tenant Store Isolation on baki_transactions"
-    ON baki_transactions FOR ALL
-    USING (store_id = get_current_store_id())
-    WITH CHECK (store_id = get_current_store_id());
-
-CREATE POLICY "Tenant Store Isolation on expenses"
-    ON expenses FOR ALL
-    USING (store_id = get_current_store_id())
-    WITH CHECK (store_id = get_current_store_id());
-=======
 ALTER TABLE supplier_chalans ENABLE ROW LEVEL SECURITY;
 ALTER TABLE chalan_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE supplier_payments ENABLE ROW LEVEL SECURITY;
@@ -635,4 +485,3 @@ BEGIN
     END LOOP;
 END;
 $$;
->>>>>>> c18622f (Bug Fix)

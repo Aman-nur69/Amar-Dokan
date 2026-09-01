@@ -3,26 +3,13 @@
 // Multi-Role Auth + React 19 + TypeScript + Zustand + Dexie.js
 // ==============================================================================
 
-<<<<<<< HEAD
-import React, { useEffect, useState } from 'react';
-=======
 import React, { lazy, Suspense, useEffect, useState } from 'react';
->>>>>>> c18622f (Bug Fix)
 import { initializeLocalDatabase } from './db/offlineDb';
 import { useOfflineSync } from './hooks/useOfflineSync';
 import { useCartStore } from './hooks/useCartStore';
 import { useAuthStore } from './hooks/useAuthStore';
 import { AppHeader } from './components/layout/AppHeader';
 import { MobileNavigation, ActiveTab } from './components/layout/MobileNavigation';
-<<<<<<< HEAD
-import { POSView } from './views/POSView';
-import { BakiKhataView } from './views/BakiKhataView';
-import { InventoryView } from './views/InventoryView';
-import { DashboardView } from './views/DashboardView';
-import { StaffManagementView } from './views/StaffManagementView';
-import { SuperAdminDashboardView } from './views/SuperAdminDashboardView';
-import { LoginScreen } from './components/auth/LoginScreen';
-=======
 // The till must open fast on a 2G connection, so only the POS screen is in the
 // initial chunk; the rest arrive when the shopkeeper first opens them.
 import { POSView } from './views/POSView';
@@ -52,7 +39,6 @@ import { LoginScreen } from './components/auth/LoginScreen';
 import { QuickPinAuth } from './components/common/QuickPinAuth';
 import { ToastHost } from './components/common/ToastHost';
 import { ErrorBoundary } from './components/common/ErrorBoundary';
->>>>>>> c18622f (Bug Fix)
 import { WifiOff, Store } from 'lucide-react';
 import { toBanglaDigits } from './lib/banglaNumberFormatter';
 
@@ -61,15 +47,9 @@ export const App: React.FC = () => {
     currentUser,
     isAuthenticated,
     hasAccess,
-<<<<<<< HEAD
-    isSuperAdmin,
-    inspectingStore,
-    exitStoreInspection,
-=======
     inspectingStore,
     exitStoreInspection,
     isLocked,
->>>>>>> c18622f (Bug Fix)
   } = useAuthStore();
   const [activeTab, setActiveTab] = useState<ActiveTab>('POS');
   const [isDbReady, setIsDbReady] = useState(false);
@@ -108,16 +88,11 @@ export const App: React.FC = () => {
     isSimulatedOffline,
     toggleSimulatedOffline,
     pendingCount,
-<<<<<<< HEAD
-    isSyncing,
-    triggerSync,
-=======
     failedCount,
     isSyncing,
     isStoragePersisted,
     triggerSync,
     retryFailedItems,
->>>>>>> c18622f (Bug Fix)
   } = useOfflineSync();
 
   const { getItemCount } = useCartStore();
@@ -177,16 +152,12 @@ export const App: React.FC = () => {
 
   // If not logged in, display the clean Login Screen
   if (!isAuthenticated) {
-<<<<<<< HEAD
-    return <LoginScreen />;
-=======
     return (
       <>
         <LoginScreen />
         <ToastHost />
       </>
     );
->>>>>>> c18622f (Bug Fix)
   }
 
   return (
@@ -197,16 +168,11 @@ export const App: React.FC = () => {
         isSimulatedOffline={isSimulatedOffline}
         onToggleSimulatedOffline={toggleSimulatedOffline}
         pendingCount={pendingCount}
-<<<<<<< HEAD
-        isSyncing={isSyncing}
-        onTriggerSync={triggerSync}
-=======
         failedCount={failedCount}
         isSyncing={isSyncing}
         isStoragePersisted={isStoragePersisted}
         onTriggerSync={triggerSync}
         onRetryFailed={retryFailedItems}
->>>>>>> c18622f (Bug Fix)
       />
 
       {/* 2. Simple Role-Aware Navigation Bar */}
@@ -238,17 +204,6 @@ export const App: React.FC = () => {
 
       {/* 4. Active View Content (With generous bottom padding on mobile to float over modern dock) */}
       <main className="flex-1 max-w-7xl w-full mx-auto p-3 sm:p-6 pb-24 sm:pb-6">
-<<<<<<< HEAD
-        {activeTab === 'SUPER_ADMIN' && (
-          <SuperAdminDashboardView onNavigateToShop={() => setActiveTab('INVENTORY')} />
-        )}
-        {activeTab === 'POS' && <POSView />}
-        {activeTab === 'BAKI' && <BakiKhataView />}
-        {activeTab === 'INVENTORY' && <InventoryView />}
-        {activeTab === 'DASHBOARD' && <DashboardView />}
-        {activeTab === 'STAFF' && <StaffManagementView />}
-      </main>
-=======
         <ErrorBoundary key={activeTab}>
           <Suspense fallback={<ViewFallback />}>
           {activeTab === 'SUPER_ADMIN' && (
@@ -266,7 +221,6 @@ export const App: React.FC = () => {
       {/* Register lock gate - the app stays mounted behind it. */}
       <QuickPinAuth isOpen={isLocked} />
       <ToastHost />
->>>>>>> c18622f (Bug Fix)
     </div>
   );
 };

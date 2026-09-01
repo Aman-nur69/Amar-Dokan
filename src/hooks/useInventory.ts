@@ -4,11 +4,7 @@
 // ==============================================================================
 
 import { useState, useEffect, useCallback } from 'react';
-<<<<<<< HEAD
-import { db } from '../db/offlineDb';
-=======
 import { db, buildSyncItem } from '../db/offlineDb';
->>>>>>> c18622f (Bug Fix)
 import { useAuthStore } from './useAuthStore';
 import {
   Product,
@@ -19,11 +15,8 @@ import {
   ChalanItem,
   SupplierPayment,
 } from '../@types/database.types';
-<<<<<<< HEAD
-=======
 import { round2, round3, toBaseQuantity, toBaseUnitPrice, UNIT_LABELS_BN } from '../lib/units';
 import { matchesProduct } from '../lib/phoneticSearch';
->>>>>>> c18622f (Bug Fix)
 
 export function useInventory() {
   const { activeStoreId } = useAuthStore();
@@ -74,11 +67,6 @@ export function useInventory() {
   }, [refreshInventory]);
 
   /**
-<<<<<<< HEAD
-   * Adjusts stock quantity for a single product (e.g. manual audit or damaged goods)
-   */
-  const adjustStock = async (productId: string, newStock: number, reason?: string): Promise<boolean> => {
-=======
    * Adjusts stock for a single product.
    *
    * `mode` is explicit on purpose: the caller used to pass the entered quantity
@@ -91,42 +79,20 @@ export function useInventory() {
     mode: 'ADD' | 'SET' = 'SET',
     reason?: string
   ): Promise<boolean> => {
->>>>>>> c18622f (Bug Fix)
     try {
       const now = new Date().toISOString();
       const product = await db.products.get(productId);
       if (!product) return false;
 
-<<<<<<< HEAD
-      const cleanStock = Math.max(0, Math.round(newStock * 1000) / 1000);
-=======
       const entered = Number(quantity) || 0;
       const resolved = mode === 'ADD' ? product.stock_quantity + entered : entered;
       const cleanStock = round3(Math.max(0, resolved));
->>>>>>> c18622f (Bug Fix)
 
       await db.products.update(productId, {
         stock_quantity: cleanStock,
         updated_at: now,
       });
 
-<<<<<<< HEAD
-      // Queue sync mutation
-      await db.sync_queue.add({
-        id: crypto.randomUUID(),
-        table_name: 'products',
-        action: 'UPDATE',
-        payload: {
-          id: productId,
-          stock_quantity: cleanStock,
-          reason: reason || 'ম্যানুয়াল স্টক অ্যাডজাস্টমেন্ট',
-          updated_at: now,
-        },
-        created_at: now,
-        retry_count: 0,
-        status: 'PENDING',
-      });
-=======
       // Products carry no server-side stock trigger, so the absolute value is
       // safe to sync. `reason` is local-only and stripped by the sanitizer.
       await db.sync_queue.add(
@@ -137,7 +103,6 @@ export function useInventory() {
           reason: reason || mode,
         })
       );
->>>>>>> c18622f (Bug Fix)
 
       await refreshInventory();
       return true;
@@ -201,21 +166,6 @@ export function useInventory() {
         created_at: now,
       };
 
-<<<<<<< HEAD
-      const chalanItemRecords: ChalanItem[] = items.map((it) => ({
-        id: crypto.randomUUID(),
-        store_id: targetStoreId,
-        chalan_id: chalanId,
-        product_id: it.product_id,
-        product_name_bn: it.product_name_bn,
-        quantity: it.quantity,
-        unit: it.unit,
-        unit_cost_price: it.unit_cost_price,
-        unit_selling_price: it.unit_selling_price,
-        subtotal: it.subtotal,
-        created_at: now,
-      }));
-=======
       // Resolve base-unit figures once, here, so the local write and the cloud
       // trigger apply exactly the same replenishment.
       const productsById = new Map(
@@ -240,7 +190,6 @@ export function useInventory() {
           created_at: now,
         };
       });
->>>>>>> c18622f (Bug Fix)
 
       // Atomic transaction: Insert Chalan, Insert Items, Increment Products Stock, Update Cost Price
       await db.transaction(
@@ -249,23 +198,6 @@ export function useInventory() {
         async () => {
           await db.supplier_chalans.add(newChalan);
           await db.chalan_items.bulkAdd(chalanItemRecords);
-<<<<<<< HEAD
-
-          for (const item of chalanItemRecords) {
-            let product = await db.products.get(item.product_id);
-            if (!product && item.product_name_bn) {
-              product = await db.products.where('name_bn').equals(item.product_name_bn).first();
-            }
-
-            if (product) {
-              const currentStock = Number(product.stock_quantity) || 0;
-              const addedQty = Number(item.quantity) || 0;
-              const updatedStock = Math.max(0, Math.round((currentStock + addedQty) * 1000) / 1000);
-
-              const productUpdates: Partial<Product> = {
-                stock_quantity: updatedStock,
-                cost_price: Number(item.unit_cost_price) || Number(product.cost_price),
-=======
           await db.sync_queue.add(
             buildSyncItem('supplier_chalans', 'INSERT', newChalan as unknown as Record<string, unknown>)
           );
@@ -292,34 +224,10 @@ export function useInventory() {
               const productUpdates: Partial<Product> = {
                 stock_quantity: updatedStock,
                 cost_price: round2(item.base_unit_cost || product.cost_price),
->>>>>>> c18622f (Bug Fix)
                 updated_at: now,
               };
 
               if (item.unit_selling_price && Number(item.unit_selling_price) > 0) {
-<<<<<<< HEAD
-                productUpdates.selling_price = Number(item.unit_selling_price);
-              }
-
-              await db.products.update(product.id, productUpdates);
-              console.log(`[MudiDokan Stock] Replenished ${product.name_bn}: +${addedQty} -> ${updatedStock} ${product.unit}`);
-            }
-          }
-
-          // Queue sync
-          await db.sync_queue.add({
-            id: crypto.randomUUID(),
-            table_name: 'supplier_chalans',
-            action: 'INSERT',
-            payload: {
-              chalan: newChalan,
-              items: chalanItemRecords,
-            },
-            created_at: now,
-            retry_count: 0,
-            status: 'PENDING',
-          });
-=======
                 productUpdates.selling_price = round2(Number(item.unit_selling_price));
               }
 
@@ -335,7 +243,6 @@ export function useInventory() {
               buildSyncItem('chalan_items', 'INSERT', item as unknown as Record<string, unknown>)
             );
           }
->>>>>>> c18622f (Bug Fix)
         }
       );
 
@@ -372,13 +279,8 @@ export function useInventory() {
         return { success: false, error: 'পরিশোধের পরিমাণ শূন্য হতে পারবে না।' };
       }
 
-<<<<<<< HEAD
-      const newPaid = Number(chalan.paid_amount || 0) + payAmount;
-      const newDue = Math.max(0, currentDue - payAmount);
-=======
       const newPaid = round2(Number(chalan.paid_amount || 0) + payAmount);
       const newDue = round2(Math.max(0, currentDue - payAmount));
->>>>>>> c18622f (Bug Fix)
       const now = new Date().toISOString();
 
       const paymentRecord: SupplierPayment = {
@@ -402,17 +304,6 @@ export function useInventory() {
 
         await db.supplier_payments.add(paymentRecord);
 
-<<<<<<< HEAD
-        await db.sync_queue.add({
-          id: crypto.randomUUID(),
-          table_name: 'supplier_payments',
-          action: 'INSERT',
-          payload: paymentRecord as unknown as Record<string, unknown>,
-          created_at: now,
-          retry_count: 0,
-          status: 'PENDING',
-        });
-=======
         await db.sync_queue.add(
           buildSyncItem('supplier_payments', 'INSERT', paymentRecord as unknown as Record<string, unknown>)
         );
@@ -425,7 +316,6 @@ export function useInventory() {
             due_amount: newDue,
           })
         );
->>>>>>> c18622f (Bug Fix)
       });
 
       await refreshInventory();
@@ -468,23 +358,9 @@ export function useInventory() {
       };
 
       await db.products.add(newProduct);
-<<<<<<< HEAD
-
-      // Queue sync
-      await db.sync_queue.add({
-        id: crypto.randomUUID(),
-        table_name: 'products',
-        action: 'INSERT',
-        payload: newProduct as unknown as Record<string, unknown>,
-        created_at: now,
-        retry_count: 0,
-        status: 'PENDING',
-      });
-=======
       await db.sync_queue.add(
         buildSyncItem('products', 'INSERT', newProduct as unknown as Record<string, unknown>)
       );
->>>>>>> c18622f (Bug Fix)
 
       await refreshInventory();
       return { success: true };
@@ -496,17 +372,8 @@ export function useInventory() {
 
   // Filter products based on search, status badge, and category
   const filteredProducts = products.filter((p) => {
-<<<<<<< HEAD
-    const matchesSearch =
-      p.name_bn.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (p.name_en && p.name_en.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      (p.barcode && p.barcode.includes(searchQuery));
-
-    if (!matchesSearch) return false;
-=======
     // Bengali, English, barcode or English phonetics ("chini", "tel").
     if (!matchesProduct(p, searchQuery)) return false;
->>>>>>> c18622f (Bug Fix)
 
     if (selectedCategory !== 'ALL' && p.category_id !== selectedCategory) {
       return false;

@@ -15,12 +15,6 @@ import {
   BakiTransaction,
   Expense,
   SyncQueueItem,
-<<<<<<< HEAD
-  SupplierChalan,
-  ChalanItem,
-  SupplierPayment,
-} from '../@types/database.types';
-=======
   SyncTableName,
   SupplierChalan,
   ChalanItem,
@@ -29,7 +23,6 @@ import {
   DayClosing,
 } from '../@types/database.types';
 import { todayDhakaKey } from '../lib/dateUtils';
->>>>>>> c18622f (Bug Fix)
 
 export class MudiDokanDexieDb extends Dexie {
   stores!: Table<Store, string>;
@@ -45,11 +38,8 @@ export class MudiDokanDexieDb extends Dexie {
   supplier_payments!: Table<SupplierPayment, string>;
   sync_queue!: Table<SyncQueueItem, string>;
   profiles!: Table<Profile, string>;
-<<<<<<< HEAD
-=======
   cash_counts!: Table<CashCount, string>;
   day_closings!: Table<DayClosing, string>;
->>>>>>> c18622f (Bug Fix)
 
   constructor() {
     super('AmarDokanOfflineDB');
@@ -68,8 +58,6 @@ export class MudiDokanDexieDb extends Dexie {
       supplier_payments: 'id, store_id, chalan_id, payment_date, created_at',
       sync_queue: 'id, status, table_name, created_at',
     });
-<<<<<<< HEAD
-=======
 
     // v5: business-date indexes for the daily হিসাব, plus persisted drawer
     // counts and day closings (previously the reconciliation was thrown away).
@@ -98,7 +86,6 @@ function toDhakaKeySafe(iso?: string): string {
     return iso ? new Date(new Date(iso).getTime() + 6 * 3600 * 1000).toISOString().slice(0, 10) : todayDhakaKey();
   } catch {
     return todayDhakaKey();
->>>>>>> c18622f (Bug Fix)
   }
 }
 
@@ -127,11 +114,7 @@ export const DEFAULT_STORE: Store = {
 export const INITIAL_STORES: Store[] = [
   DEFAULT_STORE,
   {
-<<<<<<< HEAD
-    id: 'store-2222-2222-2222-222222222222',
-=======
     id: '22222222-2222-4222-8222-222222222222',
->>>>>>> c18622f (Bug Fix)
     name: 'মদিনা জেনারেল স্টোর',
     proprietor: 'হাজী মোঃ ইউসুফ',
     phone: '01822334455',
@@ -146,11 +129,7 @@ export const INITIAL_STORES: Store[] = [
     updated_at: new Date(Date.now() - 7 * 86400000).toISOString(),
   },
   {
-<<<<<<< HEAD
-    id: 'store-3333-3333-3333-333333333333',
-=======
     id: '33333333-3333-4333-8333-333333333333',
->>>>>>> c18622f (Bug Fix)
     name: 'জননী ডিপার্টমেন্টাল স্টোর',
     proprietor: 'কামাল হোসেন',
     phone: '01933445566',
@@ -166,11 +145,7 @@ export const INITIAL_STORES: Store[] = [
     updated_at: new Date(Date.now() - 1 * 86400000).toISOString(),
   },
   {
-<<<<<<< HEAD
-    id: 'store-4444-4444-4444-444444444444',
-=======
     id: '44444444-4444-4444-8444-444444444444',
->>>>>>> c18622f (Bug Fix)
     name: 'আল-মদিনা গ্রোসারি শপ',
     proprietor: 'মোঃ জাহিদ হাসান',
     phone: '01644556677',
@@ -190,11 +165,7 @@ export const INITIAL_STORES: Store[] = [
 // Initial Seed Staff Profiles for Multi-Role Login (Password Authenticated)
 export const INITIAL_PROFILES: Profile[] = [
   {
-<<<<<<< HEAD
-    id: 'p-0000000-0000-0000-0000-000000000000',
-=======
     id: '00000000-0000-4000-8000-000000000000',
->>>>>>> c18622f (Bug Fix)
     store_id: DEFAULT_STORE.id,
     full_name: 'তানভীর আহমেদ',
     phone: '01700000000',
@@ -206,11 +177,7 @@ export const INITIAL_PROFILES: Profile[] = [
     updated_at: new Date().toISOString(),
   },
   {
-<<<<<<< HEAD
-    id: 'p-1111111-1111-1111-1111-111111111111',
-=======
     id: '11111111-1111-4111-8111-111111111111',
->>>>>>> c18622f (Bug Fix)
     store_id: DEFAULT_STORE.id,
     full_name: 'মোঃ রফিকুল ইসলাম',
     phone: '01711998877',
@@ -222,11 +189,7 @@ export const INITIAL_PROFILES: Profile[] = [
     updated_at: new Date().toISOString(),
   },
   {
-<<<<<<< HEAD
-    id: 'p-2222222-2222-2222-2222-222222222222',
-=======
     id: '20000000-2222-4222-8222-222222222222',
->>>>>>> c18622f (Bug Fix)
     store_id: DEFAULT_STORE.id,
     full_name: 'আব্দুল করিম',
     phone: '01811223344',
@@ -238,11 +201,7 @@ export const INITIAL_PROFILES: Profile[] = [
     updated_at: new Date().toISOString(),
   },
   {
-<<<<<<< HEAD
-    id: 'p-3333333-3333-3333-3333-333333333333',
-=======
     id: '30000000-3333-4333-8333-333333333333',
->>>>>>> c18622f (Bug Fix)
     store_id: DEFAULT_STORE.id,
     full_name: 'সাকিব হাসান',
     phone: '01911334455',
@@ -571,11 +530,7 @@ export const INITIAL_BAKI_TRANSACTIONS: BakiTransaction[] = [
 
 export const INITIAL_CHALANS: SupplierChalan[] = [
   {
-<<<<<<< HEAD
-    id: 'ch-1111111-1111-1111-1111-111111111111',
-=======
     id: 'ca111111-1111-4111-8111-111111111111',
->>>>>>> c18622f (Bug Fix)
     store_id: DEFAULT_STORE.id,
     chalan_no: 'CH-FRESH-4921',
     supplier_name: 'মেঘনা গ্রুপ অব ইন্ডাস্ট্রিজ (ফ্রেশ ডিলার)',
@@ -590,11 +545,7 @@ export const INITIAL_CHALANS: SupplierChalan[] = [
     created_at: new Date(Date.now() - 2 * 86400000).toISOString(),
   },
   {
-<<<<<<< HEAD
-    id: 'ch-2222222-2222-2222-2222-222222222222',
-=======
     id: 'ca222222-2222-4222-8222-222222222222',
->>>>>>> c18622f (Bug Fix)
     store_id: DEFAULT_STORE.id,
     chalan_no: 'CH-TEER-8810',
     supplier_name: 'সিটি গ্রুপ (তীর ডিস্ট্রিবিউটর)',
@@ -609,11 +560,7 @@ export const INITIAL_CHALANS: SupplierChalan[] = [
     created_at: new Date(Date.now() - 5 * 86400000).toISOString(),
   },
   {
-<<<<<<< HEAD
-    id: 'ch-3333333-3333-3333-3333-333333333333',
-=======
     id: 'ca333333-3333-4333-8333-333333333333',
->>>>>>> c18622f (Bug Fix)
     store_id: DEFAULT_STORE.id,
     chalan_no: 'CH-AROT-104',
     supplier_name: 'হাজী কাশেম বাণিজ্যালয় (কারওয়ান বাজার চালের আড়ত)',
@@ -631,15 +578,9 @@ export const INITIAL_CHALANS: SupplierChalan[] = [
 
 export const INITIAL_CHALAN_ITEMS: ChalanItem[] = [
   {
-<<<<<<< HEAD
-    id: 'ci-1111111-1111-1111-1111-111111111111',
-    store_id: DEFAULT_STORE.id,
-    chalan_id: 'ch-1111111-1111-1111-1111-111111111111',
-=======
     id: 'cb111111-1111-4111-8111-111111111111',
     store_id: DEFAULT_STORE.id,
     chalan_id: 'ca111111-1111-4111-8111-111111111111',
->>>>>>> c18622f (Bug Fix)
     product_id: 'c2222222-2222-2222-2222-222222222222',
     product_name_bn: 'দেশি সাদা চিনি',
     quantity: 100,
@@ -650,15 +591,9 @@ export const INITIAL_CHALAN_ITEMS: ChalanItem[] = [
     created_at: new Date(Date.now() - 2 * 86400000).toISOString(),
   },
   {
-<<<<<<< HEAD
-    id: 'ci-2222222-2222-2222-2222-222222222222',
-    store_id: DEFAULT_STORE.id,
-    chalan_id: 'ch-1111111-1111-1111-1111-111111111111',
-=======
     id: 'cb222222-2222-4222-8222-222222222222',
     store_id: DEFAULT_STORE.id,
     chalan_id: 'ca111111-1111-4111-8111-111111111111',
->>>>>>> c18622f (Bug Fix)
     product_id: 'c3333333-3333-3333-3333-333333333333',
     product_name_bn: 'মসুর ডাল (চিকন)',
     quantity: 40,
@@ -669,15 +604,9 @@ export const INITIAL_CHALAN_ITEMS: ChalanItem[] = [
     created_at: new Date(Date.now() - 2 * 86400000).toISOString(),
   },
   {
-<<<<<<< HEAD
-    id: 'ci-3333333-3333-3333-3333-333333333333',
-    store_id: DEFAULT_STORE.id,
-    chalan_id: 'ch-2222222-2222-2222-2222-222222222222',
-=======
     id: 'cb333333-3333-4333-8333-333333333333',
     store_id: DEFAULT_STORE.id,
     chalan_id: 'ca222222-2222-4222-8222-222222222222',
->>>>>>> c18622f (Bug Fix)
     product_id: 'c9999999-9999-9999-9999-999999999999',
     product_name_bn: 'রূপচাঁদা সয়াবিন তেল (২ লিটার)',
     quantity: 50,
@@ -688,15 +617,9 @@ export const INITIAL_CHALAN_ITEMS: ChalanItem[] = [
     created_at: new Date(Date.now() - 5 * 86400000).toISOString(),
   },
   {
-<<<<<<< HEAD
-    id: 'ci-4444444-4444-4444-4444-444444444444',
-    store_id: DEFAULT_STORE.id,
-    chalan_id: 'ch-2222222-2222-2222-2222-222222222222',
-=======
     id: 'cb444444-4444-4444-8444-444444444444',
     store_id: DEFAULT_STORE.id,
     chalan_id: 'ca222222-2222-4222-8222-222222222222',
->>>>>>> c18622f (Bug Fix)
     product_id: 'cccccccc-cccc-cccc-cccc-cccccccccccc',
     product_name_bn: 'তীর আটা (২ কেজি প্যাকেট)',
     quantity: 60,
@@ -707,15 +630,9 @@ export const INITIAL_CHALAN_ITEMS: ChalanItem[] = [
     created_at: new Date(Date.now() - 5 * 86400000).toISOString(),
   },
   {
-<<<<<<< HEAD
-    id: 'ci-5555555-5555-5555-5555-555555555555',
-    store_id: DEFAULT_STORE.id,
-    chalan_id: 'ch-3333333-3333-3333-3333-333333333333',
-=======
     id: 'cb555555-5555-4555-8555-555555555555',
     store_id: DEFAULT_STORE.id,
     chalan_id: 'ca333333-3333-4333-8333-333333333333',
->>>>>>> c18622f (Bug Fix)
     product_id: 'c7777777-7777-7777-7777-777777777777',
     product_name_bn: 'মিনিকেট চাল (খোলা)',
     quantity: 500,
@@ -804,8 +721,6 @@ export async function initializeLocalDatabase(): Promise<void> {
     }
   }
 }
-<<<<<<< HEAD
-=======
 
 // ==============================================================================
 // Sync Queue Helpers
@@ -863,4 +778,3 @@ export async function enqueueSync(
   if (entries.length === 0) return;
   await db.sync_queue.bulkAdd(entries.map((e) => buildSyncItem(e.table, e.action, e.payload)));
 }
->>>>>>> c18622f (Bug Fix)
