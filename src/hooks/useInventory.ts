@@ -113,6 +113,131 @@ export function useInventory() {
   };
 
   /**
+   * Adjusts stock on an existing product with financial accounting (Cash vs Supplier Baki vs Audit).
+   */
+  const adjustStockWithPurchase = async (params: {
+    productId: string;
+    addQuantity: number;
+    purchaseType: 'CASH' | 'BAKI' | 'AUDIT';
+    unitCostPrice?: number;
+    supplierName?: string;
+    paidAmount?: number;
+    notes?: string;
+  }): Promise<boolean> => {
+    try {
+      const now = new Date().toISOString();
+      const product = await db.products.get(params.productId);
+      if (!product) return false;
+
+      const newStock = round3(Math.max(0, product.stock_quantity + params.addQuantity));
+      const costPrice = params.unitCostPrice ?? product.cost_price;
+      const totalAmount = round2(params.addQuantity * costPrice);
+
+      // Update product stock and cost price
+      await db.products.update(params.productId, {
+        stock_quantity: newStock,
+        cost_price: costPrice > 0 ? costPrice : product.cost_price,
+        updated_at: now,
+      });
+
+      await db.sync_queue.add(
+        buildSyncItem('products', 'UPDATE', {
+          id: params.productId,
+          stock_quantity: newStock,
+          cost_price: costPrice > 0 ? costPrice : product.cost_price,
+          updated_at: now,
+        })
+      );
+
+      // If financial purchase (Cash or Baki), generate a Supplier Chalan
+      if (params.purchaseType === 'CASH' || params.purchaseType === 'BAKI') {
+        const isCash = params.purchaseType === 'CASH';
+        const paid = isCash ? totalAmount : (params.paidAmount || 0);
+        const due = Math.max(0, round2(totalAmount - paid));
+        const chalanId = crypto.randomUUID();
+        const chalanNo = `CH-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
+        const storeId = product.store_id || activeStoreId || 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11';
+        const supplier = params.supplierName?.trim() || (isCash ? 'নগদ মহাজন / বাজার ক্রয়' : 'কোম্পানি মহাজন');
+
+        const newChalan: SupplierChalan = {
+          id: chalanId,
+          store_id: storeId,
+          chalan_no: chalanNo,
+          supplier_name: supplier,
+          chalan_date: now.split('T')[0],
+          total_amount: totalAmount,
+          paid_amount: paid,
+          due_amount: due,
+          items_count: 1,
+          payment_method: isCash ? 'CASH' : due === totalAmount ? 'DUE' : 'PARTIAL_CASH',
+          notes:
+            params.notes ||
+            (isCash
+              ? `মজুদ ক্রয় — নগদ পরিশোধ (${product.name_bn})`
+              : `বাকিতে স্টক বৃদ্ধি (${product.name_bn})`),
+          created_at: now,
+        };
+
+        const chalanItemRecord: ChalanItem = {
+          id: crypto.randomUUID(),
+          store_id: storeId,
+          chalan_id: chalanId,
+          product_id: product.id,
+          product_name_bn: product.name_bn,
+          quantity: params.addQuantity,
+          unit: product.unit,
+          unit_cost_price: costPrice,
+          subtotal: totalAmount,
+          created_at: now,
+        };
+
+        await db.transaction('rw', [db.supplier_chalans, db.chalan_items, db.sync_queue], async () => {
+          await db.supplier_chalans.add(newChalan);
+          await db.chalan_items.add(chalanItemRecord);
+
+          await db.sync_queue.add(
+            buildSyncItem('supplier_chalans', 'INSERT', {
+              id: newChalan.id,
+              store_id: newChalan.store_id,
+              chalan_no: newChalan.chalan_no,
+              supplier_name: newChalan.supplier_name,
+              chalan_date: newChalan.chalan_date,
+              total_amount: newChalan.total_amount,
+              paid_amount: newChalan.paid_amount,
+              due_amount: newChalan.due_amount,
+              items_count: newChalan.items_count,
+              payment_method: newChalan.payment_method,
+              notes: newChalan.notes,
+              created_at: now,
+            })
+          );
+
+          await db.sync_queue.add(
+            buildSyncItem('chalan_items', 'INSERT', {
+              id: chalanItemRecord.id,
+              store_id: chalanItemRecord.store_id,
+              chalan_id: chalanItemRecord.chalan_id,
+              product_id: chalanItemRecord.product_id,
+              product_name_bn: chalanItemRecord.product_name_bn,
+              quantity: chalanItemRecord.quantity,
+              unit: chalanItemRecord.unit,
+              unit_cost_price: chalanItemRecord.unit_cost_price,
+              subtotal: chalanItemRecord.subtotal,
+              created_at: now,
+            })
+          );
+        });
+      }
+
+      await refreshInventory();
+      return true;
+    } catch (err) {
+      console.error('[useInventory] adjustStockWithPurchase error:', err);
+      return false;
+    }
+  };
+
+  /**
    * Records a new Supplier/Company Delivery Chalan (কোম্পানির চালান)
    * Atomically replenishes stock quantities for all items and updates cost/selling prices
    */
@@ -439,6 +564,7 @@ export function useInventory() {
     totalSupplierPaid,
     totalSupplierDue,
     adjustStock,
+    adjustStockWithPurchase,
     addProduct,
     saveSupplierChalan,
     paySupplierDue,

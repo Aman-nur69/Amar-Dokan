@@ -25,6 +25,7 @@ import {
   ShieldCheck,
   UserX,
   UserCheck,
+  Trash2,
 } from 'lucide-react';
 
 const BD_PHONE = /^01[3-9]\d{8}$/;
@@ -54,14 +55,15 @@ export const StaffManagementView: React.FC = () => {
     setResetValue('');
   });
 
-  /** Only this shop's staff. The unscoped query leaked every tenant's roster. */
+  /** Only this shop's staff (excluding super_admin). */
   const fetchProfiles = useCallback(async () => {
     if (!activeStoreId) {
       setProfiles([]);
       return;
     }
     try {
-      const list = await db.profiles.where('store_id').equals(activeStoreId).toArray();
+      const rawList = await db.profiles.where('store_id').equals(activeStoreId).toArray();
+      const list = rawList.filter((p) => p.role !== 'super_admin');
       list.sort((a, b) => a.full_name.localeCompare(b.full_name, 'bn'));
       setProfiles(list);
     } catch (e) {
@@ -73,6 +75,35 @@ export const StaffManagementView: React.FC = () => {
   useEffect(() => {
     fetchProfiles();
   }, [fetchProfiles]);
+
+  const handleDeleteStaff = async (profile: Profile) => {
+    if (profile.id === currentUser?.id) {
+      toast.warning('নিজের অ্যাকাউন্ট মুছে ফেলা যাবে না।');
+      return;
+    }
+
+    if (!window.confirm(`আপনি কি নিশ্চিত যে কর্মী "${profile.full_name}" এর অ্যাকাউন্ট মুছে ফেলতে চান?`)) {
+      return;
+    }
+
+    try {
+      await db.transaction('rw', [db.profiles, db.sync_queue], async () => {
+        await db.profiles.delete(profile.id);
+        await db.sync_queue.add(
+          buildSyncItem('profiles', 'DELETE', {
+            id: profile.id,
+            store_id: profile.store_id,
+          })
+        );
+      });
+
+      toast.success(`কর্মী "${profile.full_name}" এর অ্যাকাউন্ট মুছে ফেলা হয়েছে।`);
+      fetchProfiles();
+    } catch (err) {
+      console.error('Failed to delete staff:', err);
+      toast.error('স্টাফ মুছে ফেলতে সমস্যা হয়েছে।');
+    }
+  };
 
   const resetForm = () => {
     setFullName('');
@@ -249,17 +280,7 @@ export const StaffManagementView: React.FC = () => {
       </div>
 
       {/* Role Hierarchy Quick Card */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-        <div className="p-4 rounded-xl border border-purple-200 bg-purple-50/50">
-          <div className="flex items-center gap-2 mb-1">
-            <span className="w-2.5 h-2.5 rounded-full bg-purple-500" />
-            <span className="font-bold text-sm text-purple-900">সুপার অ্যাডমিন</span>
-          </div>
-          <p className="text-xs text-purple-700/90">
-            প্ল্যাটফর্ম পর্যায়ের অনুমোদন ও পর্যবেক্ষণ। দোকানের বিক্রি বা খাতায় হাত দিতে পারেন না।
-          </p>
-        </div>
-
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         <div className="p-4 rounded-xl border border-emerald-200 bg-emerald-50/50">
           <div className="flex items-center gap-2 mb-1">
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
@@ -379,11 +400,20 @@ export const StaffManagementView: React.FC = () => {
                     title={isActive ? 'নিষ্ক্রিয় করুন' : 'সক্রিয় করুন'}
                     className={`p-2 rounded-lg border transition-colors disabled:opacity-30 ${
                       isActive
-                        ? 'text-rose-600 border-rose-200 hover:bg-rose-50'
+                        ? 'text-amber-600 border-amber-200 hover:bg-amber-50'
                         : 'text-emerald-700 border-emerald-200 hover:bg-emerald-50'
                     }`}
                   >
                     {isActive ? <UserX className="w-4 h-4" /> : <UserCheck className="w-4 h-4" />}
+                  </button>
+
+                  <button
+                    onClick={() => handleDeleteStaff(p)}
+                    disabled={isSelf}
+                    title="কর্মী মুছে ফেলুন"
+                    className="p-2 rounded-lg border border-rose-200 text-rose-600 hover:bg-rose-50 transition-colors disabled:opacity-30"
+                  >
+                    <Trash2 className="w-4 h-4" />
                   </button>
                 </div>
               </div>
@@ -508,7 +538,6 @@ export const StaffManagementView: React.FC = () => {
                 >
                   <option value="cashier">ক্যাশিয়ার (ক্যাশ ও বাকি বিলিং)</option>
                   <option value="manager">ম্যানেজার (স্টক, চালান ও রিপোর্ট)</option>
-                  <option value="owner">দোকান মালিক (সব কিছু ও নিট লাভ)</option>
                 </select>
               </div>
 

@@ -39,6 +39,8 @@ export interface DailyMetrics {
   totalChalanDue: number;       // কোম্পানির নতুন বাকি
   totalSupplierDuePaid?: number; // আগে বাকি থাকা চালানের আজ পরিশোধ
   chalanCount: number;          // আজকের চালানের সংখ্যা
+  totalCustomerDueAllTime?: number; // দোকানের মোট কাস্টমার বাকি পাওনা
+  totalSupplierDueAllTime?: number; // মহাজনদের মোট দেনা
 }
 
 interface DailyProfitWidgetProps {
@@ -271,6 +273,37 @@ export const DailyProfitWidget: React.FC<DailyProfitWidgetProps> = ({
           </div>
         </div>
       </div>
+
+      {/* 3. Overall Cumulative Ledger (মোট কাস্টমার বাকি পাওনা বনাম মোট মহাজন দেনা) */}
+      {(metrics.totalCustomerDueAllTime !== undefined || metrics.totalSupplierDueAllTime !== undefined) && (
+        <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white border border-slate-700 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center flex-shrink-0">
+              <FileText className="w-5 h-5" />
+            </div>
+            <div>
+              <h4 className="font-black text-sm text-white">দোকানের সামগ্রিক মোট দেনা-পাওনা স্থিতি</h4>
+              <p className="text-xs text-slate-400">সকল কাস্টমার বাকি খাতা ও মহাজন চালানের বর্তমান ব্যালেন্স</p>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-4 text-xs font-bold">
+            <div className="px-3.5 py-2 rounded-xl bg-teal-950/80 border border-teal-600/40 text-teal-300">
+              <span className="text-[10px] text-teal-400 font-semibold block uppercase">গ্রাহকদের কাছে মোট পাওনা</span>
+              <span className="text-base font-black text-teal-300">
+                {formatBengaliCurrency(metrics.totalCustomerDueAllTime || 0)}
+              </span>
+            </div>
+
+            <div className="px-3.5 py-2 rounded-xl bg-rose-950/80 border border-rose-600/40 text-rose-300">
+              <span className="text-[10px] text-rose-400 font-semibold block uppercase">মহাজনদের মোট বাকি দেনা</span>
+              <span className="text-base font-black text-rose-300">
+                {formatBengaliCurrency(metrics.totalSupplierDueAllTime || 0)}
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

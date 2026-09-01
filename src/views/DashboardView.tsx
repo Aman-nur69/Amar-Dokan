@@ -12,11 +12,16 @@ import {
   SaleItem,
   SupplierChalan,
   SupplierPayment,
+  Customer,
 } from '../@types/database.types';
 import { DailyProfitWidget } from '../components/reports/DailyProfitWidget';
 import { ExpenseLoggerModal } from '../components/reports/ExpenseLoggerModal';
 import { CashCountModal } from '../components/reports/CashCountModal';
 import { DayClosingModal } from '../components/reports/DayClosingModal';
+import {
+  TransactionDetailModal,
+  FeedTransactionItem,
+} from '../components/reports/TransactionDetailModal';
 import {
   formatBengaliCurrency,
   toBanglaDigits,
@@ -56,6 +61,7 @@ export const DashboardView: React.FC = () => {
   const [saleItems, setSaleItems] = useState<SaleItem[]>([]);
   const [chalans, setChalans] = useState<SupplierChalan[]>([]);
   const [supplierPayments, setSupplierPayments] = useState<SupplierPayment[]>([]);
+  const [customers, setCustomers] = useState<Customer[]>([]);
   const [previousClosing, setPreviousClosing] = useState<DayClosing | null>(null);
   const [countedCashToday, setCountedCashToday] = useState<number | undefined>(undefined);
 
@@ -63,13 +69,12 @@ export const DashboardView: React.FC = () => {
   const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false);
   const [isCashCountModalOpen, setIsCashCountModalOpen] = useState(false);
   const [isDayClosingModalOpen, setIsDayClosingModalOpen] = useState(false);
+  const [selectedTransaction, setSelectedTransaction] = useState<FeedTransactionItem | null>(null);
 
   // Date and filter states
-  // Bangladesh is UTC+6: a 05:30 AM sale is stored as 23:30 UTC the day before,
-  // so every date boundary here must be computed in Dhaka time.
   const todayStr = todayDhakaKey();
   const [selectedDate, setSelectedDate] = useState<string>(todayStr);
-  const [dateFilterPreset, setDateFilterPreset] = useState<'TODAY' | 'YESTERDAY' | 'WEEK' | 'CUSTOM'>('TODAY');
+  const [dateFilterPreset, setDateFilterPreset] = useState<'TODAY' | 'YESTERDAY' | 'WEEK' | 'MONTH' | 'CUSTOM'>('TODAY');
   const [activityTab, setActivityTab] = useState<ActivityTab>('ALL');
   const [searchQuery, setSearchQuery] = useState<string>('');
 
@@ -90,6 +95,7 @@ export const DashboardView: React.FC = () => {
     const allItems = await db.sale_items.where('store_id').equals(activeStoreId).toArray();
     const allChalans = await db.supplier_chalans.where('store_id').equals(activeStoreId).toArray();
     const allPayments = await db.supplier_payments.where('store_id').equals(activeStoreId).toArray();
+    const allCustomers = await db.customers.where('store_id').equals(activeStoreId).toArray();
 
     // Yesterday's counted cash is today's opening float.
     const closings = await db.day_closings.where('store_id').equals(activeStoreId).toArray();
@@ -115,6 +121,7 @@ export const DashboardView: React.FC = () => {
     setSaleItems(allItems);
     setChalans(allChalans);
     setSupplierPayments(allPayments);
+    setCustomers(allCustomers);
   }, [activeStoreId, selectedDate]);
 
   useEffect(() => {
@@ -122,7 +129,7 @@ export const DashboardView: React.FC = () => {
   }, [loadData]);
 
   // Handle Preset Date Selection
-  const handleSelectPreset = (preset: 'TODAY' | 'YESTERDAY' | 'WEEK' | 'CUSTOM') => {
+  const handleSelectPreset = (preset: 'TODAY' | 'YESTERDAY' | 'WEEK' | 'MONTH' | 'CUSTOM') => {
     setDateFilterPreset(preset);
 
     if (preset === 'TODAY') {
@@ -131,6 +138,8 @@ export const DashboardView: React.FC = () => {
       setSelectedDate(shiftDhakaDateKey(todayDhakaKey(), -1));
     } else if (preset === 'WEEK') {
       setSelectedDate(shiftDhakaDateKey(todayDhakaKey(), -6));
+    } else if (preset === 'MONTH') {
+      setSelectedDate(`${todayStr.slice(0, 7)}-01`);
     }
   };
 
@@ -138,11 +147,9 @@ export const DashboardView: React.FC = () => {
   const matchesDateFilter = useCallback(
     (dateStr?: string) => {
       if (!dateStr) return false;
-      if (dateFilterPreset === 'WEEK') {
+      if (dateFilterPreset === 'WEEK' || dateFilterPreset === 'MONTH') {
         return isWithinDhakaRange(dateStr, selectedDate, todayStr);
       }
-      // Comparing the raw UTC prefix pushed every pre-6 AM sale into the
-      // previous day's হিসাব.
       return isOnDhakaDate(dateStr, selectedDate);
     },
     [dateFilterPreset, selectedDate, todayStr]
@@ -227,6 +234,15 @@ export const DashboardView: React.FC = () => {
 
   const openingFloat = previousClosing?.counted_cash ?? previousClosing?.cash_collected ?? 0;
 
+  const totalCustomerDueAllTime = customers.reduce(
+    (acc, c) => acc + Math.max(0, Number(c.current_balance || 0)),
+    0
+  );
+  const totalSupplierDueAllTime = chalans.reduce(
+    (acc, c) => acc + Math.max(0, Number(c.due_amount || 0)),
+    0
+  );
+
   const metrics = {
     totalSales,
     totalCashCollected,
@@ -241,6 +257,8 @@ export const DashboardView: React.FC = () => {
     totalChalanDue,
     totalSupplierDuePaid,
     chalanCount: filteredChalans.length,
+    totalCustomerDueAllTime,
+    totalSupplierDueAllTime,
   };
 
   // Unified Activity Stream items
@@ -256,6 +274,7 @@ export const DashboardView: React.FC = () => {
     badgeVariant: 'green' | 'red' | 'amber' | 'teal' | 'slate';
     date: string;
     isInflow: boolean;
+    raw: Sale | SupplierChalan | BakiTransaction | Expense;
   }
 
   const activityFeed: FeedItem[] = useMemo(() => {
@@ -275,6 +294,7 @@ export const DashboardView: React.FC = () => {
         badgeVariant: s.payment_method === 'CASH' ? 'green' : s.payment_method === 'BAKI' ? 'red' : 'teal',
         date: s.created_at,
         isInflow: true,
+        raw: s,
       });
     });
 
@@ -292,6 +312,7 @@ export const DashboardView: React.FC = () => {
         badgeVariant: c.due_amount > 0 ? 'red' : 'green',
         date: c.created_at,
         isInflow: false,
+        raw: c,
       });
     });
 
@@ -309,6 +330,7 @@ export const DashboardView: React.FC = () => {
         badgeVariant: 'green',
         date: p.created_at,
         isInflow: false,
+        raw: p as unknown as SupplierChalan,
       });
     });
 
@@ -335,6 +357,7 @@ export const DashboardView: React.FC = () => {
         badgeVariant: 'teal',
         date: b.created_at,
         isInflow: true,
+        raw: b,
       });
     });
 
@@ -352,6 +375,7 @@ export const DashboardView: React.FC = () => {
           badgeVariant: 'red',
           date: b.created_at,
           isInflow: false,
+          raw: b,
         });
       });
 
@@ -367,6 +391,7 @@ export const DashboardView: React.FC = () => {
         badgeVariant: 'amber',
         date: e.created_at,
         isInflow: false,
+        raw: e,
       });
     });
 
@@ -436,6 +461,8 @@ export const DashboardView: React.FC = () => {
             <strong className="text-slate-800 font-bold">
               {dateFilterPreset === 'WEEK'
                 ? `বিগত ৭ দিনের হিসাব (${toBanglaDigits(new Date(selectedDate).toLocaleDateString('bn-BD'))} হতে আজ)`
+                : dateFilterPreset === 'MONTH'
+                ? `চলতি মাসের হিসাব (${toBanglaDigits(new Date(selectedDate).toLocaleDateString('bn-BD'))} হতে আজ)`
                 : toBanglaDigits(new Date(selectedDate).toLocaleDateString('bn-BD'))}
             </strong>
           </p>
@@ -473,6 +500,16 @@ export const DashboardView: React.FC = () => {
               }`}
             >
               বিগত ৭ দিন
+            </button>
+            <button
+              onClick={() => handleSelectPreset('MONTH')}
+              className={`px-3 py-1.5 rounded-xl transition-all ${
+                dateFilterPreset === 'MONTH'
+                  ? 'bg-slate-900 text-white shadow-sm'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              চলতি মাস
             </button>
           </div>
 
@@ -658,7 +695,20 @@ export const DashboardView: React.FC = () => {
               return (
                 <div
                   key={`${item.type}-${item.id}`}
-                  className="p-4 hover:bg-slate-50 transition-colors flex items-center justify-between gap-4"
+                  onClick={() =>
+                    setSelectedTransaction({
+                      id: item.id,
+                      type: item.type,
+                      title: item.title,
+                      subtitle: item.subtitle,
+                      amount: item.amount,
+                      badge: item.badgeText,
+                      badgeColor: item.badgeVariant,
+                      date: item.date,
+                      raw: item.raw,
+                    })
+                  }
+                  className="p-4 hover:bg-slate-50 transition-colors flex items-center justify-between gap-4 cursor-pointer"
                 >
                   {/* Icon & Title */}
                   <div className="flex items-center gap-3 min-w-0">
@@ -753,6 +803,12 @@ export const DashboardView: React.FC = () => {
         openingFloat={openingFloat}
         countedCash={countedCashToday}
         onClosed={loadData}
+      />
+
+      {/* Transaction Detail Modal */}
+      <TransactionDetailModal
+        transaction={selectedTransaction}
+        onClose={() => setSelectedTransaction(null)}
       />
     </div>
   );

@@ -75,6 +75,7 @@ export const InventoryView: React.FC = () => {
     totalSupplierPaid,
     totalSupplierDue,
     adjustStock,
+    adjustStockWithPurchase,
     addProduct,
     saveSupplierChalan,
     paySupplierDue,
@@ -85,6 +86,11 @@ export const InventoryView: React.FC = () => {
   const [adjustProduct, setAdjustProduct] = useState<Product | null>(null);
   const [adjustAmount, setAdjustAmount] = useState<number>(0);
   const [adjustMode, setAdjustMode] = useState<'ADD' | 'SET'>('ADD');
+  const [adjustPurchaseType, setAdjustPurchaseType] = useState<'CASH' | 'BAKI' | 'AUDIT'>('CASH');
+  const [adjustCostPrice, setAdjustCostPrice] = useState<number>(0);
+  const [adjustSupplierName, setAdjustSupplierName] = useState<string>('');
+  const [adjustPaidAmount, setAdjustPaidAmount] = useState<number>(0);
+  const [adjustNotes, setAdjustNotes] = useState<string>('');
 
   // New product form
   const [nameBn, setNameBn] = useState('');
@@ -111,27 +117,60 @@ export const InventoryView: React.FC = () => {
     setAdjustProduct(product);
     setAdjustAmount(0);
     setAdjustMode('ADD');
+    setAdjustPurchaseType('CASH');
+    setAdjustCostPrice(product.cost_price || 0);
+    setAdjustSupplierName('');
+    setAdjustPaidAmount(0);
+    setAdjustNotes('');
   };
 
   const handleConfirmAdjust = async () => {
     if (!adjustProduct) return;
     const qty = Number(adjustAmount);
-    if (isNaN(qty) || qty === 0) {
+    if (isNaN(qty) || qty <= 0) {
       toast.error('সঠিক পরিমাণ লিখুন');
       return;
     }
 
-    // The mode is passed through explicitly now: "ADD" adds to the existing
-    // balance, "SET" replaces it. They used to collapse into a replace.
-    const ok = await adjustStock(
-      adjustProduct.id,
-      qty,
-      adjustMode,
-      adjustMode === 'ADD' ? 'PURCHASE' : 'AUDIT_CORRECTION'
-    );
+    if (adjustMode === 'SET') {
+      const ok = await adjustStock(adjustProduct.id, qty, 'SET', 'AUDIT_CORRECTION');
+      if (ok) {
+        toast.success(`${adjustProduct.name_bn}: মজুদ সংশোধন হয়েছে`);
+        setAdjustProduct(null);
+      } else {
+        toast.error('মজুদ আপডেট করতে সমস্যা হয়েছে');
+      }
+      return;
+    }
+
+    // ADD mode
+    const unitCost = Number(adjustCostPrice) || adjustProduct.cost_price || 0;
+    const totalCost = Math.round(qty * unitCost * 100) / 100;
+
+    if (adjustPurchaseType === 'BAKI' && !adjustSupplierName.trim()) {
+      toast.error('মহাজন বা কোম্পানির নাম লিখুন');
+      return;
+    }
+
+    const paid = adjustPurchaseType === 'CASH' ? totalCost : Number(adjustPaidAmount || 0);
+
+    const ok = await adjustStockWithPurchase({
+      productId: adjustProduct.id,
+      addQuantity: qty,
+      purchaseType: adjustPurchaseType,
+      unitCostPrice: unitCost,
+      supplierName: adjustSupplierName,
+      paidAmount: paid,
+      notes: adjustNotes.trim() || undefined,
+    });
 
     if (ok) {
-      const label = adjustMode === 'ADD' ? 'নতুন মাল যোগ হয়েছে' : 'মজুদ সংশোধন হয়েছে';
+      const label =
+        adjustPurchaseType === 'CASH'
+          ? 'নগদ ক্রয়ে স্টক যোগ হয়েছে'
+          : adjustPurchaseType === 'BAKI'
+          ? 'কোম্পানি বাকিতে চালান ও স্টক যোগ হয়েছে'
+          : 'অডিটে স্টক যোগ হয়েছে';
       toast.success(`${adjustProduct.name_bn}: ${label}`);
       setAdjustProduct(null);
     } else {
@@ -724,7 +763,7 @@ export const InventoryView: React.FC = () => {
                 <div className="flex bg-slate-100 p-1 rounded-2xl mb-4 text-xs font-bold">
                   <button
                     onClick={() => setAdjustMode('ADD')}
-                    className={`flex-1 py-2 rounded-xl transition-all ${
+                    className={`flex-1 py-2 rounded-xl transition-all cursor-pointer ${
                       adjustMode === 'ADD' ? 'bg-white shadow text-slate-900' : 'text-slate-500'
                     }`}
                   >
@@ -732,7 +771,7 @@ export const InventoryView: React.FC = () => {
                   </button>
                   <button
                     onClick={() => setAdjustMode('SET')}
-                    className={`flex-1 py-2 rounded-xl transition-all ${
+                    className={`flex-1 py-2 rounded-xl transition-all cursor-pointer ${
                       adjustMode === 'SET' ? 'bg-white shadow text-slate-900' : 'text-slate-500'
                     }`}
                   >
@@ -740,33 +779,166 @@ export const InventoryView: React.FC = () => {
                   </button>
                 </div>
 
-                <div className="mb-6">
-                  <label className="block text-xs font-bold text-slate-700 uppercase mb-2">
-                    {adjustMode === 'ADD' ? 'কত পরিমাণ মাল যোগ হবে?' : 'নতুন মোট স্টক সংখ্যা'} (
-                    {unitLabels[adjustProduct.unit] || adjustProduct.unit})
-                  </label>
-                  <input
-                    type="number"
-                    step="any"
-                    value={adjustAmount || ''}
-                    onChange={(e) => setAdjustAmount(parseFloat(e.target.value) || 0)}
-                    placeholder="০"
-                    className="w-full h-14 px-4 rounded-2xl border-2 border-slate-300 text-2xl font-black text-center focus:border-emerald-500 outline-none"
-                    autoFocus
-                  />
-                  {adjustMode === 'ADD' && adjustAmount !== 0 && (
-                    <p className="text-xs text-emerald-800 font-bold text-center mt-2">
-                      নতুন মোট মজুদ হবে:{' '}
-                      {toBanglaDigits(adjustProduct.stock_quantity + adjustAmount)}{' '}
-                      {unitLabels[adjustProduct.unit] || adjustProduct.unit}
-                    </p>
+                <div className="space-y-4 mb-6">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
+                      {adjustMode === 'ADD' ? 'কত পরিমাণ মাল যোগ হবে?' : 'নতুন মোট স্টক সংখ্যা'} (
+                      {unitLabels[adjustProduct.unit] || adjustProduct.unit})
+                    </label>
+                    <input
+                      type="number"
+                      step="any"
+                      value={adjustAmount || ''}
+                      onChange={(e) => setAdjustAmount(parseFloat(e.target.value) || 0)}
+                      placeholder="০"
+                      className="w-full h-12 px-4 rounded-2xl border-2 border-slate-300 text-xl font-black text-center focus:border-emerald-500 outline-none bg-slate-50 focus:bg-white"
+                      autoFocus
+                    />
+                    {adjustMode === 'ADD' && adjustAmount !== 0 && (
+                      <p className="text-xs text-emerald-800 font-bold text-center mt-1">
+                        নতুন মোট মজুদ হবে:{' '}
+                        {toBanglaDigits(adjustProduct.stock_quantity + adjustAmount)}{' '}
+                        {unitLabels[adjustProduct.unit] || adjustProduct.unit}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Financial Purchase Type Selector (Only in ADD mode) */}
+                  {adjustMode === 'ADD' && (
+                    <div className="space-y-3 pt-2 border-t border-slate-100">
+                      <div>
+                        <label className="block text-[11px] font-bold text-slate-600 uppercase mb-1">
+                          মাল ক্রয়ের ধরন (হিসাব খাতা)
+                        </label>
+                        <div className="grid grid-cols-3 gap-1.5 p-1 bg-slate-100 rounded-xl text-xs font-bold">
+                          <button
+                            type="button"
+                            onClick={() => setAdjustPurchaseType('CASH')}
+                            className={`py-2 rounded-lg transition-all text-center cursor-pointer ${
+                              adjustPurchaseType === 'CASH'
+                                ? 'bg-emerald-600 text-white shadow-xs'
+                                : 'text-slate-600 hover:bg-slate-200'
+                            }`}
+                          >
+                            💵 নগদ ক্রয়
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setAdjustPurchaseType('BAKI')}
+                            className={`py-2 rounded-lg transition-all text-center cursor-pointer ${
+                              adjustPurchaseType === 'BAKI'
+                                ? 'bg-rose-600 text-white shadow-xs'
+                                : 'text-slate-600 hover:bg-slate-200'
+                            }`}
+                          >
+                            📋 বাকি ক্রয়
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setAdjustPurchaseType('AUDIT')}
+                            className={`py-2 rounded-lg transition-all text-center cursor-pointer ${
+                              adjustPurchaseType === 'AUDIT'
+                                ? 'bg-slate-800 text-white shadow-xs'
+                                : 'text-slate-600 hover:bg-slate-200'
+                            }`}
+                          >
+                            ⚙️ অডিট
+                          </button>
+                        </div>
+                      </div>
+
+                      {adjustPurchaseType !== 'AUDIT' && (
+                        <div className="space-y-3 p-3 bg-slate-50 rounded-2xl border border-slate-200">
+                          <div className="grid grid-cols-2 gap-2">
+                            <div>
+                              <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                                একক ক্রয় দর (৳)
+                              </label>
+                              <input
+                                type="number"
+                                step="any"
+                                value={adjustCostPrice || ''}
+                                onChange={(e) => setAdjustCostPrice(parseFloat(e.target.value) || 0)}
+                                placeholder="১০০"
+                                className="w-full h-10 px-3 rounded-lg border border-slate-200 text-xs font-bold outline-none focus:border-emerald-500 bg-white"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                                মোট ক্রয় মূল্য
+                              </label>
+                              <div className="h-10 px-3 rounded-lg border border-slate-200 bg-white flex items-center font-black text-xs text-slate-900">
+                                {formatBengaliCurrency((adjustAmount || 0) * (adjustCostPrice || adjustProduct.cost_price || 0))}
+                              </div>
+                            </div>
+                          </div>
+
+                          {adjustPurchaseType === 'BAKI' && (
+                            <div className="space-y-2 pt-1 border-t border-slate-200/80">
+                              <div>
+                                <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                                  মহাজন / কোম্পানির নাম *
+                                </label>
+                                <input
+                                  type="text"
+                                  value={adjustSupplierName}
+                                  onChange={(e) => setAdjustSupplierName(e.target.value)}
+                                  placeholder="উদাঃ ইউনিলিভার / আকিজ / পাইকারি আড়ত"
+                                  className="w-full h-10 px-3 rounded-lg border border-slate-200 text-xs font-bold outline-none focus:border-rose-500 bg-white"
+                                />
+                              </div>
+
+                              {/* Quick supplier chips */}
+                              <div className="flex flex-wrap gap-1">
+                                {['ইউনিলিভার', 'আকিজ', 'মেঘনা', 'স্কয়ার', 'ফ্রেশ', 'পাইকারি আড়ত'].map((name) => (
+                                  <button
+                                    key={name}
+                                    type="button"
+                                    onClick={() => setAdjustSupplierName(name)}
+                                    className="px-2 py-0.5 rounded-md bg-white border border-slate-200 text-[10px] font-bold text-slate-700 hover:border-slate-400 cursor-pointer"
+                                  >
+                                    {name}
+                                  </button>
+                                ))}
+                              </div>
+
+                              <div>
+                                <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                                  নগদ পরিশোধ (যদি দেওয়া হয়)
+                                </label>
+                                <input
+                                  type="number"
+                                  step="any"
+                                  value={adjustPaidAmount || ''}
+                                  onChange={(e) => setAdjustPaidAmount(parseFloat(e.target.value) || 0)}
+                                  placeholder="০ (সম্পূর্ণ বাকি)"
+                                  className="w-full h-10 px-3 rounded-lg border border-slate-200 text-xs font-bold outline-none focus:border-emerald-500 bg-white"
+                                />
+                              </div>
+                            </div>
+                          )}
+
+                          {adjustPurchaseType === 'CASH' && (
+                            <p className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 p-2 rounded-lg border border-emerald-100">
+                              ✓ ক্যাশবাক্স ড্রয়ার থেকে টাকা কেটে কেনা হিসেবে রেকর্ড হবে
+                            </p>
+                          )}
+                        </div>
+                      )}
+
+                      {adjustPurchaseType === 'AUDIT' && (
+                        <p className="text-[11px] font-semibold text-slate-500 bg-slate-50 p-2 rounded-lg border border-slate-200">
+                          ℹ️ ভুল সংশোধন বা সাধারণ মজুদ সমন্বয় (কোনো আর্থিক খরচ বা বাকি রেকর্ড হবে না)
+                        </p>
+                      )}
+                    </div>
                   )}
                 </div>
 
                 <div className="flex gap-2">
                   <button
                     onClick={() => setAdjustProduct(null)}
-                    className="flex-1 h-12 rounded-xl bg-slate-100 text-slate-700 font-bold text-sm"
+                    className="flex-1 h-12 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-sm cursor-pointer"
                   >
                     বাতিল
                   </button>
