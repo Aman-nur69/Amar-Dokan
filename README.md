@@ -1,66 +1,112 @@
-# MudiDokan (মুদিদোকান) — Offline-First Retail OS & Digital Bakir Khata
+# 🏪 মুদিদোকান (MudiDokan 2.00) / Amar Dokan (আমার দোকান)
+### *Hyper-Localized Offline-First Retail OS, Multi-Store SaaS & Digital Bakir Khata for Bangladeshi Retailers*
 
-**মুদিদোকান (MudiDokan)** is a hyper-localized retail operating system and digital credit ledger (*Bakir Khata*) engineered specifically for grocery store shopkeepers (*mudi dokandars*) in Bangladesh. 
-
-Designed for **zero cognitive load**, **unstable mobile network conditions (2G/3G/4G drops)**, **fast multi-modal checkout**, and **bulletproof financial consistency**.
+[![React 19](https://img.shields.io/badge/React-19.2-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-6.0-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Vite](https://img.shields.io/badge/Vite-8.2-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev/)
+[![TailwindCSS](https://img.shields.io/badge/Tailwind_CSS-3.4-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
+[![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)](https://supabase.com/)
+[![Dexie.js](https://img.shields.io/badge/Dexie.js-IndexedDB-FFA500?style=for-the-badge)](https://dexie.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
 
 ---
 
-## 🌟 Key Features
+## 📖 Overview / পরিচিতি
 
-### 1. 🛒 Frictionless Quick-POS
-- **1-Tap Unbarcoded Bulk Grid:** High-frequency goods (খোলা সয়াবিন তেল, চিনি, মসুর ডাল, ফার্মের ডিম, গোল আলু, পেঁয়াজ, চাল, রসুন) with visual icons and 1-tap cart additions.
-- **Bulk Weight Converter:** Instant quantity presets (২৫০ গ্রাম, ৫০০ গ্রাম, ১ কেজি, ২ কেজি, ৫ কেজি) with automatic BDT price calculation.
-- **Hardware Barcode Scanner Support:** Automated stream listener detects high-speed scanner keystrokes ($\le 50\text{ms}$) ending with Enter.
-- **Bilingual Phonetic Search:** Search goods typing Bengali (`চিনি`, `তেল`), English (`sugar`), English phonetics (`chini`, `tel`, `dal`), or a barcode in either digit set. Implemented in `src/lib/phoneticSearch.ts`.
-- **Split & Multi-Modal Payments:** 1-tap **ক্যাশ বিক্রি** (Full Cash), **বাকিতে বিক্রি** (Full Due to Customer), or **আংশিক ও ডিজিটাল পেমেন্ট** (Cash + bKash/Nagad + Due).
+**মুদিদোকান (MudiDokan 2.00 / Amar Dokan)** is a hyper-localized retail operating system, modern Point of Sale (POS), and digital credit ledger (*Bakir Khata*) engineered specifically for grocery store shopkeepers (*mudi dokandars*), super shops, and retailers across Bangladesh.
+
+Designed with **zero cognitive load**, **unstable mobile network resiliency (2G/3G/4G network drops)**, **fast multi-modal checkout**, **multi-store SaaS management**, and **bulletproof financial consistency**.
+
+---
+
+## 🌟 Key Features & Modules
+
+### 1. 🛒 Frictionless Quick-POS (পয়েন্ট অফ সেল)
+* **1-Tap Unbarcoded Bulk Grid:** High-frequency goods (খোলা সয়াবিন তেল, চিনি, মসুর ডাল, ফার্মের ডিম, গোল আলু, পেঁয়াজ, মিনিকেট চাল, রসুন ইত্যাদি) with localized visual cards and 1-tap cart additions.
+* **Bulk Unit & Weight Converter:** Instant quantity presets (২৫০ গ্রাম, ৫০০ গ্রাম, ১ কেজি, ২ কেজি, ৫ কেজি, ডজন, হালি) with automatic BDT price calculation.
+* **Hardware Barcode Scanner Support:** Automated low-latency stream listener detects high-speed hardware barcode scanner keystrokes ($\le 50\text{ms}$) terminating with Enter.
+* **Bilingual Phonetic Search:** Search products typing Bengali script (`চিনি`, `তেল`), English (`sugar`), or English phonetics (`chini`, `tel`, `dal`, `alu`) and barcode scanning in `src/lib/phoneticSearch.ts`.
+* **Split & Multi-Modal Payments:**
+  * 💵 **ক্যাশ বিক্রি (Full Cash)** with exact change calculation.
+  * 🔴 **বাকিতে বিক্রি (Full Due to Customer)** directly updating customer ledger.
+  * 💳 **আংশিক ও ডিজিটাল পেমেন্ট (Split Payment):** Cash + bKash / Nagad / Rocket + Due.
+
+---
 
 ### 2. 🧾 Native 58mm & 80mm ESC/POS Thermal Receipts
-- Pure CSS printable thermal receipt formatted precisely for standard 58mm and 80mm roll widths.
-- Displays store branding, Bengali invoice numbers, itemized quantities, customer previous balance, and total cumulative dues.
-- **1-Click WhatsApp & SMS Reminders:** Instant link generators with pre-filled Bengali messages containing pending balance and bKash numbers.
+* Pure CSS printable thermal receipts formatted precisely for standard **58mm** and **80mm** roll widths.
+* Displays store branding, Bengali invoice numbers, itemized quantities, customer previous balance, and total cumulative dues.
+* **1-Click WhatsApp & SMS Reminders:** Instant link generators with pre-filled Bengali messages containing pending balance and store bKash/Nagad merchant numbers.
 
-### 3. 📖 Digital Bakir Khata (Credit Ledger)
-- **11-Digit Mobile Number Validation:** Validates Bangladeshi phone numbers (`^01[3-9]\d{8}$`).
-- **High-Contrast Semantic Balances:**
-  - 🔴 **Crimson Red:** Customer owes money to shopkeeper (বকেয়া দেনা).
-  - 🟢 **Emerald Green:** Cleared / zero balance (হিসাব পরিশোধিত).
-- **বাকি আদায় (Collect Due) Modal:** Fast repayment recording with instant trigger rebalancing.
-- **Audit-Trail Ledger:** Immutable chronological transaction history per customer.
+---
+
+### 3. 📖 Digital Bakir Khata (ডিজিটাল বাকির খাতা)
+* **11-Digit Bangladeshi Mobile Validation:** Validates local phone numbers (`^01[3-9]\d{8}$`).
+* **High-Contrast Semantic Balances:**
+  * 🔴 **Crimson Red:** Customer owes money to shopkeeper (বকেয়া দেনা).
+  * 🟢 **Emerald Green:** Cleared / zero balance (হিসাব পরিশোধিত).
+* **বাকি আদায় (Collect Due) Modal:** Fast repayment recording with instant trigger rebalancing.
+* **Audit-Trail Ledger:** Immutable chronological transaction history per customer with detailed date stamps.
+
+---
 
 ### 4. 📦 Stock Management & Daily Profit Engine
-- **Visual Stock Status Monitors:**
-  - 🟢 **পর্যাপ্ত (In Stock)**
-  - 🟡 **কম স্টক (Low Stock $\le$ alert threshold)**
-  - 🔴 **স্টক শেষ (Out of Stock / 0 units)**
-- **Daily Hisab-Kitab Analytics:**
-  - **মোট বিক্রি** (Total Sales Revenue)
-  - **ক্যাশবাক্সে নগদ জমা** (Cash Collected in Drawer)
-  - **নতুন বাকি** (New Credit Extended)
-  - **বাকি আদায়** (Past Due Recovered)
-  - **দৈনিক দোকান খরচ** (Overheads: Rent, Power, Tea, Transport)
-  - **নিট লাভ (Estimated Net Profit = Revenue - [COGS + Expenses])**
+* **Visual Stock Status Monitors:**
+  * 🟢 **পর্যাপ্ত (In Stock)**
+  * 🟡 **কম স্টক (Low Stock $\le$ alert threshold)**
+  * 🔴 **স্টক শেষ (Out of Stock / 0 units)**
+* **Daily Hisab-Kitab Analytics:**
+  * **মোট বিক্রি (Total Sales Revenue)**
+  * **ক্যাশবাক্সে নগদ জমা (Cash Collected in Drawer)**
+  * **নতুন বাকি (New Credit Extended)**
+  * **বাকি আদায় (Past Due Recovered)**
+  * **দৈনিক দোকান খরচ (Operating Expenses):** Rent, Electricity, Tea, Staff Meal, Transport.
+  * **নিট লাভ (Estimated Net Profit):** $\text{Revenue} - (\text{COGS} + \text{Expenses})$.
+* **Transaction Detail Breakdown:** Deep-dive modal inspecting itemized sale breakdown, profit per transaction, and payment distribution.
+
+---
 
 ### 5. ⚡ Offline-First Architecture & FIFO Mutation Sync
-- Runs **100% offline out-of-the-box** using Dexie.js (IndexedDB), and installs as a **PWA** — a service worker precaches the app shell, so the till opens with no network at all, not just in an already-open tab.
-- Automatically intercepts checkout mutations and credit transactions in offline queue (`sync_queue`).
-- Background FIFO listener automatically syncs mutations to Supabase PostgreSQL when internet connectivity returns, in foreign-key order, with exponential backoff and a visible "আটকে আছে" counter for rows that could not be delivered.
-- **One queue row = one table row.** Server-side triggers own the derived values (stock depletion, khata rebalancing), so the client never syncs `stock_quantity` or `current_balance` from a sale — that would apply the change twice.
-- Interactive **"অফলাইন টেস্ট"** switch to test connectivity drops on demand.
+* Runs **100% offline out-of-the-box** using Dexie.js (IndexedDB) and installs as a **PWA** — service worker precaches the app shell for zero-network launches.
+* Automatically intercepts checkout mutations and credit transactions in an offline queue (`sync_queue`).
+* Background FIFO listener automatically syncs mutations to Supabase PostgreSQL when internet connectivity returns, in foreign-key order with exponential backoff.
+* **One queue row = one table row:** Server-side triggers manage derived values (stock depletion, ledger rebalancing).
+* Interactive **"অফলাইন টেস্ট"** switch to test connectivity drops on demand.
+
+---
+
+### 6. 👥 Multi-Role Staff & Multi-Store SaaS Governance
+* **Hierarchical Role-Based Access Control (RBAC):**
+  * 👑 **Super Admin:** Multi-store network oversight, store approval workflows, and store inspection mode.
+  * 🏢 **Owner (দোকান মালিক):** Store settings, financial reports, profit/loss analysis, staff administration, and inventory management.
+  * 👔 **Manager (ম্যানেজার):** Daily stock adjustments, receipts, and order management.
+  * 🛒 **Cashier (ক্যাশিয়ার):** Streamlined POS billing, customer searches, and receipt generation.
 
 ---
 
 ## 🏗️ System Architecture & Technology Stack
 
+```mermaid
+graph TD
+    A[React 19 + TypeScript Client] --> B[Zustand State Stores]
+    A --> C[Dexie.js / IndexedDB Local Storage]
+    C -->|Topological Sync Queue| D[useOfflineSync Hook]
+    D -->|Online Network Detected| E[Supabase Client]
+    E -->|HTTPS / WSS| F[Supabase PostgreSQL 15+]
+    F -->|Row Level Security| G[Multi-Tenant Store Isolation]
+    F -->|Triggers & Functions| H[Ledger & Stock Recalculation]
+```
+
 | Layer | Technologies |
 | :--- | :--- |
-| **Client Core** | React 19 + TypeScript + Vite |
+| **Client Core** | React 19 + TypeScript + Vite 8 |
 | **Styling** | Tailwind CSS v3 + Hind Siliguri (Bengali Typography) |
 | **Icons** | Lucide React |
-| **State Management** | Zustand (POS Cart & UI states) |
-| **Local Database** | Dexie.js (IndexedDB offline database & sync queue) |
+| **State Management** | Zustand 5 (POS Cart, Auth, and UI states) |
+| **Local Database** | Dexie.js 4 (IndexedDB offline database & sync queue) |
 | **Backend & Cloud** | Supabase Edge + PostgreSQL 15+ (Multi-Tenant RLS & Triggers) |
 | **Receipt Output** | Web Print API (58mm / 80mm ESC/POS) + WhatsApp URL Scheme |
+| **Deployment** | Vercel SPA Routing (`vercel.json`) |
 
 ---
 
@@ -75,7 +121,7 @@ npm install
 ```bash
 npm run dev
 ```
-Open [http://127.0.0.1:5173/](http://127.0.0.1:5173/) in your browser.
+Open [http://localhost:5173/](http://localhost:5173/) in your browser.
 
 ### 3. Production Build
 ```bash
@@ -96,47 +142,54 @@ To connect with a live Supabase instance:
    VITE_SUPABASE_URL=https://your-project.supabase.co
    VITE_SUPABASE_ANON_KEY=your-anon-key-here
    ```
-3. Run the SQL schema and seed migrations in the Supabase SQL Editor. The schema is generated from `src/@types/database.types.ts` and must stay in step with it:
-   - [supabase/migrations/20260830000001_core_schema.sql](supabase/migrations/20260830000001_core_schema.sql)
-   - [supabase/seed.sql](supabase/seed.sql)
+3. Run the SQL schema and seed migrations in the Supabase SQL Editor:
+   - [`supabase/migrations/20260830000001_core_schema.sql`](supabase/migrations/20260830000001_core_schema.sql)
+   - [`supabase/seed.sql`](supabase/seed.sql)
 
 ---
 
 ## 🔒 Security & Access
 
-- **Cashier PIN Protection:** Tap the lock icon in the header to lock the register. Unlocking needs the staff member's 4-digit PIN, and the lock survives a page reload.
-- **No secret is ever stored or displayed in the clear.** Passwords and PINs are kept as salted SHA-256 digests (`src/lib/secureHash.ts`); legacy plaintext records are upgraded on first login. The staff screen shows "পাসওয়ার্ড সুরক্ষিত" and offers a reset — never the value.
-- **Demo logins are development-only.** The one-tap role buttons are compiled out of production builds (`DEMO_LOGINS_ENABLED`).
-- **Tenant Isolation:** Every local query is scoped by `store_id`, and in Supabase, Row-Level Security restricts each store to its own rows. `is_super_admin()` is the only escape hatch.
+- **Cashier PIN Protection:** Tap the lock icon in the header to lock the register. Unlocking needs the staff member's 4-digit PIN.
+- **Secure Password Hashing:** Passwords and PINs are hashed using salted SHA-256 digests (`src/lib/secureHash.ts`).
+- **Tenant Isolation:** Every local query is scoped by `store_id`, and in Supabase, Row-Level Security restricts each store to its own rows. `is_super_admin()` provides global governance.
 
-### Demo credentials (development builds only)
+### Demo Credentials (Development Builds)
 
 | Role | Phone | Password |
 | :--- | :--- | :--- |
-| সুপার অ্যাডমিন | `01700000000` | `admin123` |
-| দোকান মালিক | `01711998877` | `dokan123` |
-| ম্যানেজার | `01811223344` | `dokan123` |
-| ক্যাশিয়ার | `01911334455` | `dokan123` |
+| 👑 সুপার অ্যাডমিন (Super Admin) | `01700000000` | `admin123` |
+| 🏢 দোকান মালিক (Store Owner) | `01711998877` | `dokan123` |
+| 👔 ম্যানেজার (Manager) | `01811223344` | `dokan123` |
+| 🛒 ক্যাশিয়ার (Cashier) | `01911334455` | `dokan123` |
 
 ---
 
-## 🧭 Business rules worth knowing
+## 🧭 Business Rules & Localized Logic
 
-- **The business day is Asia/Dhaka, not UTC.** A sale at ৫:৩০ সকাল belongs to that day's হিসাব. Every date filter goes through `src/lib/dateUtils.ts`; never compare ISO strings directly.
-- **Stock may go negative on purpose.** A dokandar is never blocked from selling goods that are physically on the shelf; the shortfall is surfaced as a warning and in the out-of-stock filter instead of being silently clamped to zero.
-- **Credit limits are enforced.** A baki sale that would push a customer past their limit is blocked, and only an owner or manager can override it.
-- **Stock is always held in the product's base unit.** Anything that touches stock — checkout, chalan replenishment, adjustments — converts through `src/lib/units.ts`.
-- **Cash counts and day closings are persisted**, and yesterday's counted cash becomes today's opening float.
+- **Asia/Dhaka Business Day:** The financial day is aligned with Asia/Dhaka time (`src/lib/dateUtils.ts`).
+- **Real-world Physical Stock Handling:** Dokandars are not hard-blocked from selling goods physically in front of them; negative shortfall triggers real-time visual alerts.
+- **Unit Conversions:** All stock operations convert through standardized base units (`src/lib/units.ts`).
+- **Cash Drawer Reconciliations:** Cash counts and day closings persist daily opening floats.
 
 ---
 
-## ✅ Quality gates
+## 🌐 Deployment
 
-```bash
-npm run typecheck   # tsc -b --noEmit (strict mode is on)
-npm run lint        # oxlint
-npm run test        # vitest — money paths, units, Dhaka dates, credentials
-npm run verify      # all of the above, then a production build
-```
+### Deploying to Vercel
+This repository includes a [`vercel.json`](vercel.json) pre-configured for Single Page Application (SPA) routing.
 
-CI runs the same four steps on every push and pull request (`.github/workflows/ci.yml`).
+1. Push the repository to GitHub.
+2. Import the project into [Vercel](https://vercel.com/).
+3. Add `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` to your environment variables.
+4. Deploy!
+
+---
+
+## 📄 License
+
+Distributed under the **MIT License**.
+
+<div align="center">
+  <sub>Built with ❤️ for retail shopkeepers across Bangladesh 🇧🇩</sub>
+</div>
