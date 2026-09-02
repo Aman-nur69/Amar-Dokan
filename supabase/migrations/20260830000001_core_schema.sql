@@ -17,6 +17,22 @@
 
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
+-- Drop old conflicting template tables if they exist without store_id
+DROP TABLE IF EXISTS day_closings CASCADE;
+DROP TABLE IF EXISTS cash_counts CASCADE;
+DROP TABLE IF EXISTS supplier_payments CASCADE;
+DROP TABLE IF EXISTS chalan_items CASCADE;
+DROP TABLE IF EXISTS supplier_chalans CASCADE;
+DROP TABLE IF EXISTS expenses CASCADE;
+DROP TABLE IF EXISTS baki_transactions CASCADE;
+DROP TABLE IF EXISTS sale_items CASCADE;
+DROP TABLE IF EXISTS sales CASCADE;
+DROP TABLE IF EXISTS customers CASCADE;
+DROP TABLE IF EXISTS products CASCADE;
+DROP TABLE IF EXISTS categories CASCADE;
+DROP TABLE IF EXISTS profiles CASCADE;
+DROP TABLE IF EXISTS stores CASCADE;
+
 -- ------------------------------------------------------------------------------
 -- 1. TENANCY & AUTHENTICATION
 -- ------------------------------------------------------------------------------
