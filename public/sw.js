@@ -13,7 +13,7 @@
  *   - Supabase / APIs     : never cached; the sync queue owns that traffic
  * ========================================================================== */
 
-const VERSION = 'v1';
+const VERSION = 'v2';
 const SHELL_CACHE = `amar-dokan-shell-${VERSION}`;
 const ASSET_CACHE = `amar-dokan-assets-${VERSION}`;
 const FONT_CACHE = `amar-dokan-fonts-${VERSION}`;

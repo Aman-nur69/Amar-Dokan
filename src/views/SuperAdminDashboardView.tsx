@@ -81,10 +81,14 @@ export const SuperAdminDashboardView: React.FC<SuperAdminDashboardViewProps> = (
           .select('*')
           .order('created_at', { ascending: false });
 
-        if (!storeErr && cloudStores && cloudStores.length > 0) {
-          await db.stores.bulkPut(cloudStores);
-          allStores = await db.stores.toArray();
-          setStores(allStores);
+        if (storeErr) {
+          console.error('[AmarDokan SuperAdmin] Cloud stores fetch error:', storeErr.message);
+        } else if (cloudStores) {
+          if (cloudStores.length > 0) {
+            await db.stores.bulkPut(cloudStores);
+          }
+          const freshStores = await db.stores.toArray();
+          setStores(freshStores);
         }
 
         const { data: cloudProfiles } = await supabase.from('profiles').select('*');
