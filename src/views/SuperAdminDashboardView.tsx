@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { db, buildSyncItem } from '../db/offlineDb';
 import { Store, ShopVerificationStatus, Sale } from '../@types/database.types';
 import { useAuthStore } from '../hooks/useAuthStore';
 import { useSuperAdminNavStore } from '../hooks/useSuperAdminNavStore';
 import { formatBengaliCurrency, toBanglaDigits } from '../lib/banglaNumberFormatter';
 import { hashSecret } from '../lib/secureHash';
+import { supabase, isSupabaseConfigured } from '../lib/supabaseClient';
 import {
   ShieldCheck,
   Store as StoreIcon,
@@ -24,6 +25,7 @@ import {
   Plus,
   X,
   Upload,
+  RefreshCw,
 } from 'lucide-react';
 
 interface SuperAdminDashboardViewProps {
@@ -48,6 +50,7 @@ export const SuperAdminDashboardView: React.FC<SuperAdminDashboardViewProps> = (
   const [selectedDetailStore, setSelectedDetailStore] = useState<Store | null>(null);
   const [actionSuccessMessage, setActionSuccessMessage] = useState<string | null>(null);
   const [rejectionNoteInput, setRejectionNoteInput] = useState('');
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   // New Shop Listing Modal States
   const [isSubmittingShop, setIsSubmittingShop] = useState(false);
@@ -62,20 +65,43 @@ export const SuperAdminDashboardView: React.FC<SuperAdminDashboardViewProps> = (
   const [tradeLicenceUrl, setTradeLicenceUrl] = useState('');
   const [autoApprove, setAutoApprove] = useState(true);
 
-  const loadPlatformData = async () => {
+  const loadPlatformData = useCallback(async () => {
+    setIsRefreshing(true);
     try {
-      const allStores = await db.stores.toArray();
+      // 1. Initial fast read from local Dexie database
+      let allStores = await db.stores.toArray();
       const allSales = await db.sales.toArray();
       setStores(allStores);
       setSales(allSales);
+
+      // 2. Fetch live registered shops from Supabase Cloud (multi-device synchronization)
+      if (isSupabaseConfigured() && navigator.onLine) {
+        const { data: cloudStores, error: storeErr } = await supabase
+          .from('stores')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (!storeErr && cloudStores && cloudStores.length > 0) {
+          await db.stores.bulkPut(cloudStores);
+          allStores = await db.stores.toArray();
+          setStores(allStores);
+        }
+
+        const { data: cloudProfiles } = await supabase.from('profiles').select('*');
+        if (cloudProfiles && cloudProfiles.length > 0) {
+          await db.profiles.bulkPut(cloudProfiles);
+        }
+      }
     } catch (err) {
       console.error('Error loading platform data:', err);
+    } finally {
+      setIsRefreshing(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     loadPlatformData();
-  }, []);
+  }, [loadPlatformData]);
 
   const handleUpdateStatus = async (
     storeId: string,
@@ -97,6 +123,18 @@ export const SuperAdminDashboardView: React.FC<SuperAdminDashboardViewProps> = (
         // Approvals used to live only in this admin's browser.
         await db.sync_queue.add(buildSyncItem('stores', 'UPDATE', { id: storeId, ...statusPatch }));
       });
+
+      // Direct cloud update if Supabase is live
+      if (isSupabaseConfigured() && navigator.onLine) {
+        try {
+          await supabase.from('stores').update(statusPatch).eq('id', storeId);
+          if (isApproved) {
+            await supabase.from('profiles').update({ is_active: true }).eq('store_id', storeId);
+          }
+        } catch (sbErr) {
+          console.warn('Direct cloud update failed, sync queue will retry:', sbErr);
+        }
+      }
 
       // If approved, make sure owner profiles for this store are active
       if (isApproved) {
@@ -298,6 +336,17 @@ export const SuperAdminDashboardView: React.FC<SuperAdminDashboardViewProps> = (
               লাইভ ক্লাউড সিঙ্ক
             </span>
           </div>
+
+          <button
+            type="button"
+            onClick={loadPlatformData}
+            disabled={isRefreshing}
+            className="px-3.5 py-2.5 rounded-xl border border-slate-200 hover:bg-slate-100 active:bg-slate-200 text-slate-700 font-bold text-xs sm:text-sm flex items-center gap-2 shadow-xs transition-all cursor-pointer disabled:opacity-50"
+            title="ক্লাউড থেকে নতুন দোকান তালিকা রিফ্রেশ করুন"
+          >
+            <RefreshCw className={`w-4 h-4 text-purple-700 ${isRefreshing ? 'animate-spin' : ''}`} />
+            <span>{isRefreshing ? 'সিঙ্ক হচ্ছে...' : 'রিফ্রেশ'}</span>
+          </button>
 
           <button
             onClick={() => {
