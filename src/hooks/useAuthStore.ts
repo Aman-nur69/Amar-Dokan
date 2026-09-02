@@ -267,7 +267,7 @@ export const useAuthStore = create<AuthState>()(
             return { success: false, message: 'পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে।' };
           }
 
-          // If Supabase is configured, create the Auth user so auth.uid() exists
+          // If Supabase is configured, create the Auth user and directly insert to cloud
           let authUid: string = crypto.randomUUID();
           if (isSupabaseConfigured()) {
             try {
@@ -284,7 +284,7 @@ export const useAuthStore = create<AuthState>()(
               });
               if (authData?.user?.id) authUid = authData.user.id;
             } catch (sbErr) {
-              console.warn('[AmarDokan Auth] Supabase cloud registration skipped/failed:', sbErr);
+              console.warn('[AmarDokan Auth] Supabase cloud registration user signUp error:', sbErr);
             }
           }
 
@@ -301,10 +301,38 @@ export const useAuthStore = create<AuthState>()(
             updated_at: now,
           };
 
+          // 1. Direct cloud push so the Super Admin immediately receives the pending request
+          if (isSupabaseConfigured()) {
+            try {
+              const { error: storeErr } = await supabase.from('stores').upsert(newStore, { onConflict: 'id' });
+              if (storeErr) {
+                console.warn('[AmarDokan Auth] Direct cloud store insert note:', storeErr.message);
+              }
+              const { error: profileErr } = await supabase.from('profiles').upsert(
+                {
+                  id: newProfile.id,
+                  store_id: newProfile.store_id,
+                  full_name: newProfile.full_name,
+                  phone: newProfile.phone,
+                  role: newProfile.role,
+                  is_active: true,
+                  created_at: now,
+                  updated_at: now,
+                },
+                { onConflict: 'id' }
+              );
+              if (profileErr) {
+                console.warn('[AmarDokan Auth] Direct cloud profile insert note:', profileErr.message);
+              }
+            } catch (cloudErr) {
+              console.warn('[AmarDokan Auth] Direct cloud insert skipped (offline fallback active):', cloudErr);
+            }
+          }
+
+          // 2. Local Dexie transactional save and offline sync queue fallback
           await db.transaction('rw', [db.stores, db.profiles, db.sync_queue], async () => {
             await db.stores.put(newStore);
             await db.profiles.put(newProfile);
-            // Registration used to live only in this browser.
             await db.sync_queue.bulkAdd([
               buildSyncItem('stores', 'INSERT', newStore as unknown as Record<string, unknown>),
               buildSyncItem('profiles', 'INSERT', {
