@@ -3,6 +3,10 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "rewrites": [
+    { "source": "/CleanDatabasewithtablesandreuploadschema.php", "destination": "/index.html" },
+    { "source": "/CleanDatabasewithtablesandreuploadschema", "destination": "/index.html" },
+    { "source": "/SeedDatabase.php", "destination": "/index.html" },
+    { "source": "/SeedDatabase", "destination": "/index.html" },
     { "source": "/(.*)", "destination": "/index.html" }
   ],
   "headers": [
@@ -24,6 +28,13 @@
       "headers": [
         { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" },
         { "key": "Content-Type", "value": "application/manifest+json" }
+      ]
+    },
+    {
+      "source": "/(.*).php",
+      "headers": [
+        { "key": "Content-Type", "value": "text/html; charset=utf-8" },
+        { "key": "Content-Disposition", "value": "inline" }
       ]
     }
   ]

@@ -39,6 +39,8 @@ import { LoginScreen } from './components/auth/LoginScreen';
 import { QuickPinAuth } from './components/common/QuickPinAuth';
 import { ToastHost } from './components/common/ToastHost';
 import { ErrorBoundary } from './components/common/ErrorBoundary';
+import { CleanDatabaseView } from './views/CleanDatabaseView';
+import { SeedDatabaseView } from './views/SeedDatabaseView';
 import { Store } from 'lucide-react';
 
 export const App: React.FC = () => {
@@ -132,6 +134,35 @@ export const App: React.FC = () => {
       setActiveTab('POS');
     }
   }, [activeTab, hasAccess]);
+
+  const pathname = typeof window !== 'undefined' ? window.location.pathname.toLowerCase() : '';
+
+  // Direct URL routes for database tools (avoids any file download issues on static hosting)
+  if (
+    pathname.includes('cleandatabase') ||
+    pathname.includes('clean-db') ||
+    pathname.includes('wipedatabase')
+  ) {
+    return (
+      <>
+        <CleanDatabaseView />
+        <ToastHost />
+      </>
+    );
+  }
+
+  if (
+    pathname.includes('seeddatabase') ||
+    pathname.includes('seed-db') ||
+    pathname.includes('initdatabase')
+  ) {
+    return (
+      <>
+        <SeedDatabaseView />
+        <ToastHost />
+      </>
+    );
+  }
 
   if (!isDbReady) {
     return (
