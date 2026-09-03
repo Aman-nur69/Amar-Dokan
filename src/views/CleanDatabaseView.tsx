@@ -142,16 +142,35 @@ export const CleanDatabaseView: React.FC = () => {
             ) : (
               <>
                 <Trash2 className="w-5 h-5" />
-                <span>সম্পূর্ণ ডাটাবেজ মুছে ফ্রেশ করুন (Clean All Tables)</span>
+                <span>১. সম্পূর্ণ ডাটাবেজ মুছে ফ্রেশ করুন (Clean All Tables)</span>
               </>
             )}
           </button>
+
+          {/* Direct Supabase SQL Editor Helper */}
+          <div className="p-3 bg-slate-950/80 border border-slate-700/60 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-2">
+            <span className="text-xs text-slate-300 font-semibold text-center sm:text-left">
+              🛠️ Supabase এ টেবিল/স্কিমা তৈরি করতে চান?
+            </span>
+            <div className="flex gap-2 w-full sm:w-auto">
+              <a
+                href="https://supabase.com/dashboard/project/sfhsrrmwckwefjtxjoij/sql/new"
+                target="_blank"
+                rel="noreferrer"
+                className="flex-1 sm:flex-initial px-3 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl transition-all text-center flex items-center justify-center gap-1"
+              >
+                <span>Supabase SQL Editor খুলুন</span>
+                <span>↗</span>
+              </a>
+            </div>
+          </div>
+
           <div className="flex gap-2">
             <a
               href="/SeedDatabase.php"
               className="flex-1 py-3 px-3 rounded-xl bg-slate-700 hover:bg-slate-600 text-slate-300 text-center text-xs font-semibold transition-all flex items-center justify-center gap-1.5"
             >
-              <span>টেস্ট ডাটা সিড করতে চান?</span>
+              <span>২. টেস্ট ডাটা সিড করতে চান?</span>
             </a>
             <a
               href="/"
