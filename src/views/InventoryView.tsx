@@ -18,7 +18,6 @@ import {
   XCircle,
   Boxes,
   Plus,
-  Minus,
   Barcode,
   X,
   Truck,
@@ -127,12 +126,11 @@ export const InventoryView: React.FC = () => {
   const handleConfirmAdjust = async () => {
     if (!adjustProduct) return;
     const qty = Number(adjustAmount);
-    if (isNaN(qty) || qty <= 0) {
-      toast.error('সঠিক পরিমাণ লিখুন');
-      return;
-    }
-
     if (adjustMode === 'SET') {
+      if (isNaN(qty) || qty < 0) {
+        toast.error('সঠিক পরিমাণ লিখুন (০ বা তার বেশি)');
+        return;
+      }
       const ok = await adjustStock(adjustProduct.id, qty, 'SET', 'AUDIT_CORRECTION');
       if (ok) {
         toast.success(`${adjustProduct.name_bn}: মজুদ সংশোধন হয়েছে`);
@@ -140,6 +138,11 @@ export const InventoryView: React.FC = () => {
       } else {
         toast.error('মজুদ আপডেট করতে সমস্যা হয়েছে');
       }
+      return;
+    }
+
+    if (isNaN(qty) || qty <= 0) {
+      toast.error('সঠিক পরিমাণ লিখুন');
       return;
     }
 

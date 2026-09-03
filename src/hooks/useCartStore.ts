@@ -168,6 +168,8 @@ export const useCartStore = create<CartState>((set, get) => ({
         // Switching kg -> gm on a 1kg line should offer a sane gram quantity.
         if (item.selectedUnit === 'kg' && unit === 'gm') quantity = round3(item.quantity * 1000);
         else if (item.selectedUnit === 'gm' && unit === 'kg') quantity = round3(item.quantity / 1000);
+        else if (item.selectedUnit === 'hali' && unit === 'piece') quantity = round3(item.quantity * 4);
+        else if (item.selectedUnit === 'piece' && unit === 'hali') quantity = round3(item.quantity / 4);
 
         if (quantity <= 0) quantity = 1;
 

@@ -5,14 +5,25 @@
 
 import { createClient } from '@supabase/supabase-js';
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://placeholder-mudidokan.supabase.co';
-const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || 'placeholder-anon-key';
+const sanitizeUrl = (raw?: string): string => {
+  if (!raw) return 'https://placeholder-mudidokan.supabase.co';
+  let cleaned = raw.trim();
+  // Strip trailing /rest/v1 or trailing slashes if accidentally included
+  cleaned = cleaned.replace(/\/rest\/v1\/?$/, '').replace(/\/+$/, '');
+  return cleaned;
+};
+
+const rawUrl = import.meta.env.VITE_SUPABASE_URL || '';
+const rawAnonKey = (import.meta.env.VITE_SUPABASE_ANON_KEY || '').trim();
+
+const SUPABASE_URL = sanitizeUrl(rawUrl);
+const SUPABASE_ANON_KEY = rawAnonKey || 'placeholder-anon-key';
 
 export const isSupabaseConfigured = (): boolean => {
   return (
-    Boolean(import.meta.env.VITE_SUPABASE_URL) &&
-    Boolean(import.meta.env.VITE_SUPABASE_ANON_KEY) &&
-    import.meta.env.VITE_SUPABASE_URL !== 'https://placeholder-mudidokan.supabase.co'
+    Boolean(rawUrl) &&
+    Boolean(rawAnonKey) &&
+    SUPABASE_URL !== 'https://placeholder-mudidokan.supabase.co'
   );
 };
 

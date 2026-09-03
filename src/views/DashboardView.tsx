@@ -36,18 +36,13 @@ import {
 } from '../lib/dateUtils';
 import { DayClosing } from '../@types/database.types';
 import {
-  Calendar,
   Receipt,
   ShoppingBag,
   Truck,
   HandCoins,
   Search,
-  CheckCircle2,
-  AlertCircle,
   FileCheck,
   Calculator,
-  ArrowDownRight,
-  ArrowUpRight,
   Sparkles,
 } from 'lucide-react';
 

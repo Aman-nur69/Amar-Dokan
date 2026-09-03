@@ -141,4 +141,37 @@ describe('cart pricing', () => {
     addItem(sugar, 2, 'kg'); // 2 kg
     expect(getBaseQuantityForProduct(sugar.id)).toBe(2.5);
   });
+
+  it('correctly converts units between hali and piece and scales quantity', () => {
+    const eggs: Product = {
+      ...soap,
+      id: 'p-eggs',
+      name_bn: 'ডিম',
+      unit: 'hali',
+      cost_price: 40,
+      selling_price: 48, // 48 tk per hali = 12 tk per piece
+    };
+
+    const { addItem, updateUnit } = useCartStore.getState();
+    addItem(eggs, 2, 'hali'); // 2 hali = 8 eggs, subtotal = 96
+
+    const lineId = useCartStore.getState().items[0]!.id;
+    expect(useCartStore.getState().items[0]!.subtotal).toBe(96);
+
+    // Switch hali -> piece
+    updateUnit(lineId, 'piece');
+    const pieceLine = useCartStore.getState().items[0]!;
+    expect(pieceLine.selectedUnit).toBe('piece');
+    expect(pieceLine.quantity).toBe(8);
+    expect(pieceLine.unitPrice).toBe(12);
+    expect(pieceLine.subtotal).toBe(96);
+
+    // Switch piece -> hali
+    updateUnit(lineId, 'hali');
+    const haliLine = useCartStore.getState().items[0]!;
+    expect(haliLine.selectedUnit).toBe('hali');
+    expect(haliLine.quantity).toBe(2);
+    expect(haliLine.unitPrice).toBe(48);
+    expect(haliLine.subtotal).toBe(96);
+  });
 });

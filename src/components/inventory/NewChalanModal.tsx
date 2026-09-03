@@ -110,8 +110,8 @@ export const NewChalanModal: React.FC<NewChalanModalProps> = ({
   if (!isOpen) return null;
 
   // Calculate totals
-  const totalChalanAmount = lineItems.reduce((acc, it) => acc + (Number(it.subtotal) || 0), 0);
-  const dueAmount = Math.max(0, totalChalanAmount - (Number(paidAmount) || 0));
+  const totalChalanAmount = round2(lineItems.reduce((acc, it) => acc + (Number(it.subtotal) || 0), 0));
+  const dueAmount = round2(Math.max(0, totalChalanAmount - (Number(paidAmount) || 0)));
 
   const handleAddLineItem = () => {
     const defaultProd = products.find((p) => !lineItems.some((it) => it.productId === p.id)) || products[0];
@@ -119,7 +119,7 @@ export const NewChalanModal: React.FC<NewChalanModalProps> = ({
 
     const defaultQty = 10;
     const defaultCost = Number(defaultProd.cost_price || 0);
-    const sub = defaultQty * defaultCost;
+    const sub = round2(defaultQty * defaultCost);
 
     setLineItems((prev) => [
       ...prev,
@@ -135,7 +135,7 @@ export const NewChalanModal: React.FC<NewChalanModalProps> = ({
     ]);
 
     // Update paid amount if it was matching previous total
-    setPaidAmount((prev) => (prev === totalChalanAmount ? prev + sub : prev));
+    setPaidAmount((prev) => (prev === totalChalanAmount ? round2(prev + sub) : prev));
   };
 
   const handleRemoveLineItem = (index: number) => {
@@ -156,7 +156,7 @@ export const NewChalanModal: React.FC<NewChalanModalProps> = ({
       item.unit = matched.unit;
       item.unitCostPrice = Number(matched.cost_price || 0);
       item.unitSellingPrice = Number(matched.selling_price || 0);
-      item.subtotal = Number(item.quantity) * Number(matched.cost_price || 0);
+      item.subtotal = round2(Number(item.quantity) * Number(matched.cost_price || 0));
       return updated;
     });
   };
@@ -168,7 +168,7 @@ export const NewChalanModal: React.FC<NewChalanModalProps> = ({
       const item = { ...updated[index] };
       updated[index] = item;
       item.quantity = cleanQty;
-      item.subtotal = cleanQty * Number(item.unitCostPrice || 0);
+      item.subtotal = round2(cleanQty * Number(item.unitCostPrice || 0));
       return updated;
     });
   };
@@ -180,7 +180,7 @@ export const NewChalanModal: React.FC<NewChalanModalProps> = ({
       const item = { ...updated[index] };
       updated[index] = item;
       item.unitCostPrice = cleanCost;
-      item.subtotal = Number(item.quantity || 0) * cleanCost;
+      item.subtotal = round2(Number(item.quantity || 0) * cleanCost);
       return updated;
     });
   };
@@ -224,9 +224,9 @@ export const NewChalanModal: React.FC<NewChalanModalProps> = ({
         product_name_bn: it.productName || matched.name_bn,
         quantity: Number(it.quantity) || 1,
         unit: it.unit || matched.unit,
-        unit_cost_price: Number(it.unitCostPrice) || Number(matched.cost_price),
-        unit_selling_price: Number(it.unitSellingPrice) || Number(matched.selling_price),
-        subtotal: Number(it.subtotal) || Number(it.quantity) * Number(it.unitCostPrice),
+        unit_cost_price: round2(Number(it.unitCostPrice) || Number(matched.cost_price)),
+        unit_selling_price: round2(Number(it.unitSellingPrice) || Number(matched.selling_price)),
+        subtotal: round2(Number(it.subtotal) || Number(it.quantity) * Number(it.unitCostPrice)),
       };
     });
 
@@ -236,9 +236,9 @@ export const NewChalanModal: React.FC<NewChalanModalProps> = ({
         supplier_name: supplierName,
         supplier_phone: supplierPhone,
         chalan_date: chalanDate,
-        total_amount: Number(totalChalanAmount),
-        paid_amount: Number(paidAmount) || 0,
-        due_amount: Number(dueAmount) || 0,
+        total_amount: round2(Number(totalChalanAmount)),
+        paid_amount: round2(Number(paidAmount) || 0),
+        due_amount: round2(Number(dueAmount) || 0),
         payment_method: paymentMethod,
         notes: notes,
       },

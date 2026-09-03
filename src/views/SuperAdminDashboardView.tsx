@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { db, buildSyncItem } from '../db/offlineDb';
-import { Store, ShopVerificationStatus, Sale } from '../@types/database.types';
+import { Store, ShopVerificationStatus } from '../@types/database.types';
 import { useAuthStore } from '../hooks/useAuthStore';
 import { useSuperAdminNavStore } from '../hooks/useSuperAdminNavStore';
-import { formatBengaliCurrency, toBanglaDigits } from '../lib/banglaNumberFormatter';
+import { toBanglaDigits } from '../lib/banglaNumberFormatter';
 import { hashSecret } from '../lib/secureHash';
 import { supabase, isSupabaseConfigured } from '../lib/supabaseClient';
 import {
@@ -12,7 +12,6 @@ import {
   CheckCircle2,
   XCircle,
   Clock,
-  ExternalLink,
   Search,
   FileText,
   AlertTriangle,
@@ -21,10 +20,8 @@ import {
   Building2,
   Phone,
   MapPin,
-  TrendingUp,
   Plus,
   X,
-  Upload,
   RefreshCw,
 } from 'lucide-react';
 
@@ -33,7 +30,7 @@ interface SuperAdminDashboardViewProps {
 }
 
 export const SuperAdminDashboardView: React.FC<SuperAdminDashboardViewProps> = ({ onNavigateToShop }) => {
-  const { enterStoreInspection, registerNewShop } = useAuthStore();
+  const { enterStoreInspection } = useAuthStore();
   const {
     adminTab,
     setAdminTab,
@@ -44,7 +41,6 @@ export const SuperAdminDashboardView: React.FC<SuperAdminDashboardViewProps> = (
   } = useSuperAdminNavStore();
 
   const [stores, setStores] = useState<Store[]>([]);
-  const [sales, setSales] = useState<Sale[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDocStore, setSelectedDocStore] = useState<Store | null>(null);
   const [selectedDetailStore, setSelectedDetailStore] = useState<Store | null>(null);
@@ -70,9 +66,7 @@ export const SuperAdminDashboardView: React.FC<SuperAdminDashboardViewProps> = (
     try {
       // 1. Initial fast read from local Dexie database
       let allStores = await db.stores.toArray();
-      const allSales = await db.sales.toArray();
       setStores(allStores);
-      setSales(allSales);
 
       // 2. Fetch live registered shops from Supabase Cloud (multi-device synchronization)
       if (isSupabaseConfigured() && navigator.onLine) {
@@ -199,8 +193,15 @@ export const SuperAdminDashboardView: React.FC<SuperAdminDashboardViewProps> = (
     e.preventDefault();
     setShopError(null);
 
-    if (!shopName.trim() || !proprietor.trim() || !shopPhone.trim() || !shopPassword.trim()) {
-      setShopError('দয়া করে দোকানের নাম, স্বত্বাধিকারী, মোবাইল নম্বর ও পাসওয়ার্ড প্রদান করুন।');
+    const cleanPhone = shopPhone.replace(/\D/g, '');
+    const phoneRegex = /^01[3-9]\d{8}$/;
+    if (!phoneRegex.test(cleanPhone)) {
+      setShopError('দয়া করে সঠিক ১১ ডিজিটের মোবাইল নম্বর দিন (যেমন: 01711998877)');
+      return;
+    }
+
+    if (!shopName.trim() || !proprietor.trim() || !shopPassword.trim()) {
+      setShopError('দয়া করে দোকানের নাম, স্বত্বাধিকারী ও পাসওয়ার্ড প্রদান করুন।');
       return;
     }
 
@@ -217,7 +218,7 @@ export const SuperAdminDashboardView: React.FC<SuperAdminDashboardViewProps> = (
         id: storeId,
         name: shopName.trim(),
         proprietor: proprietor.trim(),
-        phone: shopPhone.trim(),
+        phone: cleanPhone,
         address: shopAddress.trim() || 'নির্ধারিত ঠিকানা নেই',
         trade_licence_no: tradeLicence.trim() || 'TRAD/SAAS/' + Math.floor(100000 + Math.random() * 900000),
         trade_licence_doc_url: tradeLicenceUrl || 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=600&auto=format&fit=crop&q=60',
@@ -234,10 +235,10 @@ export const SuperAdminDashboardView: React.FC<SuperAdminDashboardViewProps> = (
         id: crypto.randomUUID(),
         store_id: storeId,
         full_name: proprietor.trim(),
-        phone: shopPhone.trim(),
+        phone: cleanPhone,
         role: 'owner' as const,
-        password_hash: await hashSecret(shopPhone.trim(), shopPassword.trim()),
-        pin_hash: await hashSecret(shopPhone.trim(), shopPassword.trim().slice(0, 4)),
+        password_hash: await hashSecret(cleanPhone, shopPassword.trim()),
+        pin_hash: await hashSecret(cleanPhone, shopPassword.trim().slice(0, 4)),
         is_active: true,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
@@ -288,7 +289,6 @@ export const SuperAdminDashboardView: React.FC<SuperAdminDashboardViewProps> = (
   const totalShops = stores.length;
   const approvedShops = stores.filter((s) => s.verification_status === 'approved').length;
   const pendingShops = stores.filter((s) => s.verification_status === 'pending').length;
-  const totalPlatformSales = sales.reduce((acc, s) => acc + Number(s.total_amount || 0), 0);
 
   useEffect(() => {
     setPlatformCounts({

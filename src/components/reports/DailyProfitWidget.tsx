@@ -20,7 +20,6 @@ import {
   Truck,
   Calculator,
   FileCheck,
-  PlusCircle,
 } from 'lucide-react';
 import { useAuthStore } from '../../hooks/useAuthStore';
 

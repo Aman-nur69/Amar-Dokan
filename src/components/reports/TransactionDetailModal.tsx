@@ -27,9 +27,7 @@ import {
   Printer,
   Calendar,
   User,
-  CreditCard,
   Tag,
-  CheckCircle2,
 } from 'lucide-react';
 import { useModalDismiss } from '../../hooks/useModalDismiss';
 

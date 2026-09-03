@@ -9,7 +9,6 @@ import { useAuthStore } from './useAuthStore';
 import {
   Product,
   Category,
-  SyncQueueItem,
   ProductUnit,
   SupplierChalan,
   ChalanItem,
