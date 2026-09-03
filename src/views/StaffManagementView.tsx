@@ -10,6 +10,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { db, buildSyncItem } from '../db/offlineDb';
 import { Profile, UserRole } from '../@types/database.types';
 import { useAuthStore, getRoleInfo } from '../hooks/useAuthStore';
+import { isSupabaseConfigured, supabase } from '../lib/supabaseClient';
 import { hashSecret } from '../lib/secureHash';
 import { toast } from '../hooks/useToastStore';
 import { useModalDismiss } from '../hooks/useModalDismiss';
@@ -56,12 +57,28 @@ export const StaffManagementView: React.FC = () => {
   });
 
   /** Only this shop's staff (excluding super_admin). */
+  /** Only this shop's staff (excluding super_admin). */
   const fetchProfiles = useCallback(async () => {
     if (!activeStoreId) {
       setProfiles([]);
       return;
     }
     try {
+      if (isSupabaseConfigured()) {
+        try {
+          const { data: cloudProfiles } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('store_id', activeStoreId);
+          if (cloudProfiles) {
+            await db.profiles.where('store_id').equals(activeStoreId).delete();
+            if (cloudProfiles.length > 0) await db.profiles.bulkPut(cloudProfiles);
+          }
+        } catch (sbErr) {
+          console.warn('[StaffManagement] Live Supabase fetch note:', sbErr);
+        }
+      }
+
       const rawList = await db.profiles.where('store_id').equals(activeStoreId).toArray();
       const list = rawList.filter((p) => p.role !== 'super_admin');
       list.sort((a, b) => a.full_name.localeCompare(b.full_name, 'bn'));
@@ -96,6 +113,14 @@ export const StaffManagementView: React.FC = () => {
           })
         );
       });
+
+      if (isSupabaseConfigured()) {
+        try {
+          await supabase.from('profiles').delete().eq('id', profile.id);
+        } catch (sbErr) {
+          console.warn('[StaffManagement] Supabase delete profile note:', sbErr);
+        }
+      }
 
       toast.success(`কর্মী "${profile.full_name}" এর অ্যাকাউন্ট মুছে ফেলা হয়েছে।`);
       fetchProfiles();
@@ -132,8 +157,13 @@ export const StaffManagementView: React.FC = () => {
       return;
     }
 
-    // A phone number is the login id, so it has to be unique platform-wide.
-    const duplicate = await db.profiles.where('phone').equals(cleanPhone).first();
+    // Check duplicate in Supabase or local
+    let duplicate = await db.profiles.where('phone').equals(cleanPhone).first();
+    if (!duplicate && isSupabaseConfigured()) {
+      const { data: sbDup } = await supabase.from('profiles').select('id').eq('phone', cleanPhone).maybeSingle();
+      if (sbDup) duplicate = sbDup as unknown as Profile;
+    }
+
     if (duplicate) {
       setFormError('এই মোবাইল নম্বরে ইতিমধ্যে একটি অ্যাকাউন্ট রয়েছে।');
       return;
@@ -148,7 +178,6 @@ export const StaffManagementView: React.FC = () => {
         full_name: fullName.trim(),
         phone: cleanPhone,
         role,
-        // Digest only — the secret itself is never stored or shown.
         password_hash: await hashSecret(cleanPhone, staffPassword),
         pin_hash: await hashSecret(cleanPhone, staffPin || staffPassword.slice(0, 4)),
         is_active: true,
@@ -171,6 +200,23 @@ export const StaffManagementView: React.FC = () => {
           })
         );
       });
+
+      if (isSupabaseConfigured()) {
+        try {
+          await supabase.from('profiles').insert({
+            id: newProfile.id,
+            store_id: newProfile.store_id,
+            full_name: newProfile.full_name,
+            phone: newProfile.phone,
+            role: newProfile.role,
+            is_active: true,
+            created_at: now,
+            updated_at: now,
+          });
+        } catch (sbErr) {
+          console.warn('[StaffManagement] Supabase insert profile note:', sbErr);
+        }
+      }
 
       toast.success(`কর্মী "${newProfile.full_name}" যুক্ত হয়েছে।`);
       setIsAddModalOpen(false);
@@ -199,6 +245,14 @@ export const StaffManagementView: React.FC = () => {
       );
     });
 
+    if (isSupabaseConfigured()) {
+      try {
+        await supabase.from('profiles').update({ is_active: nextActive, updated_at: now }).eq('id', profile.id);
+      } catch (sbErr) {
+        console.warn('[StaffManagement] Supabase toggle active note:', sbErr);
+      }
+    }
+
     toast.success(
       nextActive
         ? `${profile.full_name} আবার সক্রিয় করা হয়েছে।`
@@ -215,11 +269,22 @@ export const StaffManagementView: React.FC = () => {
     }
 
     const { password: _legacyPassword, ...rest } = resetTarget;
+    const hashed = await hashSecret(resetTarget.phone || '', resetValue.trim());
+    const now = new Date().toISOString();
     await db.profiles.put({
       ...rest,
-      password_hash: await hashSecret(resetTarget.phone || '', resetValue.trim()),
-      updated_at: new Date().toISOString(),
+      password_hash: hashed,
+      updated_at: now,
     });
+
+    if (isSupabaseConfigured()) {
+      try {
+        await supabase.from('profiles').update({ updated_at: now }).eq('id', resetTarget.id);
+      } catch (sbErr) {
+        console.warn('[StaffManagement] Supabase password reset note:', sbErr);
+      }
+    }
+
     toast.success('পাসওয়ার্ড পরিবর্তন হয়েছে। কর্মীকে নতুন পাসওয়ার্ডটি জানিয়ে দিন।');
     setResetTarget(null);
     setResetValue('');

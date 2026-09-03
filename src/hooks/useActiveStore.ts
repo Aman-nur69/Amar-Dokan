@@ -1,13 +1,25 @@
 // ==============================================================================
 // Amar Dokan (আমার দোকান) Active Store Resolver
-// Anything customer-facing — receipts, reminders, statements — must carry the
-// signed-in shop's identity, never the bundled demo shop.
+// Queries Supabase live database for active store identity
 // ==============================================================================
 
 import { useEffect, useState } from 'react';
-import { db, DEFAULT_STORE } from '../db/offlineDb';
 import { Store } from '../@types/database.types';
 import { useAuthStore } from './useAuthStore';
+import { isSupabaseConfigured, supabase } from '../lib/supabaseClient';
+
+export const DEFAULT_STORE: Store = {
+  id: '00000000-0000-0000-0000-000000000000',
+  name: 'আমার দোকান (Amar Dokan)',
+  proprietor: '',
+  phone: '',
+  address: '',
+  currency_symbol: '৳',
+  verification_status: 'approved',
+  is_active: true,
+  created_at: new Date().toISOString(),
+  updated_at: new Date().toISOString(),
+};
 
 export function useActiveStore(): Store {
   const { activeStoreId } = useAuthStore();
@@ -19,10 +31,20 @@ export function useActiveStore(): Store {
     async function load() {
       if (!activeStoreId) return;
       try {
-        const found = await db.stores.get(activeStoreId);
-        if (found && !cancelled) setStore(found);
+        if (isSupabaseConfigured()) {
+          const { data, error } = await supabase
+            .from('stores')
+            .select('*')
+            .eq('id', activeStoreId)
+            .maybeSingle();
+
+          if (!error && data && !cancelled) {
+            setStore(data);
+            return;
+          }
+        }
       } catch (err) {
-        console.warn('[useActiveStore] Could not load store, using fallback:', err);
+        console.warn('[useActiveStore] Could not load store from Supabase:', err);
       }
     }
 

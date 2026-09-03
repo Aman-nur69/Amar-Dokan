@@ -1,12 +1,12 @@
 // ==============================================================================
 // MudiDokan (মুদিদোকান) Digital Bakir Khata (Credit Ledger) Hook
-// Handles Customer Directories, 11-digit Validation, Due Rebalancing,
-// and Opening Balance (পূর্বের বকেয়া) Ledger Initialization
+// Real-time live Supabase cloud database integration & customer balance manager
 // ==============================================================================
 
 import { useState, useEffect, useCallback } from 'react';
 import { db, buildSyncItem } from '../db/offlineDb';
 import { useAuthStore } from './useAuthStore';
+import { isSupabaseConfigured, supabase } from '../lib/supabaseClient';
 import { Customer, BakiTransaction, MfsProvider } from '../@types/database.types';
 import { round2 } from '../lib/units';
 
@@ -18,7 +18,7 @@ export function useBakiKhata() {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [filterType, setFilterType] = useState<'ALL' | 'DUE_ONLY' | 'CLEARED'>('ALL');
 
-  // Load customers and transactions from local Dexie database for current active store
+  // Load customers and transactions from live Supabase database for current active store
   const refreshData = useCallback(async () => {
     if (!activeStoreId) {
       setCustomers([]);
@@ -29,6 +29,26 @@ export function useBakiKhata() {
 
     setIsLoading(true);
     try {
+      if (isSupabaseConfigured()) {
+        try {
+          const [sbCustomers, sbTx] = await Promise.all([
+            supabase.from('customers').select('*').eq('store_id', activeStoreId),
+            supabase.from('baki_transactions').select('*').eq('store_id', activeStoreId),
+          ]);
+
+          if (sbCustomers.data) {
+            await db.customers.where('store_id').equals(activeStoreId).delete();
+            if (sbCustomers.data.length > 0) await db.customers.bulkPut(sbCustomers.data);
+          }
+          if (sbTx.data) {
+            await db.baki_transactions.where('store_id').equals(activeStoreId).delete();
+            if (sbTx.data.length > 0) await db.baki_transactions.bulkPut(sbTx.data);
+          }
+        } catch (sbErr) {
+          console.warn('[useBakiKhata] Supabase live fetch note:', sbErr);
+        }
+      }
+
       const allCustomers = await db.customers.where('store_id').equals(activeStoreId).toArray();
       // Sort by current_balance DESC (highest due first)
       allCustomers.sort((a, b) => b.current_balance - a.current_balance);
@@ -72,7 +92,7 @@ export function useBakiKhata() {
       return { success: false, error: 'গ্রাহকের নাম অবশ্যই দিতে হবে।' };
     }
 
-    const targetStoreId = activeStoreId || 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11';
+    const targetStoreId = activeStoreId || '00000000-0000-0000-0000-000000000000';
 
     // Check duplicate phone in this store
     const existing = await db.customers
@@ -104,17 +124,6 @@ export function useBakiKhata() {
     await db.transaction('rw', [db.customers, db.baki_transactions, db.sync_queue], async () => {
       await db.customers.add(newCustomer);
 
-      // The cloud rebalances the khata from the ledger via trigger, so the
-      // customer row must sync with a ZERO balance whenever an opening DEBIT is
-      // queued alongside it - otherwise the opening due is applied twice.
-      await db.sync_queue.add(
-        buildSyncItem('customers', 'INSERT', {
-          ...newCustomer,
-          current_balance: 0,
-        } as unknown as Record<string, unknown>)
-      );
-
-      // If opening due is provided, create initial DEBIT transaction in ledger
       if (cleanOpeningDue > 0) {
         const initialTx: BakiTransaction = {
           id: crypto.randomUUID(),
@@ -133,6 +142,36 @@ export function useBakiKhata() {
           buildSyncItem('baki_transactions', 'INSERT', initialTx as unknown as Record<string, unknown>)
         );
       }
+
+      if (isSupabaseConfigured()) {
+        try {
+          await supabase.from('customers').insert({
+            ...newCustomer,
+            current_balance: cleanOpeningDue,
+          });
+          if (cleanOpeningDue > 0) {
+            await supabase.from('baki_transactions').insert({
+              id: crypto.randomUUID(),
+              store_id: targetStoreId,
+              customer_id: newCustomer.id,
+              type: 'DEBIT',
+              amount: cleanOpeningDue,
+              payment_method: 'CASH',
+              note: 'পূর্বের খাতার প্রারম্ভিক বকেয়া',
+              created_at: now,
+            });
+          }
+        } catch (sbErr) {
+          console.warn('[useBakiKhata] Supabase customer insert note:', sbErr);
+        }
+      }
+
+      await db.sync_queue.add(
+        buildSyncItem('customers', 'INSERT', {
+          ...newCustomer,
+          current_balance: cleanOpeningDue,
+        } as unknown as Record<string, unknown>)
+      );
     });
 
     await refreshData();
@@ -151,7 +190,7 @@ export function useBakiKhata() {
     if (amount <= 0) return false;
 
     try {
-      const targetStoreId = activeStoreId || 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11';
+      const targetStoreId = activeStoreId || '00000000-0000-0000-0000-000000000000';
       const now = new Date().toISOString();
       const customer = await db.customers.get(customerId);
       if (!customer) return false;
@@ -178,7 +217,18 @@ export function useBakiKhata() {
           updated_at: now,
         });
 
-        // Only the ledger row syncs; the server trigger rebalances the khata.
+        if (isSupabaseConfigured()) {
+          try {
+            await supabase.from('baki_transactions').insert(txRecord);
+            await supabase.from('customers').update({
+              current_balance: newBalance,
+              updated_at: now,
+            }).eq('id', customerId);
+          } catch (sbErr) {
+            console.warn('[useBakiKhata] Supabase collect payment note:', sbErr);
+          }
+        }
+
         await db.sync_queue.add(
           buildSyncItem('baki_transactions', 'INSERT', txRecord as unknown as Record<string, unknown>)
         );
@@ -209,7 +259,7 @@ export function useBakiKhata() {
 
       const newBalance = round2(customer.current_balance + amount);
 
-      const targetStoreId = activeStoreId || 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11';
+      const targetStoreId = activeStoreId || '00000000-0000-0000-0000-000000000000';
       const txRecord: BakiTransaction = {
         id: crypto.randomUUID(),
         store_id: targetStoreId,
@@ -229,6 +279,18 @@ export function useBakiKhata() {
           current_balance: newBalance,
           updated_at: now,
         });
+
+        if (isSupabaseConfigured()) {
+          try {
+            await supabase.from('baki_transactions').insert(txRecord);
+            await supabase.from('customers').update({
+              current_balance: newBalance,
+              updated_at: now,
+            }).eq('id', customerId);
+          } catch (sbErr) {
+            console.warn('[useBakiKhata] Supabase add manual due note:', sbErr);
+          }
+        }
 
         await db.sync_queue.add(
           buildSyncItem('baki_transactions', 'INSERT', txRecord as unknown as Record<string, unknown>)

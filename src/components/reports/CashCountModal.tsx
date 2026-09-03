@@ -6,6 +6,7 @@
 import React, { useState, useMemo } from 'react';
 import { db, buildSyncItem } from '../../db/offlineDb';
 import { useAuthStore } from '../../hooks/useAuthStore';
+import { isSupabaseConfigured, supabase } from '../../lib/supabaseClient';
 import { toast } from '../../hooks/useToastStore';
 import { useModalDismiss } from '../../hooks/useModalDismiss';
 import { CashCount } from '../../@types/database.types';
@@ -137,6 +138,14 @@ export const CashCountModal: React.FC<CashCountModalProps> = ({
           buildSyncItem('cash_counts', 'INSERT', record as unknown as Record<string, unknown>)
         );
       });
+
+      if (isSupabaseConfigured()) {
+        try {
+          await supabase.from('cash_counts').insert(record);
+        } catch (sbErr) {
+          console.warn('[CashCount] Supabase direct insert note:', sbErr);
+        }
+      }
 
       onCounted?.(record.counted_amount);
       toast.success('ক্যাশ গণনা সংরক্ষিত হয়েছে');

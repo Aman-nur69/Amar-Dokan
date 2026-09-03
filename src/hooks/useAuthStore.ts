@@ -123,12 +123,26 @@ export const useAuthStore = create<AuthState>()(
             }
           }
 
-          // 2. Local Dexie offline authentication lookup
-          let profile: Profile | undefined = await db.profiles.where('phone').equals(cleanPhone).first();
+          // 2. Direct live Supabase authentication lookup
+          let profile: Profile | undefined;
+          if (isSupabaseConfigured()) {
+            try {
+              const { data: sbProfile } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('phone', cleanPhone)
+                .maybeSingle();
+              if (sbProfile) {
+                profile = sbProfile;
+                await db.profiles.put(sbProfile);
+              }
+            } catch (sbErr) {
+              console.warn('[AmarDokan Auth] Supabase live profile query:', sbErr);
+            }
+          }
 
-          // Fallback to initial seed profiles if database isn't fully ready
           if (!profile) {
-            profile = INITIAL_PROFILES.find((p) => p.phone === cleanPhone);
+            profile = await db.profiles.where('phone').equals(cleanPhone).first();
           }
 
           if (!profile) {
@@ -154,22 +168,23 @@ export const useAuthStore = create<AuthState>()(
           }
 
           // Migrate the record off plaintext now that we know the secret.
-          // Written with put() and the legacy keys destructured away: relying on
-          // update({ password: undefined }) to delete a key is not a guarantee
-          // worth making for a credential.
           if (needsUpgrade) {
             try {
               const stored2 = await db.profiles.get(profile.id);
               if (stored2) {
                 const { password: _legacyPassword, pin_code: _legacyPin, ...rest } = stored2;
-                await db.profiles.put({
+                const updatedProfile = {
                   ...rest,
                   password_hash: await hashSecret(cleanPhone, cleanSecret),
                   pin_hash: _legacyPin
                     ? await hashSecret(cleanPhone, _legacyPin)
                     : rest.pin_hash,
                   updated_at: new Date().toISOString(),
-                });
+                };
+                await db.profiles.put(updatedProfile);
+                if (isSupabaseConfigured()) {
+                  await supabase.from('profiles').update(updatedProfile).eq('id', profile.id);
+                }
               }
             } catch (upgradeErr) {
               console.warn('[AmarDokan Auth] Could not upgrade stored secret:', upgradeErr);
@@ -178,7 +193,26 @@ export const useAuthStore = create<AuthState>()(
 
           // Check if store is approved (non-super_admin roles)
           if (profile.role !== 'super_admin') {
-            const store = await db.stores.get(profile.store_id);
+            let store: Store | null = null;
+            if (isSupabaseConfigured()) {
+              try {
+                const { data: sbStore } = await supabase
+                  .from('stores')
+                  .select('*')
+                  .eq('id', profile.store_id)
+                  .maybeSingle();
+                if (sbStore) {
+                  store = sbStore;
+                  await db.stores.put(sbStore);
+                }
+              } catch (sbErr) {
+                console.warn('[AmarDokan Auth] Supabase store query:', sbErr);
+              }
+            }
+            if (!store) {
+              store = (await db.stores.get(profile.store_id)) || null;
+            }
+
             if (store && store.verification_status === 'pending') {
               set({
                 isLoading: false,

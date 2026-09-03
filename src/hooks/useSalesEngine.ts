@@ -11,6 +11,7 @@
 import { useState } from 'react';
 import { db, buildSyncItem } from '../db/offlineDb';
 import { useAuthStore } from './useAuthStore';
+import { isSupabaseConfigured, supabase } from '../lib/supabaseClient';
 import { Sale, SaleItem, BakiTransaction, MfsProvider } from '../@types/database.types';
 import { ThermalReceiptData } from '../@types/pos.types';
 import { useCartStore } from './useCartStore';
@@ -255,6 +256,48 @@ export function useSalesEngine() {
                 current_balance: round2(customer.current_balance + dueAmount),
                 updated_at: now,
               });
+            }
+          }
+
+          // 3. Direct live cloud push to Supabase
+          if (isSupabaseConfigured()) {
+            try {
+              await supabase.from('sales').insert(saleRecord);
+              await supabase.from('sale_items').insert(saleItemRecords);
+              for (const item of saleItemRecords) {
+                const product = await db.products.get(item.product_id);
+                if (product) {
+                  await supabase.from('products').update({
+                    stock_quantity: round3(product.stock_quantity - item.quantity),
+                    updated_at: now,
+                  }).eq('id', item.product_id);
+                }
+              }
+              if (dueAmount > 0 && selectedCustomer) {
+                const bakiTx: BakiTransaction = {
+                  id: crypto.randomUUID(),
+                  store_id: targetStoreId,
+                  customer_id: selectedCustomer.id,
+                  sale_id: saleId,
+                  type: 'DEBIT',
+                  amount: dueAmount,
+                  payment_method: mfsPart > 0 ? (paymentDetails.mfsProvider as MfsProvider) : 'CASH',
+                  note: `ইনভয়েস #${invoiceNo} থেকে বাকি`,
+                  customer_name: selectedCustomer.name,
+                  customer_phone: selectedCustomer.phone,
+                  created_at: now,
+                };
+                await supabase.from('baki_transactions').insert(bakiTx);
+                const customer = await db.customers.get(selectedCustomer.id);
+                if (customer) {
+                  await supabase.from('customers').update({
+                    current_balance: round2(customer.current_balance + dueAmount),
+                    updated_at: now,
+                  }).eq('id', selectedCustomer.id);
+                }
+              }
+            } catch (sbErr) {
+              console.warn('[useSalesEngine] Supabase direct sales push note:', sbErr);
             }
           }
         }

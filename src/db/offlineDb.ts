@@ -91,558 +91,30 @@ function toDhakaKeySafe(iso?: string): string {
 
 export const db = new MudiDokanDexieDb();
 
-// Default Store Profile
+// Default Store Profile Template (Empty state fallback)
 export const DEFAULT_STORE: Store = {
-  id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
-  name: 'আমার দোকান (Amar Dokan Super Store)',
-  proprietor: 'মোঃ রফিকুল ইসলাম',
-  phone: '01711998877',
-  address: 'দোকান নং ১২, মীরপুর-১০ গোলচত্বর বাজার, ঢাকা',
-  trade_licence_no: 'TRAD/DNCC/2024/098124',
-  trade_licence_doc_url: 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=600&auto=format&fit=crop&q=60',
-  tin_number: '748392019482',
-  verification_status: 'approved',
-  bkash_number: '01711998877',
-  nagad_number: '01811998877',
+  id: '00000000-0000-0000-0000-000000000000',
+  name: 'আমার দোকান (Amar Dokan)',
+  proprietor: '',
+  phone: '',
+  address: '',
   currency_symbol: '৳',
+  verification_status: 'approved',
   is_active: true,
   created_at: new Date().toISOString(),
   updated_at: new Date().toISOString(),
 };
 
-// Seed stores for Super Admin multi-shop management
-export const INITIAL_STORES: Store[] = [
-  DEFAULT_STORE,
-  {
-    id: '22222222-2222-4222-8222-222222222222',
-    name: 'মদিনা জেনারেল স্টোর',
-    proprietor: 'হাজী মোঃ ইউসুফ',
-    phone: '01822334455',
-    address: 'প্লট নং ৪, আগ্রাবাদ বাণিজ্যিক এলাকা, চট্টগ্রাম',
-    trade_licence_no: 'TRAD/CCC/2024/114920',
-    trade_licence_doc_url: 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=600&auto=format&fit=crop&q=60',
-    tin_number: '592810394812',
-    verification_status: 'approved',
-    currency_symbol: '৳',
-    is_active: true,
-    created_at: new Date(Date.now() - 7 * 86400000).toISOString(),
-    updated_at: new Date(Date.now() - 7 * 86400000).toISOString(),
-  },
-  {
-    id: '33333333-3333-4333-8333-333333333333',
-    name: 'জননী ডিপার্টমেন্টাল স্টোর',
-    proprietor: 'কামাল হোসেন',
-    phone: '01933445566',
-    address: 'সেক্টর-৩, রবীন্দ্র সরণি, উত্তরা, ঢাকা',
-    trade_licence_no: 'TRAD/DNCC/2026/047192',
-    trade_licence_doc_url: 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=600&auto=format&fit=crop&q=60',
-    tin_number: '883920194820',
-    verification_status: 'pending',
-    verification_notes: 'ট্রেড লাইসেন্স ও টিআইএন যাচাই প্রক্রিয়াধীন',
-    currency_symbol: '৳',
-    is_active: false,
-    created_at: new Date(Date.now() - 1 * 86400000).toISOString(),
-    updated_at: new Date(Date.now() - 1 * 86400000).toISOString(),
-  },
-  {
-    id: '44444444-4444-4444-8444-444444444444',
-    name: 'আল-মদিনা গ্রোসারি শপ',
-    proprietor: 'মোঃ জাহিদ হাসান',
-    phone: '01644556677',
-    address: 'বাজার রোড, চাষাঢ়া, নারায়ণগঞ্জ',
-    trade_licence_no: 'TRAD/NCC/2026/001284',
-    trade_licence_doc_url: 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=600&auto=format&fit=crop&q=60',
-    tin_number: '339102948192',
-    verification_status: 'rejected',
-    verification_notes: 'ট্রেড লাইসেন্স স্ক্যান কপিতে মেয়াদ উত্তীর্ণ দেখা যাচ্ছে। হালনাগাদ কপি জমা দিন।',
-    currency_symbol: '৳',
-    is_active: false,
-    created_at: new Date(Date.now() - 3 * 86400000).toISOString(),
-    updated_at: new Date(Date.now() - 3 * 86400000).toISOString(),
-  },
-];
-
-// Initial Seed Staff Profiles for Multi-Role Login (Password Authenticated)
-export const INITIAL_PROFILES: Profile[] = [
-  {
-    id: '00000000-0000-4000-8000-000000000000',
-    store_id: DEFAULT_STORE.id,
-    full_name: 'তানভীর আহমেদ',
-    phone: '01700000000',
-    role: 'super_admin',
-    password: 'admin123',
-    pin_code: '0000',
-    is_active: true,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: '11111111-1111-4111-8111-111111111111',
-    store_id: DEFAULT_STORE.id,
-    full_name: 'মোঃ রফিকুল ইসলাম',
-    phone: '01711998877',
-    role: 'owner',
-    password: 'dokan123',
-    pin_code: '1234',
-    is_active: true,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: '20000000-2222-4222-8222-222222222222',
-    store_id: DEFAULT_STORE.id,
-    full_name: 'আব্দুল করিম',
-    phone: '01811223344',
-    role: 'manager',
-    password: 'dokan123',
-    pin_code: '2345',
-    is_active: true,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: '30000000-3333-4333-8333-333333333333',
-    store_id: DEFAULT_STORE.id,
-    full_name: 'সাকিব হাসান',
-    phone: '01911334455',
-    role: 'cashier',
-    password: 'dokan123',
-    pin_code: '3456',
-    is_active: true,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-];
-
-// Initial Seed Data for Instant Standalone / Offline Execution
-export const INITIAL_CATEGORIES: Category[] = [
-  { id: 'b1111111-1111-1111-1111-111111111111', store_id: DEFAULT_STORE.id, name_bn: 'নিত্যপ্রয়োজনীয়', name_en: 'Daily Essentials', icon: 'shopping-bag', created_at: new Date().toISOString() },
-  { id: 'b2222222-2222-2222-2222-222222222222', store_id: DEFAULT_STORE.id, name_bn: 'তেল ও ঘি', name_en: 'Oil & Ghee', icon: 'droplet', created_at: new Date().toISOString() },
-  { id: 'b3333333-3333-3333-3333-333333333333', store_id: DEFAULT_STORE.id, name_bn: 'চাল ও ডাল', name_en: 'Rice & Pulses', icon: 'wheat', created_at: new Date().toISOString() },
-  { id: 'b4444444-4444-4444-4444-444444444444', store_id: DEFAULT_STORE.id, name_bn: 'মশলা ও আদা-রসুন', name_en: 'Spices', icon: 'sparkles', created_at: new Date().toISOString() },
-  { id: 'b5555555-5555-5555-5555-555555555555', store_id: DEFAULT_STORE.id, name_bn: 'স্ন্যাকস ও বিস্কুট', name_en: 'Snacks & Bakery', icon: 'cookie', created_at: new Date().toISOString() },
-  { id: 'b6666666-6666-6666-6666-666666666666', store_id: DEFAULT_STORE.id, name_bn: 'টয়লেট্রিজ ও সাবান', name_en: 'Toiletries', icon: 'shield-check', created_at: new Date().toISOString() },
-];
-
-export const INITIAL_PRODUCTS: Product[] = [
-  {
-    id: 'c1111111-1111-1111-1111-111111111111',
-    store_id: DEFAULT_STORE.id,
-    category_id: 'b2222222-2222-2222-2222-222222222222',
-    name_bn: 'খোলা সয়াবিন তেল',
-    name_en: 'Loose Soybean Oil',
-    unit: 'litre',
-    cost_price: 160.00,
-    selling_price: 175.00,
-    stock_quantity: 120.0,
-    min_stock_alert: 20.0,
-    is_quick_item: true,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: 'c2222222-2222-2222-2222-222222222222',
-    store_id: DEFAULT_STORE.id,
-    category_id: 'b1111111-1111-1111-1111-111111111111',
-    name_bn: 'দেশি সাদা চিনি',
-    name_en: 'White Sugar',
-    unit: 'kg',
-    cost_price: 125.00,
-    selling_price: 138.00,
-    stock_quantity: 85.5,
-    min_stock_alert: 15.0,
-    is_quick_item: true,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: 'c3333333-3333-3333-3333-333333333333',
-    store_id: DEFAULT_STORE.id,
-    category_id: 'b3333333-3333-3333-3333-333333333333',
-    name_bn: 'মসুর ডাল (চিকন)',
-    name_en: 'Red Lentil Fine',
-    unit: 'kg',
-    cost_price: 130.00,
-    selling_price: 145.00,
-    stock_quantity: 65.0,
-    min_stock_alert: 10.0,
-    is_quick_item: true,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: 'c4444444-4444-4444-4444-444444444444',
-    store_id: DEFAULT_STORE.id,
-    category_id: 'b1111111-1111-1111-1111-111111111111',
-    name_bn: 'ফার্মের লাল ডিম (১ হালি)',
-    name_en: 'Farm Red Eggs 4pcs',
-    unit: 'hali',
-    cost_price: 42.00,
-    selling_price: 48.00,
-    stock_quantity: 150.0,
-    min_stock_alert: 25.0,
-    is_quick_item: true,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: 'c5555555-5555-5555-5555-555555555555',
-    store_id: DEFAULT_STORE.id,
-    category_id: 'b1111111-1111-1111-1111-111111111111',
-    name_bn: 'নতুন গোল আলু',
-    name_en: 'Fresh Potato',
-    unit: 'kg',
-    cost_price: 32.00,
-    selling_price: 40.00,
-    stock_quantity: 250.0,
-    min_stock_alert: 40.0,
-    is_quick_item: true,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: 'c6666666-6666-6666-6666-666666666666',
-    store_id: DEFAULT_STORE.id,
-    category_id: 'b1111111-1111-1111-1111-111111111111',
-    name_bn: 'দেশি পেঁয়াজ',
-    name_en: 'Local Onion',
-    unit: 'kg',
-    cost_price: 60.00,
-    selling_price: 75.00,
-    stock_quantity: 95.0,
-    min_stock_alert: 20.0,
-    is_quick_item: true,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: 'c7777777-7777-7777-7777-777777777777',
-    store_id: DEFAULT_STORE.id,
-    category_id: 'b3333333-3333-3333-3333-333333333333',
-    name_bn: 'মিনিকেট চাল (খোলা)',
-    name_en: 'Miniket Rice Loose',
-    unit: 'kg',
-    cost_price: 68.00,
-    selling_price: 76.00,
-    stock_quantity: 320.0,
-    min_stock_alert: 50.0,
-    is_quick_item: true,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: 'c8888888-8888-8888-8888-888888888888',
-    store_id: DEFAULT_STORE.id,
-    category_id: 'b4444444-4444-4444-4444-444444444444',
-    name_bn: 'দেশি রসুন',
-    name_en: 'Local Garlic',
-    unit: 'kg',
-    cost_price: 180.00,
-    selling_price: 210.00,
-    stock_quantity: 30.0,
-    min_stock_alert: 8.0,
-    is_quick_item: true,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: 'c9999999-9999-9999-9999-999999999999',
-    store_id: DEFAULT_STORE.id,
-    category_id: 'b2222222-2222-2222-2222-222222222222',
-    barcode: '8941100501123',
-    name_bn: 'রূপচাঁদা সয়াবিন তেল (২ লিটার)',
-    name_en: 'Rupchanda Soybean Oil 2L',
-    unit: 'packet',
-    cost_price: 350.00,
-    selling_price: 375.00,
-    stock_quantity: 18.0,
-    min_stock_alert: 5.0,
-    is_quick_item: false,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: 'caaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
-    store_id: DEFAULT_STORE.id,
-    category_id: 'b5555555-5555-5555-5555-555555555555',
-    barcode: '8941100332211',
-    name_bn: 'ম্যাগি ২-মিনিট নুডুলস (৮ প্যাক)',
-    name_en: 'Maggi 2-Min Noodles 8 Pack',
-    unit: 'packet',
-    cost_price: 135.00,
-    selling_price: 150.00,
-    stock_quantity: 4.0, // Low stock simulation
-    min_stock_alert: 8.0,
-    is_quick_item: false,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: 'cbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
-    store_id: DEFAULT_STORE.id,
-    category_id: 'b6666666-6666-6666-6666-666666666666',
-    barcode: '8941100778899',
-    name_bn: 'লাইফবয় টোটাল সাবান (১০০ গ্রাম)',
-    name_en: 'Lifebuoy Total Soap 100g',
-    unit: 'piece',
-    cost_price: 42.00,
-    selling_price: 50.00,
-    stock_quantity: 0.0, // Out of stock simulation
-    min_stock_alert: 10.0,
-    is_quick_item: false,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: 'cccccccc-cccc-cccc-cccc-cccccccccccc',
-    store_id: DEFAULT_STORE.id,
-    category_id: 'b1111111-1111-1111-1111-111111111111',
-    barcode: '8941100445566',
-    name_bn: 'তীর আটা (২ কেজি প্যাকেট)',
-    name_en: 'Teer Atta 2kg Packet',
-    unit: 'packet',
-    cost_price: 115.00,
-    selling_price: 128.00,
-    stock_quantity: 35.0,
-    min_stock_alert: 10.0,
-    is_quick_item: false,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-];
-
-export const INITIAL_CUSTOMERS: Customer[] = [
-  {
-    id: 'd1111111-1111-1111-1111-111111111111',
-    store_id: DEFAULT_STORE.id,
-    name: 'হাজী শামসুল হক (বাড়িয়ালা)',
-    phone: '01819234567',
-    address: 'বাড়ি নং ৪২, রোড ৭, মীরপুর ১০',
-    current_balance: 2450.00, // Due
-    credit_limit: 10000.00,
-    is_active: true,
-    created_at: new Date(Date.now() - 30 * 86400000).toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: 'd2222222-2222-2222-2222-222222222222',
-    store_id: DEFAULT_STORE.id,
-    name: 'মাওলানা আব্দুর রশিদ',
-    phone: '01712345678',
-    address: 'বায়তুল আমান মসজিদ গলি',
-    current_balance: 850.00, // Due
-    credit_limit: 5000.00,
-    is_active: true,
-    created_at: new Date(Date.now() - 20 * 86400000).toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: 'd3333333-3333-3333-3333-333333333333',
-    store_id: DEFAULT_STORE.id,
-    name: 'মোঃ কবির হোসেন (রিকশাচালক)',
-    phone: '01918765432',
-    address: 'পূর্ব বস্তি, মিরপুর ১০',
-    current_balance: 320.00, // Due
-    credit_limit: 1500.00,
-    is_active: true,
-    created_at: new Date(Date.now() - 10 * 86400000).toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: 'd4444444-4444-4444-4444-444444444444',
-    store_id: DEFAULT_STORE.id,
-    name: 'সুমন আহমেদ (চাকরিজীবী)',
-    phone: '01611223344',
-    address: 'ফ্ল্যাট ৩বি, মীম টাওয়ার',
-    current_balance: 0.00, // Zero balance
-    credit_limit: 8000.00,
-    is_active: true,
-    created_at: new Date(Date.now() - 15 * 86400000).toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: 'd5555555-5555-5555-5555-555555555555',
-    store_id: DEFAULT_STORE.id,
-    name: 'নাসরীন আক্তার (গৃহিণী)',
-    phone: '01511998844',
-    address: 'হাউজিং স্টাফ কোয়ার্টার',
-    current_balance: 1420.00, // Due
-    credit_limit: 5000.00,
-    is_active: true,
-    created_at: new Date(Date.now() - 5 * 86400000).toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-];
-
-export const INITIAL_EXPENSES: Expense[] = [
-  {
-    id: 'f1111111-1111-1111-1111-111111111111',
-    store_id: DEFAULT_STORE.id,
-    category: 'দোকানের চা-নাস্তা',
-    amount: 120.00,
-    note: 'গ্রাহক ও কর্মীদের চা বিস্কুট',
-    expense_date: new Date().toISOString().split('T')[0],
-    created_at: new Date().toISOString(),
-  },
-  {
-    id: 'f2222222-2222-2222-2222-222222222222',
-    store_id: DEFAULT_STORE.id,
-    category: 'পরিবহন খরচ (ভ্যান)',
-    amount: 250.00,
-    note: 'কারওয়ান বাজার থেকে মাল আনা',
-    expense_date: new Date().toISOString().split('T')[0],
-    created_at: new Date().toISOString(),
-  },
-];
-
-export const INITIAL_BAKI_TRANSACTIONS: BakiTransaction[] = [
-  {
-    id: 'e1111111-1111-1111-1111-111111111111',
-    store_id: DEFAULT_STORE.id,
-    customer_id: 'd1111111-1111-1111-1111-111111111111',
-    type: 'DEBIT',
-    amount: 3450.00,
-    payment_method: 'CASH',
-    note: 'মাসের শুরুর বড় সওদা',
-    created_at: new Date(Date.now() - 4 * 86400000).toISOString(),
-  },
-  {
-    id: 'e2222222-2222-2222-2222-222222222222',
-    store_id: DEFAULT_STORE.id,
-    customer_id: 'd1111111-1111-1111-1111-111111111111',
-    type: 'CREDIT',
-    amount: 1000.00,
-    payment_method: 'BKASH',
-    note: 'বিকাশে আংশিক বকেয়া পরিশোধ',
-    created_at: new Date(Date.now() - 1 * 86400000).toISOString(),
-  },
-  {
-    id: 'e3333333-3333-3333-3333-333333333333',
-    store_id: DEFAULT_STORE.id,
-    customer_id: 'd2222222-2222-2222-2222-222222222222',
-    type: 'DEBIT',
-    amount: 850.00,
-    payment_method: 'CASH',
-    note: 'তেল ও ডাল বাকিতে ক্রয়',
-    created_at: new Date(Date.now() - 2 * 86400000).toISOString(),
-  },
-];
-
-export const INITIAL_CHALANS: SupplierChalan[] = [
-  {
-    id: 'ca111111-1111-4111-8111-111111111111',
-    store_id: DEFAULT_STORE.id,
-    chalan_no: 'CH-FRESH-4921',
-    supplier_name: 'মেঘনা গ্রুপ অব ইন্ডাস্ট্রিজ (ফ্রেশ ডিলার)',
-    supplier_phone: '01712001122',
-    chalan_date: new Date(Date.now() - 2 * 86400000).toISOString().split('T')[0],
-    total_amount: 18500.00,
-    paid_amount: 15000.00,
-    due_amount: 3500.00,
-    payment_method: 'CASH',
-    items_count: 2,
-    notes: 'সকালে ডেলিভারি ভ্যানে চিনি ও ডাল নামানো হয়েছে',
-    created_at: new Date(Date.now() - 2 * 86400000).toISOString(),
-  },
-  {
-    id: 'ca222222-2222-4222-8222-222222222222',
-    store_id: DEFAULT_STORE.id,
-    chalan_no: 'CH-TEER-8810',
-    supplier_name: 'সিটি গ্রুপ (তীর ডিস্ট্রিবিউটর)',
-    supplier_phone: '01819334455',
-    chalan_date: new Date(Date.now() - 5 * 86400000).toISOString().split('T')[0],
-    total_amount: 24200.00,
-    paid_amount: 24200.00,
-    due_amount: 0.00,
-    payment_method: 'BKASH',
-    items_count: 2,
-    notes: 'তীর সয়াবিন তেল ও আটার চালান সম্পূর্ণ পরিশোধ',
-    created_at: new Date(Date.now() - 5 * 86400000).toISOString(),
-  },
-  {
-    id: 'ca333333-3333-4333-8333-333333333333',
-    store_id: DEFAULT_STORE.id,
-    chalan_no: 'CH-AROT-104',
-    supplier_name: 'হাজী কাশেম বাণিজ্যালয় (কারওয়ান বাজার চালের আড়ত)',
-    supplier_phone: '01911445566',
-    chalan_date: new Date(Date.now() - 1 * 86400000).toISOString().split('T')[0],
-    total_amount: 34000.00,
-    paid_amount: 20000.00,
-    due_amount: 14000.00,
-    payment_method: 'CASH',
-    items_count: 1,
-    notes: 'মিনিকেট চাল ১০ বস্তা (বাকি আগামী শনিবার দেওয়া হবে)',
-    created_at: new Date(Date.now() - 1 * 86400000).toISOString(),
-  },
-];
-
-export const INITIAL_CHALAN_ITEMS: ChalanItem[] = [
-  {
-    id: 'cb111111-1111-4111-8111-111111111111',
-    store_id: DEFAULT_STORE.id,
-    chalan_id: 'ca111111-1111-4111-8111-111111111111',
-    product_id: 'c2222222-2222-2222-2222-222222222222',
-    product_name_bn: 'দেশি সাদা চিনি',
-    quantity: 100,
-    unit: 'kg',
-    unit_cost_price: 125.00,
-    unit_selling_price: 138.00,
-    subtotal: 12500.00,
-    created_at: new Date(Date.now() - 2 * 86400000).toISOString(),
-  },
-  {
-    id: 'cb222222-2222-4222-8222-222222222222',
-    store_id: DEFAULT_STORE.id,
-    chalan_id: 'ca111111-1111-4111-8111-111111111111',
-    product_id: 'c3333333-3333-3333-3333-333333333333',
-    product_name_bn: 'মসুর ডাল (চিকন)',
-    quantity: 40,
-    unit: 'kg',
-    unit_cost_price: 150.00,
-    unit_selling_price: 145.00,
-    subtotal: 6000.00,
-    created_at: new Date(Date.now() - 2 * 86400000).toISOString(),
-  },
-  {
-    id: 'cb333333-3333-4333-8333-333333333333',
-    store_id: DEFAULT_STORE.id,
-    chalan_id: 'ca222222-2222-4222-8222-222222222222',
-    product_id: 'c9999999-9999-9999-9999-999999999999',
-    product_name_bn: 'রূপচাঁদা সয়াবিন তেল (২ লিটার)',
-    quantity: 50,
-    unit: 'packet',
-    unit_cost_price: 350.00,
-    unit_selling_price: 375.00,
-    subtotal: 17500.00,
-    created_at: new Date(Date.now() - 5 * 86400000).toISOString(),
-  },
-  {
-    id: 'cb444444-4444-4444-8444-444444444444',
-    store_id: DEFAULT_STORE.id,
-    chalan_id: 'ca222222-2222-4222-8222-222222222222',
-    product_id: 'cccccccc-cccc-cccc-cccc-cccccccccccc',
-    product_name_bn: 'তীর আটা (২ কেজি প্যাকেট)',
-    quantity: 60,
-    unit: 'packet',
-    unit_cost_price: 111.66,
-    unit_selling_price: 128.00,
-    subtotal: 6700.00,
-    created_at: new Date(Date.now() - 5 * 86400000).toISOString(),
-  },
-  {
-    id: 'cb555555-5555-4555-8555-555555555555',
-    store_id: DEFAULT_STORE.id,
-    chalan_id: 'ca333333-3333-4333-8333-333333333333',
-    product_id: 'c7777777-7777-7777-7777-777777777777',
-    product_name_bn: 'মিনিকেট চাল (খোলা)',
-    quantity: 500,
-    unit: 'kg',
-    unit_cost_price: 68.00,
-    unit_selling_price: 76.00,
-    subtotal: 34000.00,
-    created_at: new Date(Date.now() - 1 * 86400000).toISOString(),
-  },
-];
+// Clean empty seed lists (Real data comes directly from Supabase cloud database)
+export const INITIAL_STORES: Store[] = [];
+export const INITIAL_PROFILES: Profile[] = [];
+export const INITIAL_CATEGORIES: Category[] = [];
+export const INITIAL_PRODUCTS: Product[] = [];
+export const INITIAL_CUSTOMERS: Customer[] = [];
+export const INITIAL_EXPENSES: Expense[] = [];
+export const INITIAL_BAKI_TRANSACTIONS: BakiTransaction[] = [];
+export const INITIAL_CHALANS: SupplierChalan[] = [];
+export const INITIAL_CHALAN_ITEMS: ChalanItem[] = [];
 
 /**
  * Request persistent browser storage to prevent silent eviction under low disk space
@@ -652,12 +124,6 @@ export async function requestPersistentStorage(): Promise<boolean> {
     try {
       const isPersisted = await navigator.storage.persist();
       console.log(`[AmarDokan DB] Persistent storage granted: ${isPersisted}`);
-      if (navigator.storage.estimate) {
-        const estimate = await navigator.storage.estimate();
-        const usageMB = estimate.usage ? (estimate.usage / (1024 * 1024)).toFixed(2) : '0';
-        const quotaMB = estimate.quota ? (estimate.quota / (1024 * 1024)).toFixed(2) : '0';
-        console.log(`[AmarDokan DB] Storage usage: ${usageMB} MB of ${quotaMB} MB quota.`);
-      }
       return isPersisted;
     } catch (e) {
       console.warn('[AmarDokan DB] Persistent storage request failed:', e);
@@ -668,58 +134,115 @@ export async function requestPersistentStorage(): Promise<boolean> {
 }
 
 /**
- * Initializes and seeds the Dexie local database if empty
+ * Purges all local IndexedDB tables and syncs fresh data directly from Supabase
+ */
+export async function purgeLocalDataAndSyncWithSupabase(): Promise<void> {
+  try {
+    const { isSupabaseConfigured, supabase } = await import('../lib/supabaseClient');
+    if (!isSupabaseConfigured()) return;
+
+    // 1. Fetch live cloud data for all operational tables
+    const [
+      storesRes,
+      profilesRes,
+      categoriesRes,
+      productsRes,
+      customersRes,
+      salesRes,
+      saleItemsRes,
+      bakiTxnsRes,
+      expensesRes,
+      chalansRes,
+      chalanItemsRes,
+      paymentsRes,
+      cashCountsRes,
+      dayClosingsRes,
+    ] = await Promise.all([
+      supabase.from('stores').select('*'),
+      supabase.from('profiles').select('*'),
+      supabase.from('categories').select('*'),
+      supabase.from('products').select('*'),
+      supabase.from('customers').select('*'),
+      supabase.from('sales').select('*'),
+      supabase.from('sale_items').select('*'),
+      supabase.from('baki_transactions').select('*'),
+      supabase.from('expenses').select('*'),
+      supabase.from('supplier_chalans').select('*'),
+      supabase.from('chalan_items').select('*'),
+      supabase.from('supplier_payments').select('*'),
+      supabase.from('cash_counts').select('*'),
+      supabase.from('day_closings').select('*'),
+    ]);
+
+    // 2. Atomic Dexie rewrite with fresh Supabase data
+    await db.transaction(
+      'rw',
+      [
+        db.stores,
+        db.profiles,
+        db.categories,
+        db.products,
+        db.customers,
+        db.sales,
+        db.sale_items,
+        db.baki_transactions,
+        db.expenses,
+        db.supplier_chalans,
+        db.chalan_items,
+        db.supplier_payments,
+        db.cash_counts,
+        db.day_closings,
+      ],
+      async () => {
+        await Promise.all([
+          db.stores.clear(),
+          db.profiles.clear(),
+          db.categories.clear(),
+          db.products.clear(),
+          db.customers.clear(),
+          db.sales.clear(),
+          db.sale_items.clear(),
+          db.baki_transactions.clear(),
+          db.expenses.clear(),
+          db.supplier_chalans.clear(),
+          db.chalan_items.clear(),
+          db.supplier_payments.clear(),
+          db.cash_counts.clear(),
+          db.day_closings.clear(),
+        ]);
+
+        if (storesRes.data?.length) await db.stores.bulkPut(storesRes.data);
+        if (profilesRes.data?.length) await db.profiles.bulkPut(profilesRes.data);
+        if (categoriesRes.data?.length) await db.categories.bulkPut(categoriesRes.data);
+        if (productsRes.data?.length) await db.products.bulkPut(productsRes.data);
+        if (customersRes.data?.length) await db.customers.bulkPut(customersRes.data);
+        if (salesRes.data?.length) await db.sales.bulkPut(salesRes.data);
+        if (saleItemsRes.data?.length) await db.sale_items.bulkPut(saleItemsRes.data);
+        if (bakiTxnsRes.data?.length) await db.baki_transactions.bulkPut(bakiTxnsRes.data);
+        if (expensesRes.data?.length) await db.expenses.bulkPut(expensesRes.data);
+        if (chalansRes.data?.length) await db.supplier_chalans.bulkPut(chalansRes.data);
+        if (chalanItemsRes.data?.length) await db.chalan_items.bulkPut(chalanItemsRes.data);
+        if (paymentsRes.data?.length) await db.supplier_payments.bulkPut(paymentsRes.data);
+        if (cashCountsRes.data?.length) await db.cash_counts.bulkPut(cashCountsRes.data);
+        if (dayClosingsRes.data?.length) await db.day_closings.bulkPut(dayClosingsRes.data);
+      }
+    );
+
+    console.log('[AmarDokan DB] Synchronized all tables directly with live Supabase database.');
+  } catch (err) {
+    console.error('[AmarDokan DB] Failed to sync all tables with Supabase:', err);
+  }
+}
+
+/**
+ * Initializes and syncs the Dexie local database with live Supabase cloud database
  */
 export async function initializeLocalDatabase(): Promise<void> {
-  // 1. Request OS/Browser storage persistence asynchronously
+  // 1. Request OS/Browser storage persistence
   requestPersistentStorage().catch(() => {});
 
-  // 2. Check store count and seed
-  const storeCount = await db.stores.count();
-  if (storeCount === 0) {
-    await db.transaction('rw', [db.stores, db.profiles, db.categories, db.products, db.customers, db.expenses, db.baki_transactions, db.supplier_chalans, db.chalan_items], async () => {
-      await db.stores.bulkPut(INITIAL_STORES);
-      await db.profiles.bulkPut(INITIAL_PROFILES);
-      await db.categories.bulkPut(INITIAL_CATEGORIES);
-      await db.products.bulkPut(INITIAL_PRODUCTS);
-      await db.customers.bulkPut(INITIAL_CUSTOMERS);
-      await db.expenses.bulkPut(INITIAL_EXPENSES);
-      await db.baki_transactions.bulkPut(INITIAL_BAKI_TRANSACTIONS);
-      await db.supplier_chalans.bulkPut(INITIAL_CHALANS);
-      await db.chalan_items.bulkPut(INITIAL_CHALAN_ITEMS);
-    });
-    console.log('[AmarDokan DB] Offline database successfully initialized and seeded with multiple stores.');
-  } else {
-    // Check if additional initial stores need adding
-    if (storeCount < INITIAL_STORES.length) {
-      await db.stores.bulkPut(INITIAL_STORES);
-    }
-
-    // Check if profiles need seeding or updating with password
-    const profileCount = await db.profiles.count();
-    if (profileCount === 0) {
-      await db.profiles.bulkPut(INITIAL_PROFILES);
-      console.log('[AmarDokan DB] Staff profiles successfully seeded.');
-    } else {
-      // Ensure seed profiles have password property populated
-      for (const p of INITIAL_PROFILES) {
-        const existing = await db.profiles.get(p.id);
-        if (existing && !existing.password) {
-          await db.profiles.update(p.id, { password: p.password });
-        }
-      }
-    }
-
-    // Check if supplier_chalans need seeding
-    const chalanCount = await db.supplier_chalans.count();
-    if (chalanCount === 0) {
-      await db.transaction('rw', [db.supplier_chalans, db.chalan_items], async () => {
-        await db.supplier_chalans.bulkPut(INITIAL_CHALANS);
-        await db.chalan_items.bulkPut(INITIAL_CHALAN_ITEMS);
-      });
-      console.log('[AmarDokan DB] Supplier chalans successfully seeded.');
-    }
-  }
+  // 2. Fetch live data from Supabase
+  await purgeLocalDataAndSyncWithSupabase();
 }
 
 // ==============================================================================

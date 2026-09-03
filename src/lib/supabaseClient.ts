@@ -13,8 +13,16 @@ const sanitizeUrl = (raw?: string): string => {
   return cleaned;
 };
 
-const rawUrl = import.meta.env.VITE_SUPABASE_URL || '';
-const rawAnonKey = (import.meta.env.VITE_SUPABASE_ANON_KEY || '').trim();
+const rawUrl =
+  import.meta.env.VITE_SUPABASE_URL ||
+  import.meta.env.NEXT_PUBLIC_SUPABASE_URL ||
+  '';
+const rawAnonKey = (
+  import.meta.env.VITE_SUPABASE_ANON_KEY ||
+  import.meta.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
+  import.meta.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+  ''
+).trim();
 
 const SUPABASE_URL = sanitizeUrl(rawUrl);
 const SUPABASE_ANON_KEY = rawAnonKey || 'placeholder-anon-key';

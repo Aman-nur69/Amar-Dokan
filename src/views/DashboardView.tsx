@@ -5,6 +5,7 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { db } from '../db/offlineDb';
+import { isSupabaseConfigured, supabase } from '../lib/supabaseClient';
 import {
   Sale,
   Expense,
@@ -84,39 +85,108 @@ export const DashboardView: React.FC = () => {
       return;
     }
 
-    const allSales = await db.sales.where('store_id').equals(activeStoreId).toArray();
-    const allExpenses = await db.expenses.where('store_id').equals(activeStoreId).toArray();
-    const allBaki = await db.baki_transactions.where('store_id').equals(activeStoreId).toArray();
-    const allItems = await db.sale_items.where('store_id').equals(activeStoreId).toArray();
-    const allChalans = await db.supplier_chalans.where('store_id').equals(activeStoreId).toArray();
-    const allPayments = await db.supplier_payments.where('store_id').equals(activeStoreId).toArray();
-    const allCustomers = await db.customers.where('store_id').equals(activeStoreId).toArray();
+    try {
+      if (isSupabaseConfigured()) {
+        try {
+          const [
+            sbSales,
+            sbExpenses,
+            sbBaki,
+            sbItems,
+            sbChalans,
+            sbPayments,
+            sbCustomers,
+            sbClosings,
+            sbCounts,
+          ] = await Promise.all([
+            supabase.from('sales').select('*').eq('store_id', activeStoreId),
+            supabase.from('expenses').select('*').eq('store_id', activeStoreId),
+            supabase.from('baki_transactions').select('*').eq('store_id', activeStoreId),
+            supabase.from('sale_items').select('*').eq('store_id', activeStoreId),
+            supabase.from('supplier_chalans').select('*').eq('store_id', activeStoreId),
+            supabase.from('supplier_payments').select('*').eq('store_id', activeStoreId),
+            supabase.from('customers').select('*').eq('store_id', activeStoreId),
+            supabase.from('day_closings').select('*').eq('store_id', activeStoreId),
+            supabase.from('cash_counts').select('*').eq('store_id', activeStoreId),
+          ]);
 
-    // Yesterday's counted cash is today's opening float.
-    const closings = await db.day_closings.where('store_id').equals(activeStoreId).toArray();
-    closings.sort((a, b) => b.business_date.localeCompare(a.business_date));
-    setPreviousClosing(closings.find((c) => c.business_date < selectedDate) || null);
+          if (sbSales.data) {
+            await db.sales.where('store_id').equals(activeStoreId).delete();
+            if (sbSales.data.length > 0) await db.sales.bulkPut(sbSales.data);
+          }
+          if (sbExpenses.data) {
+            await db.expenses.where('store_id').equals(activeStoreId).delete();
+            if (sbExpenses.data.length > 0) await db.expenses.bulkPut(sbExpenses.data);
+          }
+          if (sbBaki.data) {
+            await db.baki_transactions.where('store_id').equals(activeStoreId).delete();
+            if (sbBaki.data.length > 0) await db.baki_transactions.bulkPut(sbBaki.data);
+          }
+          if (sbItems.data) {
+            await db.sale_items.where('store_id').equals(activeStoreId).delete();
+            if (sbItems.data.length > 0) await db.sale_items.bulkPut(sbItems.data);
+          }
+          if (sbChalans.data) {
+            await db.supplier_chalans.where('store_id').equals(activeStoreId).delete();
+            if (sbChalans.data.length > 0) await db.supplier_chalans.bulkPut(sbChalans.data);
+          }
+          if (sbPayments.data) {
+            await db.supplier_payments.where('store_id').equals(activeStoreId).delete();
+            if (sbPayments.data.length > 0) await db.supplier_payments.bulkPut(sbPayments.data);
+          }
+          if (sbCustomers.data) {
+            await db.customers.where('store_id').equals(activeStoreId).delete();
+            if (sbCustomers.data.length > 0) await db.customers.bulkPut(sbCustomers.data);
+          }
+          if (sbClosings.data) {
+            await db.day_closings.where('store_id').equals(activeStoreId).delete();
+            if (sbClosings.data.length > 0) await db.day_closings.bulkPut(sbClosings.data);
+          }
+          if (sbCounts.data) {
+            await db.cash_counts.where('store_id').equals(activeStoreId).delete();
+            if (sbCounts.data.length > 0) await db.cash_counts.bulkPut(sbCounts.data);
+          }
+        } catch (sbErr) {
+          console.warn('[DashboardView] Supabase live fetch error:', sbErr);
+        }
+      }
 
-    const counts = await db.cash_counts.where('store_id').equals(activeStoreId).toArray();
-    const todaysCounts = counts
-      .filter((c) => c.business_date === selectedDate)
-      .sort((a, b) => b.created_at.localeCompare(a.created_at));
-    setCountedCashToday(todaysCounts[0]?.counted_amount);
+      const allSales = await db.sales.where('store_id').equals(activeStoreId).toArray();
+      const allExpenses = await db.expenses.where('store_id').equals(activeStoreId).toArray();
+      const allBaki = await db.baki_transactions.where('store_id').equals(activeStoreId).toArray();
+      const allItems = await db.sale_items.where('store_id').equals(activeStoreId).toArray();
+      const allChalans = await db.supplier_chalans.where('store_id').equals(activeStoreId).toArray();
+      const allPayments = await db.supplier_payments.where('store_id').equals(activeStoreId).toArray();
+      const allCustomers = await db.customers.where('store_id').equals(activeStoreId).toArray();
 
-    // Sort newest first
-    allSales.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-    allExpenses.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-    allBaki.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-    allChalans.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-    allPayments.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      // Yesterday's counted cash is today's opening float.
+      const closings = await db.day_closings.where('store_id').equals(activeStoreId).toArray();
+      closings.sort((a, b) => b.business_date.localeCompare(a.business_date));
+      setPreviousClosing(closings.find((c) => c.business_date < selectedDate) || null);
 
-    setSales(allSales);
-    setExpenses(allExpenses);
-    setBakiTx(allBaki);
-    setSaleItems(allItems);
-    setChalans(allChalans);
-    setSupplierPayments(allPayments);
-    setCustomers(allCustomers);
+      const counts = await db.cash_counts.where('store_id').equals(activeStoreId).toArray();
+      const todaysCounts = counts
+        .filter((c) => c.business_date === selectedDate)
+        .sort((a, b) => b.created_at.localeCompare(a.created_at));
+      setCountedCashToday(todaysCounts[0]?.counted_amount);
+
+      // Sort newest first
+      allSales.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      allExpenses.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      allBaki.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      allChalans.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      allPayments.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+      setSales(allSales);
+      setExpenses(allExpenses);
+      setBakiTx(allBaki);
+      setSaleItems(allItems);
+      setChalans(allChalans);
+      setSupplierPayments(allPayments);
+      setCustomers(allCustomers);
+    } catch (err) {
+      console.error('[DashboardView] Error loading data:', err);
+    }
   }, [activeStoreId, selectedDate]);
 
   useEffect(() => {

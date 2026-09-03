@@ -6,6 +6,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { db, buildSyncItem } from '../db/offlineDb';
 import { useAuthStore } from './useAuthStore';
+import { isSupabaseConfigured, supabase } from '../lib/supabaseClient';
 import {
   Product,
   Category,
@@ -41,6 +42,36 @@ export function useInventory() {
 
     setIsLoading(true);
     try {
+      if (isSupabaseConfigured()) {
+        try {
+          const [sbProds, sbCats, sbChalans, sbChalanItems] = await Promise.all([
+            supabase.from('products').select('*').eq('store_id', activeStoreId),
+            supabase.from('categories').select('*').eq('store_id', activeStoreId),
+            supabase.from('supplier_chalans').select('*').eq('store_id', activeStoreId),
+            supabase.from('chalan_items').select('*').eq('store_id', activeStoreId),
+          ]);
+
+          if (sbProds.data) {
+            await db.products.where('store_id').equals(activeStoreId).delete();
+            if (sbProds.data.length > 0) await db.products.bulkPut(sbProds.data);
+          }
+          if (sbCats.data) {
+            await db.categories.where('store_id').equals(activeStoreId).delete();
+            if (sbCats.data.length > 0) await db.categories.bulkPut(sbCats.data);
+          }
+          if (sbChalans.data) {
+            await db.supplier_chalans.where('store_id').equals(activeStoreId).delete();
+            if (sbChalans.data.length > 0) await db.supplier_chalans.bulkPut(sbChalans.data);
+          }
+          if (sbChalanItems.data) {
+            await db.chalan_items.where('store_id').equals(activeStoreId).delete();
+            if (sbChalanItems.data.length > 0) await db.chalan_items.bulkPut(sbChalanItems.data);
+          }
+        } catch (sbErr) {
+          console.warn('[useInventory] Supabase live fetch note:', sbErr);
+        }
+      }
+
       const allProducts = await db.products.where('store_id').equals(activeStoreId).toArray();
       allProducts.sort((a, b) => a.name_bn.localeCompare(b.name_bn, 'bn'));
       setProducts(allProducts);
@@ -92,8 +123,18 @@ export function useInventory() {
         updated_at: now,
       });
 
-      // Products carry no server-side stock trigger, so the absolute value is
-      // safe to sync. `reason` is local-only and stripped by the sanitizer.
+      if (isSupabaseConfigured()) {
+        try {
+          await supabase
+            .from('products')
+            .update({ stock_quantity: cleanStock, updated_at: now })
+            .eq('id', productId);
+        } catch (sbErr) {
+          console.warn('[useInventory] Supabase direct stock adjust note:', sbErr);
+        }
+      }
+
+      // Fallback queue item
       await db.sync_queue.add(
         buildSyncItem('products', 'UPDATE', {
           id: productId,
@@ -138,6 +179,18 @@ export function useInventory() {
         cost_price: costPrice > 0 ? costPrice : product.cost_price,
         updated_at: now,
       });
+
+      if (isSupabaseConfigured()) {
+        try {
+          await supabase.from('products').update({
+            stock_quantity: newStock,
+            cost_price: costPrice > 0 ? costPrice : product.cost_price,
+            updated_at: now,
+          }).eq('id', params.productId);
+        } catch (sbErr) {
+          console.warn('[useInventory] Supabase direct adjust purchase note:', sbErr);
+        }
+      }
 
       await db.sync_queue.add(
         buildSyncItem('products', 'UPDATE', {
@@ -367,6 +420,25 @@ export function useInventory() {
               buildSyncItem('chalan_items', 'INSERT', item as unknown as Record<string, unknown>)
             );
           }
+          if (isSupabaseConfigured()) {
+            try {
+              await supabase.from('supplier_chalans').insert(newChalan);
+              await supabase.from('chalan_items').insert(chalanItemRecords);
+              for (const item of chalanItemRecords) {
+                const prod = await db.products.get(item.product_id);
+                if (prod) {
+                  await supabase.from('products').update({
+                    stock_quantity: prod.stock_quantity,
+                    cost_price: prod.cost_price,
+                    selling_price: prod.selling_price,
+                    updated_at: now,
+                  }).eq('id', item.product_id);
+                }
+              }
+            } catch (sbErr) {
+              console.warn('[useInventory] Supabase chalan direct insert note:', sbErr);
+            }
+          }
         }
       );
 
@@ -428,11 +500,21 @@ export function useInventory() {
 
         await db.supplier_payments.add(paymentRecord);
 
+        if (isSupabaseConfigured()) {
+          try {
+            await supabase.from('supplier_chalans').update({
+              paid_amount: newPaid,
+              due_amount: newDue,
+            }).eq('id', chalanId);
+            await supabase.from('supplier_payments').insert(paymentRecord);
+          } catch (sbErr) {
+            console.warn('[useInventory] Supabase direct supplier payment note:', sbErr);
+          }
+        }
+
         await db.sync_queue.add(
           buildSyncItem('supplier_payments', 'INSERT', paymentRecord as unknown as Record<string, unknown>)
         );
-        // The chalan's running balance is client-owned (no server trigger),
-        // so the updated totals have to travel with the payment.
         await db.sync_queue.add(
           buildSyncItem('supplier_chalans', 'UPDATE', {
             id: chalanId,
@@ -482,6 +564,15 @@ export function useInventory() {
       };
 
       await db.products.add(newProduct);
+
+      if (isSupabaseConfigured()) {
+        try {
+          await supabase.from('products').insert(newProduct);
+        } catch (sbErr) {
+          console.warn('[useInventory] Supabase direct addProduct note:', sbErr);
+        }
+      }
+
       await db.sync_queue.add(
         buildSyncItem('products', 'INSERT', newProduct as unknown as Record<string, unknown>)
       );

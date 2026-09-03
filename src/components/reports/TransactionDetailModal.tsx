@@ -5,6 +5,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { db } from '../../db/offlineDb';
+import { isSupabaseConfigured, supabase } from '../../lib/supabaseClient';
 import {
   Sale,
   Expense,
@@ -65,6 +66,30 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
     async function loadDetails() {
       setIsLoading(true);
       try {
+        if (isSupabaseConfigured()) {
+          try {
+            if (transaction?.type === 'SALE') {
+              const sale = transaction.raw as Sale;
+              const { data: cloudItems } = await supabase.from('sale_items').select('*').eq('sale_id', sale.id);
+              if (cloudItems && cloudItems.length > 0) {
+                if (isMounted) setSaleItems(cloudItems);
+                setIsLoading(false);
+                return;
+              }
+            } else if (transaction?.type === 'CHALAN') {
+              const chalan = transaction.raw as SupplierChalan;
+              const { data: cloudItems } = await supabase.from('chalan_items').select('*').eq('chalan_id', chalan.id);
+              if (cloudItems && cloudItems.length > 0) {
+                if (isMounted) setChalanItems(cloudItems);
+                setIsLoading(false);
+                return;
+              }
+            }
+          } catch (sbErr) {
+            console.warn('[TransactionDetail] Live item fetch note:', sbErr);
+          }
+        }
+
         if (transaction?.type === 'SALE') {
           const sale = transaction.raw as Sale;
           const items = await db.sale_items.where('sale_id').equals(sale.id).toArray();

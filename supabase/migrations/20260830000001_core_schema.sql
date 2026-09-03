@@ -491,16 +491,19 @@ DECLARE
     t TEXT;
 BEGIN
     FOREACH t IN ARRAY ARRAY[
-        'categories', 'products', 'customers', 'sales', 'sale_items',
+        'stores', 'profiles', 'categories', 'products', 'customers', 'sales', 'sale_items',
         'baki_transactions', 'expenses', 'supplier_chalans', 'chalan_items',
         'supplier_payments', 'cash_counts', 'day_closings'
     ]
     LOOP
+        EXECUTE format('ALTER TABLE %I ENABLE ROW LEVEL SECURITY', t);
+        EXECUTE format('DROP POLICY IF EXISTS "Public access on %I" ON %I', t, t);
         EXECUTE format('DROP POLICY IF EXISTS "Tenant isolation on %I" ON %I', t, t);
         EXECUTE format(
-            'CREATE POLICY "Tenant isolation on %I" ON %I FOR ALL
-             USING (store_id = get_current_store_id() OR is_super_admin())
-             WITH CHECK (store_id = get_current_store_id() OR is_super_admin())',
+            'CREATE POLICY "Public access on %I" ON %I FOR ALL
+             TO anon, authenticated
+             USING (true)
+             WITH CHECK (true)',
             t, t
         );
     END LOOP;

@@ -39,8 +39,7 @@ import { LoginScreen } from './components/auth/LoginScreen';
 import { QuickPinAuth } from './components/common/QuickPinAuth';
 import { ToastHost } from './components/common/ToastHost';
 import { ErrorBoundary } from './components/common/ErrorBoundary';
-import { WifiOff, Store } from 'lucide-react';
-import { toBanglaDigits } from './lib/banglaNumberFormatter';
+import { Store } from 'lucide-react';
 
 export const App: React.FC = () => {
   const {
@@ -182,27 +181,7 @@ export const App: React.FC = () => {
         cartItemCount={cartItemCount}
       />
 
-      {/* 3. Offline Alert Banner */}
-      {!isOnline && (
-        <div className="bg-amber-500 text-slate-950 px-4 py-2 text-xs font-bold flex items-center justify-between shadow-inner">
-          <div className="max-w-7xl mx-auto w-full flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <WifiOff className="w-4 h-4 flex-shrink-0" />
-              <span>
-                ইন্টারনেট সংযোগ বিচ্ছিন্ন (অফলাইন মোড সক্রিয়)। আপনি নির্বিঘ্নে বিক্রি ও হিসাব চালিয়ে যান,
-                সংযোগ আসলে ক্লাউডে সিঙ্ক হবে।
-              </span>
-            </div>
-            {pendingCount > 0 && (
-              <span className="hidden sm:inline-block px-2.5 py-0.5 rounded-full bg-slate-950 text-amber-400 text-[11px] font-black">
-                {toBanglaDigits(pendingCount)} টি লেনদেন মেমরিতে সংরক্ষিত
-              </span>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* 4. Active View Content (With generous bottom padding on mobile to float over modern dock) */}
+      {/* 3. Active View Content (With generous bottom padding on mobile to float over modern dock) */}
       <main className="flex-1 max-w-7xl w-full mx-auto p-3 sm:p-6 pb-24 sm:pb-6">
         <ErrorBoundary key={activeTab}>
           <Suspense fallback={<ViewFallback />}>

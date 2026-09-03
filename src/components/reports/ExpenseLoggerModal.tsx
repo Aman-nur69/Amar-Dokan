@@ -6,6 +6,7 @@
 import React, { useState } from 'react';
 import { db, buildSyncItem } from '../../db/offlineDb';
 import { useAuthStore } from '../../hooks/useAuthStore';
+import { isSupabaseConfigured, supabase } from '../../lib/supabaseClient';
 import { Expense } from '../../@types/database.types';
 import { X, Receipt, Check } from 'lucide-react';
 import { BigButton } from '../common/BigButton';
@@ -75,6 +76,14 @@ export const ExpenseLoggerModal: React.FC<ExpenseLoggerModalProps> = ({
           buildSyncItem('expenses', 'INSERT', expenseItem as unknown as Record<string, unknown>)
         );
       });
+
+      if (isSupabaseConfigured()) {
+        try {
+          await supabase.from('expenses').insert(expenseItem);
+        } catch (sbErr) {
+          console.warn('[ExpenseLogger] Supabase direct insert note:', sbErr);
+        }
+      }
 
       toast.success('খরচ সংরক্ষিত হয়েছে');
       setAmount(0);

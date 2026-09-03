@@ -8,6 +8,7 @@ import { DailyMetrics } from './DailyProfitWidget';
 import { db, buildSyncItem } from '../../db/offlineDb';
 import { useActiveStore } from '../../hooks/useActiveStore';
 import { useAuthStore } from '../../hooks/useAuthStore';
+import { isSupabaseConfigured, supabase } from '../../lib/supabaseClient';
 import { toast } from '../../hooks/useToastStore';
 import { useModalDismiss } from '../../hooks/useModalDismiss';
 import { DayClosing } from '../../@types/database.types';
@@ -93,6 +94,14 @@ export const DayClosingModal: React.FC<DayClosingModalProps> = ({
           buildSyncItem('day_closings', 'INSERT', record as unknown as Record<string, unknown>)
         );
       });
+
+      if (isSupabaseConfigured()) {
+        try {
+          await supabase.from('day_closings').upsert(record, { onConflict: 'id' });
+        } catch (sbErr) {
+          console.warn('[DayClosing] Supabase direct upsert note:', sbErr);
+        }
+      }
 
       toast.success('দিনের ক্লোজিং সংরক্ষিত হয়েছে');
       onClosed?.();
