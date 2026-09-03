@@ -17,12 +17,7 @@ import {
   UserPlus,
   User,
   Phone,
-  MapPin,
-  Check,
   X,
-  AlertCircle,
-  Clock,
-  Sparkles,
 } from 'lucide-react';
 
 interface SelectBakiCustomerModalProps {

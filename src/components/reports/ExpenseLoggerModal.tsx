@@ -7,7 +7,6 @@ import React, { useState } from 'react';
 import { db, buildSyncItem } from '../../db/offlineDb';
 import { useAuthStore } from '../../hooks/useAuthStore';
 import { Expense } from '../../@types/database.types';
-import { toBanglaDigits } from '../../lib/banglaNumberFormatter';
 import { X, Receipt, Check } from 'lucide-react';
 import { BigButton } from '../common/BigButton';
 import { toast } from '../../hooks/useToastStore';

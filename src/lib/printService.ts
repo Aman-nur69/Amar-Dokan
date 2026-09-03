@@ -3,7 +3,7 @@
 // 58mm / 80mm ESC/POS Thermal Printing & WhatsApp/SMS Reminder Generator
 // ==============================================================================
 
-import { ThermalReceiptData, WhatsAppReminderData } from '../@types/pos.types';
+import { WhatsAppReminderData } from '../@types/pos.types';
 import { formatBengaliCurrency, toBanglaDigits, formatBengaliPhone } from './banglaNumberFormatter';
 import { Customer, BakiTransaction, Store } from '../@types/database.types';
 

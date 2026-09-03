@@ -31,8 +31,6 @@ export const POSView: React.FC = () => {
     addItem,
     selectedCustomer,
     setSelectedCustomer,
-    isCartDrawerOpen,
-    setCartDrawerOpen,
     isPaymentSheetOpen,
     setPaymentSheetOpen,
     getTotalAmount,
@@ -214,7 +212,6 @@ export const POSView: React.FC = () => {
           }`}
         >
           <CartDrawer
-            customers={allCustomers}
             onCashCheckout={handleCashCheckout}
             onBakiCheckout={handleBakiCheckout}
             onOpenSplitModal={() => setPaymentSheetOpen(true)}

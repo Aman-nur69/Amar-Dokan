@@ -10,8 +10,8 @@ import { toast } from '../../hooks/useToastStore';
 import { useModalDismiss } from '../../hooks/useModalDismiss';
 import { CashCount } from '../../@types/database.types';
 import { round2 } from '../../lib/units';
-import { formatBengaliCurrency, toBanglaDigits } from '../../lib/banglaNumberFormatter';
-import { X, CheckCircle2, AlertTriangle, Calculator, Sparkles, RefreshCw } from 'lucide-react';
+import { formatBengaliCurrency } from '../../lib/banglaNumberFormatter';
+import { X, CheckCircle2, AlertTriangle, Calculator, RefreshCw } from 'lucide-react';
 import { BigButton } from '../common/BigButton';
 
 interface CashCountModalProps {
@@ -106,7 +106,6 @@ export const CashCountModal: React.FC<CashCountModalProps> = ({
   const difference = round2(totalPhysicalCash - expectedTotal);
   const isMatch = Math.abs(difference) < 1;
   const isSurplus = difference > 0;
-  const isShort = difference < 0;
 
   /**
    * Saves the count. Previously the variance a shopkeeper had just discovered

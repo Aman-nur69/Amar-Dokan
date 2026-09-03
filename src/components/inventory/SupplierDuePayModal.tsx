@@ -7,8 +7,8 @@ import React, { useState, useEffect } from 'react';
 import { toast } from '../../hooks/useToastStore';
 import { useModalDismiss } from '../../hooks/useModalDismiss';
 import { SupplierChalan } from '../../@types/database.types';
-import { formatBengaliCurrency, toBanglaDigits } from '../../lib/banglaNumberFormatter';
-import { X, Check, HandCoins, Truck, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { formatBengaliCurrency } from '../../lib/banglaNumberFormatter';
+import { X, Check, HandCoins } from 'lucide-react';
 import { BigButton } from '../common/BigButton';
 
 interface SupplierDuePayModalProps {

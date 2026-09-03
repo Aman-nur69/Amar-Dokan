@@ -9,7 +9,7 @@ import { toast } from '../../hooks/useToastStore';
 import { Customer } from '../../@types/database.types';
 import { useCartStore } from '../../hooks/useCartStore';
 import { formatBengaliCurrency, toBanglaDigits } from '../../lib/banglaNumberFormatter';
-import { X, Check, DollarSign, Smartphone, BookOpen, AlertCircle } from 'lucide-react';
+import { X, Check, Smartphone, AlertCircle } from 'lucide-react';
 import { BigButton } from '../common/BigButton';
 
 interface PaymentActionSheetProps {
@@ -31,7 +31,6 @@ export const PaymentActionSheet: React.FC<PaymentActionSheetProps> = ({
     getTotalAmount,
     selectedCustomer,
     setSelectedCustomer,
-    paymentDetails,
     setPaymentDetails,
   } = useCartStore();
 
@@ -72,7 +71,7 @@ export const PaymentActionSheet: React.FC<PaymentActionSheetProps> = ({
       customer: selectedCustomer,
       paymentMethod: dueAmount > 0 ? (paidAmount > 0 ? 'SPLIT' : 'BAKI') : 'CASH',
     });
-  }, [cashAmount, mfsAmount, mfsProvider, mfsTxnId, dueAmount, selectedCustomer, setPaymentDetails]);
+  }, [cashAmount, mfsAmount, mfsProvider, mfsTxnId, dueAmount, paidAmount, selectedCustomer, setPaymentDetails]);
 
   if (!isOpen) return null;
 

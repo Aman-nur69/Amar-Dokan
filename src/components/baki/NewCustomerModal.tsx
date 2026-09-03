@@ -7,17 +7,15 @@
 import React, { useState } from 'react';
 import { useModalDismiss } from '../../hooks/useModalDismiss';
 import { Customer } from '../../@types/database.types';
-import { formatBengaliCurrency, toBanglaDigits } from '../../lib/banglaNumberFormatter';
+import { formatBengaliCurrency } from '../../lib/banglaNumberFormatter';
 import {
   X,
   UserPlus,
   Phone,
   MapPin,
-  Sparkles,
   ShieldAlert,
   Wallet,
   Check,
-  Building2,
 } from 'lucide-react';
 import { BigButton } from '../common/BigButton';
 

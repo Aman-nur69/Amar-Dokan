@@ -3,9 +3,6 @@
 // Real-time bi-directional conversion between ASCII digits (0-9) and Bengali digits (০-৯)
 // ==============================================================================
 
-const BENGALI_DIGITS = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
-const ENGLISH_DIGITS = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
-
 const DIGIT_MAP_EN_TO_BN: Record<string, string> = {
   '0': '০', '1': '১', '2': '২', '3': '৩', '4': '৪',
   '5': '৫', '6': '৬', '7': '৭', '8': '৮', '9': '৯',

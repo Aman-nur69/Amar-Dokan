@@ -8,10 +8,8 @@ import { useCartStore } from '../../hooks/useCartStore';
 import { formatBengaliCurrency, toBanglaDigits } from '../../lib/banglaNumberFormatter';
 import { Trash2, Plus, Minus, Tag, User, ShoppingBag, ArrowRight } from 'lucide-react';
 import { BigButton } from '../common/BigButton';
-import { Customer } from '../../@types/database.types';
 
 interface CartDrawerProps {
-  customers: Customer[];
   onCashCheckout: () => void;
   onBakiCheckout: () => void;
   onOpenSplitModal: () => void;
@@ -19,7 +17,6 @@ interface CartDrawerProps {
 }
 
 export const CartDrawer: React.FC<CartDrawerProps> = ({
-  customers,
   onCashCheckout,
   onBakiCheckout,
   onOpenSplitModal,

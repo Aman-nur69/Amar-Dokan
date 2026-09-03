@@ -11,7 +11,7 @@ import { QuickCustomerDrawer } from '../components/baki/QuickCustomerDrawer';
 import { NewCustomerModal } from '../components/baki/NewCustomerModal';
 import { Customer } from '../@types/database.types';
 import { formatBengaliCurrency, toBanglaDigits } from '../lib/banglaNumberFormatter';
-import { BookOpen, AlertCircle, CheckCircle2, TrendingDown, UserPlus } from 'lucide-react';
+import { AlertCircle, CheckCircle2, TrendingDown } from 'lucide-react';
 
 export const BakiKhataView: React.FC = () => {
   const {

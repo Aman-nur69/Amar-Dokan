@@ -18,7 +18,6 @@ import {
   Calculator,
   AlertCircle,
   FileText,
-  Building2,
   CheckCircle2,
   Upload,
   Eye,

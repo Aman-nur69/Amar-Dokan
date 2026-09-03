@@ -15,7 +15,6 @@ import { round2 } from '../../lib/units';
 import {
   formatBengaliCurrency,
   toBanglaDigits,
-  formatBengaliDate,
 } from '../../lib/banglaNumberFormatter';
 import { X, Printer, Share2, FileCheck, CheckCircle2 } from 'lucide-react';
 import { BigButton } from '../common/BigButton';
