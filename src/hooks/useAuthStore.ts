@@ -146,6 +146,13 @@ export const useAuthStore = create<AuthState>()(
           }
 
           if (!profile) {
+            profile = INITIAL_PROFILES.find((p) => p.phone === cleanPhone);
+            if (profile) {
+              await db.profiles.put(profile);
+            }
+          }
+
+          if (!profile) {
             set({ isLoading: false, loginError: 'এই ফোন নম্বরে কোনো অ্যাকাউন্ট পাওয়া যায়নি।' });
             return false;
           }
@@ -158,8 +165,13 @@ export const useAuthStore = create<AuthState>()(
             return false;
           }
 
-          // Verify against the digest, falling back to a legacy plaintext record.
-          const stored = profile.password_hash || profile.password || profile.pin_hash || profile.pin_code;
+          // Verify against the digest, falling back to pre-seeded demo credentials or legacy plaintext.
+          let stored = profile.password_hash || profile.password || profile.pin_hash || profile.pin_code;
+          if (!stored) {
+            const initialMatch = INITIAL_PROFILES.find((p) => p.phone === cleanPhone);
+            stored = initialMatch?.password_hash || initialMatch?.password;
+          }
+
           const { valid, needsUpgrade } = await verifySecret(cleanPhone, cleanSecret, stored);
 
           if (!valid) {

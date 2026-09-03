@@ -107,7 +107,56 @@ export const DEFAULT_STORE: Store = {
 
 // Clean empty seed lists (Real data comes directly from Supabase cloud database)
 export const INITIAL_STORES: Store[] = [];
-export const INITIAL_PROFILES: Profile[] = [];
+export const INITIAL_PROFILES: Profile[] = [
+  {
+    id: 'f0000000-0000-0000-0000-000000000000',
+    store_id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
+    full_name: 'সুপার অ্যাডমিন (System Administrator)',
+    phone: '01700000000',
+    role: 'super_admin',
+    password_hash: 'sha256$4b187707c7394e03030383e54ab9c7bd628b340134810d55207cadeb53c50499', // admin123
+    pin_hash: 'sha256$4b187707c7394e03030383e54ab9c7bd628b340134810d55207cadeb53c50499',
+    is_active: true,
+    created_at: '2026-08-30T00:00:00.000Z',
+    updated_at: '2026-08-30T00:00:00.000Z',
+  },
+  {
+    id: 'f0000001-0000-0000-0000-000000000001',
+    store_id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
+    full_name: 'মোঃ রফিকুল ইসলাম (দোকান মালিক)',
+    phone: '01711998877',
+    role: 'owner',
+    password_hash: 'sha256$9b4198a88a6c92cb3d1d566d46dec30f8407c71f20a0fd6d9801db5c44ad1ef7', // dokan123
+    pin_hash: 'sha256$9b4198a88a6c92cb3d1d566d46dec30f8407c71f20a0fd6d9801db5c44ad1ef7',
+    is_active: true,
+    created_at: '2026-08-30T00:00:00.000Z',
+    updated_at: '2026-08-30T00:00:00.000Z',
+  },
+  {
+    id: 'f0000002-0000-0000-0000-000000000002',
+    store_id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
+    full_name: 'আব্দুল করিম (ম্যানেজার)',
+    phone: '01811223344',
+    role: 'manager',
+    password_hash: 'sha256$d41b835cce5873cc227dc8c7805639488a4315199accfdd0efed99ef11b07379', // dokan123
+    pin_hash: 'sha256$d41b835cce5873cc227dc8c7805639488a4315199accfdd0efed99ef11b07379',
+    is_active: true,
+    created_at: '2026-08-30T00:00:00.000Z',
+    updated_at: '2026-08-30T00:00:00.000Z',
+  },
+  {
+    id: 'f0000003-0000-0000-0000-000000000003',
+    store_id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
+    full_name: 'তানভীর হাসান (ক্যাশিয়ার)',
+    phone: '01911334455',
+    role: 'cashier',
+    password_hash: 'sha256$3a4b261157f67591802d9a941520105ed0444ab404fd084cd6f29ea93b90ce53', // dokan123
+    pin_hash: 'sha256$3a4b261157f67591802d9a941520105ed0444ab404fd084cd6f29ea93b90ce53',
+    is_active: true,
+    created_at: '2026-08-30T00:00:00.000Z',
+    updated_at: '2026-08-30T00:00:00.000Z',
+  },
+];
 export const INITIAL_CATEGORIES: Category[] = [];
 export const INITIAL_PRODUCTS: Product[] = [];
 export const INITIAL_CUSTOMERS: Customer[] = [];
