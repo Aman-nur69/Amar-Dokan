@@ -22,13 +22,13 @@ jobs:
         run: npm ci
 
       - name: Typecheck
-        run: npx tsc -b --noEmit
+        run: npm run typecheck
 
       - name: Lint
-        run: npx oxlint --deny-warnings=false
+        run: npm run lint
 
       - name: Test
-        run: npx vitest run
+        run: npm test
 
       - name: Build
         run: npm run build

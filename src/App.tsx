@@ -73,7 +73,7 @@ export const App: React.FC = () => {
     } else {
       setActiveTab('POS');
     }
-  }, [isAuthenticated, currentUser?.id, currentUser?.role, inspectingStore]);
+  }, [isAuthenticated, currentUser, inspectingStore]);
 
   // Synchronized tab changer: if switching to Central Panel (SUPER_ADMIN), exit inspection mode completely
   const handleTabChange = (tab: ActiveTab) => {

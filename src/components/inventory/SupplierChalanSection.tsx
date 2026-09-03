@@ -9,7 +9,6 @@ import {
   formatBengaliCurrency,
   toBanglaDigits,
   formatBengaliDate,
-  formatBengaliPhone,
 } from '../../lib/banglaNumberFormatter';
 import {
   Truck,
