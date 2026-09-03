@@ -261,8 +261,20 @@ export async function purgeLocalDataAndSyncWithSupabase(): Promise<void> {
         ]);
 
         if (storesRes.data?.length) await db.stores.bulkPut(storesRes.data);
-        if (profilesRes.data?.length) await db.profiles.bulkPut(profilesRes.data);
         if (categoriesRes.data?.length) await db.categories.bulkPut(categoriesRes.data);
+        if (profilesRes.data?.length) {
+          const merged = profilesRes.data.map((p) => {
+            const initMatch = INITIAL_PROFILES.find((ip) => ip.phone === p.phone || ip.id === p.id);
+            return {
+              ...p,
+              password_hash: p.password_hash || initMatch?.password_hash,
+              pin_hash: p.pin_hash || initMatch?.pin_hash,
+            };
+          });
+          await db.profiles.bulkPut(merged);
+        } else if (INITIAL_PROFILES.length > 0) {
+          await db.profiles.bulkPut(INITIAL_PROFILES);
+        }
         if (productsRes.data?.length) await db.products.bulkPut(productsRes.data);
         if (customersRes.data?.length) await db.customers.bulkPut(customersRes.data);
         if (salesRes.data?.length) await db.sales.bulkPut(salesRes.data);

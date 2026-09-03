@@ -133,8 +133,16 @@ export const useAuthStore = create<AuthState>()(
                 .eq('phone', cleanPhone)
                 .maybeSingle();
               if (sbProfile) {
-                profile = sbProfile;
-                await db.profiles.put(sbProfile);
+                const initMatch = INITIAL_PROFILES.find((ip) => ip.phone === cleanPhone || ip.id === sbProfile.id);
+                const localProfile = await db.profiles.get(sbProfile.id);
+                const resolved: Profile = {
+                  ...sbProfile,
+                  role: sbProfile.role as UserRole,
+                  password_hash: sbProfile.password_hash || localProfile?.password_hash || initMatch?.password_hash,
+                  pin_hash: sbProfile.pin_hash || localProfile?.pin_hash || initMatch?.pin_hash,
+                };
+                profile = resolved;
+                await db.profiles.put(resolved);
               }
             } catch (sbErr) {
               console.warn('[AmarDokan Auth] Supabase live profile query:', sbErr);
