@@ -10,6 +10,8 @@
     "preview": "vite preview",
     "typecheck": "tsc -b --noEmit",
     "verify": "npm run typecheck && npm run lint && npm run test && npm run build",
+    "db:clean": "npx tsx scripts/cleanDatabase.ts",
+    "db:seed": "npx tsx scripts/seedDatabase.ts",
     "test": "vitest run",
     "test:watch": "vitest"
   },
