@@ -78,16 +78,20 @@ export const SuperAdminDashboardView: React.FC<SuperAdminDashboardViewProps> = (
         if (storeErr) {
           console.error('[AmarDokan SuperAdmin] Cloud stores fetch error:', storeErr.message);
         } else if (cloudStores) {
+          // Reconcile Dexie: clear local cache and replace with cloud truth
+          await db.stores.clear();
           if (cloudStores.length > 0) {
             await db.stores.bulkPut(cloudStores);
           }
-          const freshStores = await db.stores.toArray();
-          setStores(freshStores);
+          setStores(cloudStores);
         }
 
         const { data: cloudProfiles } = await supabase.from('profiles').select('*');
-        if (cloudProfiles && cloudProfiles.length > 0) {
-          await db.profiles.bulkPut(cloudProfiles);
+        if (cloudProfiles) {
+          await db.profiles.clear();
+          if (cloudProfiles.length > 0) {
+            await db.profiles.bulkPut(cloudProfiles);
+          }
         }
       }
     } catch (err) {

@@ -110,15 +110,42 @@ export const DashboardView: React.FC = () => {
             supabase.from('cash_counts').select('*').eq('store_id', activeStoreId).order('created_at', { ascending: false }).limit(60),
           ]);
 
-          if (sbSales.data && sbSales.data.length > 0) await db.sales.bulkPut(sbSales.data);
-          if (sbExpenses.data && sbExpenses.data.length > 0) await db.expenses.bulkPut(sbExpenses.data);
-          if (sbBaki.data && sbBaki.data.length > 0) await db.baki_transactions.bulkPut(sbBaki.data);
-          if (sbItems.data && sbItems.data.length > 0) await db.sale_items.bulkPut(sbItems.data);
-          if (sbChalans.data && sbChalans.data.length > 0) await db.supplier_chalans.bulkPut(sbChalans.data);
-          if (sbPayments.data && sbPayments.data.length > 0) await db.supplier_payments.bulkPut(sbPayments.data);
-          if (sbCustomers.data && sbCustomers.data.length > 0) await db.customers.bulkPut(sbCustomers.data);
-          if (sbClosings.data && sbClosings.data.length > 0) await db.day_closings.bulkPut(sbClosings.data);
-          if (sbCounts.data && sbCounts.data.length > 0) await db.cash_counts.bulkPut(sbCounts.data);
+          if (sbSales.data) {
+            await db.sales.where('store_id').equals(activeStoreId).delete();
+            if (sbSales.data.length > 0) await db.sales.bulkPut(sbSales.data);
+          }
+          if (sbExpenses.data) {
+            await db.expenses.where('store_id').equals(activeStoreId).delete();
+            if (sbExpenses.data.length > 0) await db.expenses.bulkPut(sbExpenses.data);
+          }
+          if (sbBaki.data) {
+            await db.baki_transactions.where('store_id').equals(activeStoreId).delete();
+            if (sbBaki.data.length > 0) await db.baki_transactions.bulkPut(sbBaki.data);
+          }
+          if (sbItems.data) {
+            await db.sale_items.where('store_id').equals(activeStoreId).delete();
+            if (sbItems.data.length > 0) await db.sale_items.bulkPut(sbItems.data);
+          }
+          if (sbChalans.data) {
+            await db.supplier_chalans.where('store_id').equals(activeStoreId).delete();
+            if (sbChalans.data.length > 0) await db.supplier_chalans.bulkPut(sbChalans.data);
+          }
+          if (sbPayments.data) {
+            await db.supplier_payments.where('store_id').equals(activeStoreId).delete();
+            if (sbPayments.data.length > 0) await db.supplier_payments.bulkPut(sbPayments.data);
+          }
+          if (sbCustomers.data) {
+            await db.customers.where('store_id').equals(activeStoreId).delete();
+            if (sbCustomers.data.length > 0) await db.customers.bulkPut(sbCustomers.data);
+          }
+          if (sbClosings.data) {
+            await db.day_closings.where('store_id').equals(activeStoreId).delete();
+            if (sbClosings.data.length > 0) await db.day_closings.bulkPut(sbClosings.data);
+          }
+          if (sbCounts.data) {
+            await db.cash_counts.where('store_id').equals(activeStoreId).delete();
+            if (sbCounts.data.length > 0) await db.cash_counts.bulkPut(sbCounts.data);
+          }
         } catch (sbErr) {
           console.warn('[DashboardView] Supabase live fetch error:', sbErr);
         }

@@ -70,8 +70,11 @@ export const StaffManagementView: React.FC = () => {
             .from('profiles')
             .select('*')
             .eq('store_id', activeStoreId);
-          if (cloudProfiles && cloudProfiles.length > 0) {
-            await db.profiles.bulkPut(cloudProfiles);
+          if (cloudProfiles) {
+            await db.profiles.where('store_id').equals(activeStoreId).delete();
+            if (cloudProfiles.length > 0) {
+              await db.profiles.bulkPut(cloudProfiles);
+            }
           }
         } catch (sbErr) {
           console.warn('[StaffManagement] Live Supabase fetch note:', sbErr);

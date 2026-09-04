@@ -36,11 +36,17 @@ export function useBakiKhata() {
             supabase.from('baki_transactions').select('*').eq('store_id', activeStoreId).order('created_at', { ascending: false }).limit(200),
           ]);
 
-          if (sbCustomers.data && sbCustomers.data.length > 0) {
-            await db.customers.bulkPut(sbCustomers.data);
+          if (sbCustomers.data) {
+            await db.customers.where('store_id').equals(activeStoreId).delete();
+            if (sbCustomers.data.length > 0) {
+              await db.customers.bulkPut(sbCustomers.data);
+            }
           }
-          if (sbTx.data && sbTx.data.length > 0) {
-            await db.baki_transactions.bulkPut(sbTx.data);
+          if (sbTx.data) {
+            await db.baki_transactions.where('store_id').equals(activeStoreId).delete();
+            if (sbTx.data.length > 0) {
+              await db.baki_transactions.bulkPut(sbTx.data);
+            }
           }
         } catch (sbErr) {
           console.warn('[useBakiKhata] Supabase live fetch note:', sbErr);

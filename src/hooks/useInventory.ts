@@ -51,17 +51,29 @@ export function useInventory() {
             supabase.from('chalan_items').select('*').eq('store_id', activeStoreId).order('created_at', { ascending: false }).limit(500),
           ]);
 
-          if (sbProds.data && sbProds.data.length > 0) {
-            await db.products.bulkPut(sbProds.data);
+          if (sbProds.data) {
+            await db.products.where('store_id').equals(activeStoreId).delete();
+            if (sbProds.data.length > 0) {
+              await db.products.bulkPut(sbProds.data);
+            }
           }
-          if (sbCats.data && sbCats.data.length > 0) {
-            await db.categories.bulkPut(sbCats.data);
+          if (sbCats.data) {
+            await db.categories.where('store_id').equals(activeStoreId).delete();
+            if (sbCats.data.length > 0) {
+              await db.categories.bulkPut(sbCats.data);
+            }
           }
-          if (sbChalans.data && sbChalans.data.length > 0) {
-            await db.supplier_chalans.bulkPut(sbChalans.data);
+          if (sbChalans.data) {
+            await db.supplier_chalans.where('store_id').equals(activeStoreId).delete();
+            if (sbChalans.data.length > 0) {
+              await db.supplier_chalans.bulkPut(sbChalans.data);
+            }
           }
-          if (sbChalanItems.data && sbChalanItems.data.length > 0) {
-            await db.chalan_items.bulkPut(sbChalanItems.data);
+          if (sbChalanItems.data) {
+            await db.chalan_items.where('store_id').equals(activeStoreId).delete();
+            if (sbChalanItems.data.length > 0) {
+              await db.chalan_items.bulkPut(sbChalanItems.data);
+            }
           }
         } catch (sbErr) {
           console.warn('[useInventory] Supabase live fetch note:', sbErr);
