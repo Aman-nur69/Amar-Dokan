@@ -15,7 +15,7 @@ import { PaymentActionSheet } from '../components/pos/PaymentActionSheet';
 import { PrintableThermalReceipt } from '../components/pos/PrintableThermalReceipt';
 import { SelectBakiCustomerModal } from '../components/pos/SelectBakiCustomerModal';
 import { NewCustomerModal } from '../components/baki/NewCustomerModal';
-import { Product, Customer } from '../@types/database.types';
+import { Product, Customer, PaymentMethod } from '../@types/database.types';
 import { formatBengaliCurrency, toBanglaDigits } from '../lib/banglaNumberFormatter';
 import { matchesProduct } from '../lib/phoneticSearch';
 import { useAuthStore } from '../hooks/useAuthStore';
@@ -95,7 +95,7 @@ export const POSView: React.FC = () => {
     setIsNewCustomerModalOpen(false);
   };
 
-  const handleSplitConfirm = async (method: 'CASH' | 'BAKI' | 'SPLIT') => {
+  const handleSplitConfirm = async (method: PaymentMethod) => {
     const receipt = await completeCheckout(method);
     if (receipt) await afterCheckout();
   };

@@ -6,7 +6,7 @@
 import React, { useState, useEffect } from 'react';
 import { useModalDismiss } from '../../hooks/useModalDismiss';
 import { toast } from '../../hooks/useToastStore';
-import { Customer } from '../../@types/database.types';
+import { Customer, PaymentMethod } from '../../@types/database.types';
 import { useCartStore } from '../../hooks/useCartStore';
 import { formatBengaliCurrency, toBanglaDigits } from '../../lib/banglaNumberFormatter';
 import { X, Check, Smartphone, AlertCircle } from 'lucide-react';
@@ -16,7 +16,7 @@ interface PaymentActionSheetProps {
   isOpen: boolean;
   onClose: () => void;
   customers: Customer[];
-  onConfirm: (method: 'CASH' | 'BAKI' | 'SPLIT') => void;
+  onConfirm: (method: PaymentMethod) => void;
   onAddNewCustomer: () => void;
 }
 
@@ -62,6 +62,17 @@ export const PaymentActionSheet: React.FC<PaymentActionSheetProps> = ({
 
   // Sync to store when amounts change
   useEffect(() => {
+    const computedMethod =
+      dueAmount > 0
+        ? paidAmount > 0
+          ? 'SPLIT'
+          : 'BAKI'
+        : mfsAmount > 0
+        ? cashAmount > 0
+          ? 'SPLIT'
+          : 'MFS'
+        : 'CASH';
+
     setPaymentDetails({
       cashAmount,
       mfsAmount,
@@ -69,7 +80,7 @@ export const PaymentActionSheet: React.FC<PaymentActionSheetProps> = ({
       mfsTxnId,
       dueAmount,
       customer: selectedCustomer,
-      paymentMethod: dueAmount > 0 ? (paidAmount > 0 ? 'SPLIT' : 'BAKI') : 'CASH',
+      paymentMethod: computedMethod,
     });
   }, [cashAmount, mfsAmount, mfsProvider, mfsTxnId, dueAmount, paidAmount, selectedCustomer, setPaymentDetails]);
 
@@ -91,7 +102,17 @@ export const PaymentActionSheet: React.FC<PaymentActionSheetProps> = ({
       return;
     }
 
-    const method = dueAmount > 0 ? (paidAmount > 0 ? 'SPLIT' : 'BAKI') : 'CASH';
+    const method =
+      dueAmount > 0
+        ? paidAmount > 0
+          ? 'SPLIT'
+          : 'BAKI'
+        : mfsAmount > 0
+        ? cashAmount > 0
+          ? 'SPLIT'
+          : 'MFS'
+        : 'CASH';
+
     onConfirm(method);
   };
 

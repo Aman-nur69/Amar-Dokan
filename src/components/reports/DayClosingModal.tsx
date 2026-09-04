@@ -114,12 +114,21 @@ export const DayClosingModal: React.FC<DayClosingModalProps> = ({
     }
   };
 
+  const directCashSales = Math.max(
+    0,
+    metrics.totalSales - metrics.totalNewDue - (metrics.totalMfsSales || 0)
+  );
+
   const handleShareWhatsApp = () => {
     const text = `📊 *${store.name} — দৈনিক হিসাব ক্লোজিং রিপোর্ট*
 📅 তারিখ: ${toBanglaDigits(new Date(selectedDate).toLocaleDateString('bn-BD'))}
 
 🔹 *আজকের মোট বিক্রি:* ${formatBengaliCurrency(metrics.totalSales)} (মোট ${toBanglaDigits(metrics.saleCount)} টি ইনভয়েস)
-💵 *নগদ বিক্রি:* ${formatBengaliCurrency(metrics.totalSales - metrics.totalNewDue)}
+💵 *নগদ ক্যাশ বিক্রি:* ${formatBengaliCurrency(directCashSales)}${
+      metrics.totalMfsSales && metrics.totalMfsSales > 0
+        ? `\n📱 *ডিজিটাল (বিকাশ/নগদ):* ${formatBengaliCurrency(metrics.totalMfsSales)}`
+        : ''
+    }
 🔴 *নতুন বাকি প্রদান:* ${formatBengaliCurrency(metrics.totalNewDue)}
 🟢 *কাস্টমার বাকি আদায়:* ${formatBengaliCurrency(metrics.totalDueCollected)}
 🚚 *আজকের চালানে মাল ক্রয়:* ${formatBengaliCurrency(metrics.totalChalanPurchases)}
@@ -194,9 +203,15 @@ export const DayClosingModal: React.FC<DayClosingModalProps> = ({
                 <span>{formatBengaliCurrency(metrics.totalSales)}</span>
               </div>
               <div className="flex justify-between text-slate-600 pl-2">
-                <span>• নগদ বিক্রি:</span>
-                <span>{formatBengaliCurrency(metrics.totalSales - metrics.totalNewDue)}</span>
+                <span>• নগদ ক্যাশ:</span>
+                <span>{formatBengaliCurrency(directCashSales)}</span>
               </div>
+              {metrics.totalMfsSales !== undefined && metrics.totalMfsSales > 0 && (
+                <div className="flex justify-between text-teal-600 pl-2">
+                  <span>• বিকাশ/নগদ:</span>
+                  <span>{formatBengaliCurrency(metrics.totalMfsSales)}</span>
+                </div>
+              )}
               <div className="flex justify-between text-rose-600 pl-2">
                 <span>• নতুন বাকি:</span>
                 <span>+{formatBengaliCurrency(metrics.totalNewDue)}</span>

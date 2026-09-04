@@ -12,7 +12,7 @@ import { useState } from 'react';
 import { db, buildSyncItem } from '../db/offlineDb';
 import { useAuthStore } from './useAuthStore';
 import { isSupabaseConfigured, supabase } from '../lib/supabaseClient';
-import { Sale, SaleItem, BakiTransaction, MfsProvider } from '../@types/database.types';
+import { Sale, SaleItem, BakiTransaction, MfsProvider, PaymentMethod } from '../@types/database.types';
 import { ThermalReceiptData } from '../@types/pos.types';
 import { useCartStore } from './useCartStore';
 import { toast } from './useToastStore';
@@ -84,7 +84,7 @@ export function useSalesEngine() {
    * Executes and commits the checkout transaction.
    */
   const completeCheckout = async (
-    overrideMethod?: 'CASH' | 'BAKI' | 'SPLIT',
+    overrideMethod?: PaymentMethod,
     options: CheckoutOptions = {}
   ): Promise<ThermalReceiptData | null> => {
     if (items.length === 0) return null;
@@ -127,6 +127,7 @@ export function useSalesEngine() {
       if (dueAmount > 0 && paidAmount > 0) paymentMethod = 'SPLIT';
       else if (dueAmount > 0) paymentMethod = 'BAKI';
       else if (mfsPart > 0 && cashPart === 0) paymentMethod = 'MFS';
+      else if (mfsPart > 0 && cashPart > 0) paymentMethod = 'SPLIT';
       else paymentMethod = 'CASH';
 
       // A due sale must be attached to a khata, or the money is untraceable.
