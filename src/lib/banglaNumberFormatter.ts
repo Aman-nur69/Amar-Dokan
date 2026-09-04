@@ -54,7 +54,8 @@ export function formatBengaliCurrency(
   showSymbol: boolean = true,
   decimals: number = 2
 ): string {
-  const num = typeof amount === 'number' ? amount : parseBengaliNumber(amount);
+  let num = typeof amount === 'number' ? amount : parseBengaliNumber(amount);
+  if (Math.abs(num) < 0.000001) num = 0; // Clamp negative-zero floating point anomalies
   
   // Format with standard locale separators
   const parts = Math.abs(num).toFixed(decimals).split('.');

@@ -42,30 +42,26 @@ export function useInventory() {
 
     setIsLoading(true);
     try {
-      if (isSupabaseConfigured()) {
+      if (isSupabaseConfigured() && navigator.onLine) {
         try {
           const [sbProds, sbCats, sbChalans, sbChalanItems] = await Promise.all([
-            supabase.from('products').select('*').eq('store_id', activeStoreId),
+            supabase.from('products').select('*').eq('store_id', activeStoreId).limit(1000),
             supabase.from('categories').select('*').eq('store_id', activeStoreId),
-            supabase.from('supplier_chalans').select('*').eq('store_id', activeStoreId),
-            supabase.from('chalan_items').select('*').eq('store_id', activeStoreId),
+            supabase.from('supplier_chalans').select('*').eq('store_id', activeStoreId).order('created_at', { ascending: false }).limit(200),
+            supabase.from('chalan_items').select('*').eq('store_id', activeStoreId).order('created_at', { ascending: false }).limit(500),
           ]);
 
-          if (sbProds.data) {
-            await db.products.where('store_id').equals(activeStoreId).delete();
-            if (sbProds.data.length > 0) await db.products.bulkPut(sbProds.data);
+          if (sbProds.data && sbProds.data.length > 0) {
+            await db.products.bulkPut(sbProds.data);
           }
-          if (sbCats.data) {
-            await db.categories.where('store_id').equals(activeStoreId).delete();
-            if (sbCats.data.length > 0) await db.categories.bulkPut(sbCats.data);
+          if (sbCats.data && sbCats.data.length > 0) {
+            await db.categories.bulkPut(sbCats.data);
           }
-          if (sbChalans.data) {
-            await db.supplier_chalans.where('store_id').equals(activeStoreId).delete();
-            if (sbChalans.data.length > 0) await db.supplier_chalans.bulkPut(sbChalans.data);
+          if (sbChalans.data && sbChalans.data.length > 0) {
+            await db.supplier_chalans.bulkPut(sbChalans.data);
           }
-          if (sbChalanItems.data) {
-            await db.chalan_items.where('store_id').equals(activeStoreId).delete();
-            if (sbChalanItems.data.length > 0) await db.chalan_items.bulkPut(sbChalanItems.data);
+          if (sbChalanItems.data && sbChalanItems.data.length > 0) {
+            await db.chalan_items.bulkPut(sbChalanItems.data);
           }
         } catch (sbErr) {
           console.warn('[useInventory] Supabase live fetch note:', sbErr);
@@ -98,10 +94,6 @@ export function useInventory() {
 
   /**
    * Adjusts stock for a single product.
-   *
-   * `mode` is explicit on purpose: the caller used to pass the entered quantity
-   * while this function treated it as the new absolute total, so "add 20 kg"
-   * silently replaced 300 kg of rice with 20 kg.
    */
   const adjustStock = async (
     productId: string,
@@ -123,7 +115,7 @@ export function useInventory() {
         updated_at: now,
       });
 
-      if (isSupabaseConfigured()) {
+      if (isSupabaseConfigured() && navigator.onLine) {
         try {
           await supabase
             .from('products')
@@ -173,33 +165,36 @@ export function useInventory() {
       const costPrice = params.unitCostPrice ?? product.cost_price;
       const totalAmount = round2(params.addQuantity * costPrice);
 
-      // Update product stock and cost price
+      // Update product stock and cost price locally
       await db.products.update(params.productId, {
         stock_quantity: newStock,
         cost_price: costPrice > 0 ? costPrice : product.cost_price,
         updated_at: now,
       });
 
-      if (isSupabaseConfigured()) {
-        try {
-          await supabase.from('products').update({
+      // If pure AUDIT (no chalan), push direct product update
+      if (params.purchaseType === 'AUDIT') {
+        if (isSupabaseConfigured() && navigator.onLine) {
+          try {
+            await supabase.from('products').update({
+              stock_quantity: newStock,
+              cost_price: costPrice > 0 ? costPrice : product.cost_price,
+              updated_at: now,
+            }).eq('id', params.productId);
+          } catch (sbErr) {
+            console.warn('[useInventory] Supabase direct adjust purchase note:', sbErr);
+          }
+        }
+
+        await db.sync_queue.add(
+          buildSyncItem('products', 'UPDATE', {
+            id: params.productId,
             stock_quantity: newStock,
             cost_price: costPrice > 0 ? costPrice : product.cost_price,
             updated_at: now,
-          }).eq('id', params.productId);
-        } catch (sbErr) {
-          console.warn('[useInventory] Supabase direct adjust purchase note:', sbErr);
-        }
+          })
+        );
       }
-
-      await db.sync_queue.add(
-        buildSyncItem('products', 'UPDATE', {
-          id: params.productId,
-          stock_quantity: newStock,
-          cost_price: costPrice > 0 ? costPrice : product.cost_price,
-          updated_at: now,
-        })
-      );
 
       // If financial purchase (Cash or Baki), generate a Supplier Chalan
       if (params.purchaseType === 'CASH' || params.purchaseType === 'BAKI') {
@@ -428,7 +423,6 @@ export function useInventory() {
                 const prod = await db.products.get(item.product_id);
                 if (prod) {
                   await supabase.from('products').update({
-                    stock_quantity: prod.stock_quantity,
                     cost_price: prod.cost_price,
                     selling_price: prod.selling_price,
                     updated_at: now,

@@ -10,7 +10,7 @@
 import { create } from 'zustand';
 import { Product, Customer, ProductUnit, MfsProvider } from '../@types/database.types';
 import { CartItem, SplitPaymentDetails } from '../@types/pos.types';
-import { round2, round3, stepFor, toUnitPrice } from '../lib/units';
+import { round2, round3, stepFor, toBaseQuantity, toUnitPrice } from '../lib/units';
 
 interface CartState {
   items: CartItem[];
@@ -235,20 +235,8 @@ export const useCartStore = create<CartState>((set, get) => ({
         .items.filter((item) => item.product.id === productId)
         .reduce(
           (acc, item) =>
-            acc +
-            (item.selectedUnit === item.product.unit
-              ? item.quantity
-              : toUnitPriceSafeQty(item.quantity, item.selectedUnit, item.product.unit)),
+            acc + toBaseQuantity(item.quantity, item.selectedUnit, item.product.unit),
           0
         )
     ),
 }));
-
-// Local helper kept out of the store surface.
-function toUnitPriceSafeQty(qty: number, from: ProductUnit, to: ProductUnit): number {
-  if (from === 'gm' && to === 'kg') return qty / 1000;
-  if (from === 'kg' && to === 'gm') return qty * 1000;
-  if (from === 'hali' && to === 'piece') return qty * 4;
-  if (from === 'piece' && to === 'hali') return qty / 4;
-  return qty;
-}

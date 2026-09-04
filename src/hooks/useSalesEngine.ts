@@ -229,8 +229,9 @@ export function useSalesEngine() {
           }
 
           // If due amount exists and customer is attached, rebalance the khata.
+          let bakiTxRecord: BakiTransaction | undefined;
           if (dueAmount > 0 && selectedCustomer) {
-            const bakiTx: BakiTransaction = {
+            bakiTxRecord = {
               id: crypto.randomUUID(),
               store_id: targetStoreId,
               customer_id: selectedCustomer.id,
@@ -245,9 +246,9 @@ export function useSalesEngine() {
               created_at: now,
             };
 
-            await db.baki_transactions.add(bakiTx);
+            await db.baki_transactions.add(bakiTxRecord);
             await db.sync_queue.add(
-              buildSyncItem('baki_transactions', 'INSERT', bakiTx as unknown as Record<string, unknown>)
+              buildSyncItem('baki_transactions', 'INSERT', bakiTxRecord as unknown as Record<string, unknown>)
             );
 
             const customer = await db.customers.get(selectedCustomer.id);
@@ -259,45 +260,16 @@ export function useSalesEngine() {
             }
           }
 
-          // 3. Direct live cloud push to Supabase
-          if (isSupabaseConfigured()) {
+          // Direct online push if connected (triggers handle derived stock & balance)
+          if (isSupabaseConfigured() && navigator.onLine) {
             try {
               await supabase.from('sales').insert(saleRecord);
               await supabase.from('sale_items').insert(saleItemRecords);
-              for (const item of saleItemRecords) {
-                const product = await db.products.get(item.product_id);
-                if (product) {
-                  await supabase.from('products').update({
-                    stock_quantity: round3(product.stock_quantity - item.quantity),
-                    updated_at: now,
-                  }).eq('id', item.product_id);
-                }
-              }
-              if (dueAmount > 0 && selectedCustomer) {
-                const bakiTx: BakiTransaction = {
-                  id: crypto.randomUUID(),
-                  store_id: targetStoreId,
-                  customer_id: selectedCustomer.id,
-                  sale_id: saleId,
-                  type: 'DEBIT',
-                  amount: dueAmount,
-                  payment_method: mfsPart > 0 ? (paymentDetails.mfsProvider as MfsProvider) : 'CASH',
-                  note: `ইনভয়েস #${invoiceNo} থেকে বাকি`,
-                  customer_name: selectedCustomer.name,
-                  customer_phone: selectedCustomer.phone,
-                  created_at: now,
-                };
-                await supabase.from('baki_transactions').insert(bakiTx);
-                const customer = await db.customers.get(selectedCustomer.id);
-                if (customer) {
-                  await supabase.from('customers').update({
-                    current_balance: round2(customer.current_balance + dueAmount),
-                    updated_at: now,
-                  }).eq('id', selectedCustomer.id);
-                }
+              if (bakiTxRecord) {
+                await supabase.from('baki_transactions').insert(bakiTxRecord);
               }
             } catch (sbErr) {
-              console.warn('[useSalesEngine] Supabase direct sales push note:', sbErr);
+              console.warn('[useSalesEngine] Direct sales insert note (sync queue active):', sbErr);
             }
           }
         }

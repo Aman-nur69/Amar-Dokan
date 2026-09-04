@@ -32,6 +32,7 @@ export interface DailyMetrics {
   totalCogs: number;
   netProfit: number;
   saleCount: number;
+  totalMfsSales?: number;
   // Supplier Chalan Metrics
   totalChalanPurchases: number; // আজকের চালান মোট ক্রয়
   totalChalanCashPaid: number;  // কোম্পানিকে নগদ প্রদান (ক্যাশ ড্রয়ার থেকে)
@@ -62,7 +63,10 @@ export const DailyProfitWidget: React.FC<DailyProfitWidgetProps> = ({
   const profitMarginPercent =
     metrics.totalSales > 0 ? (metrics.netProfit / metrics.totalSales) * 100 : 0;
 
-  const directCashSales = Math.max(0, metrics.totalSales - metrics.totalNewDue);
+  const directCashSales = Math.max(
+    0,
+    metrics.totalSales - metrics.totalNewDue - (metrics.totalMfsSales || 0)
+  );
 
   return (
     <div className="space-y-4">

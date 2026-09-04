@@ -53,19 +53,35 @@ const ALIASES: [RegExp, string][] = [
   [/সেমাই/, 'semai vermicelli'],
 ];
 
+const productIndexCache = new WeakMap<Product, string>();
+const transliterationCache = new Map<string, string>();
+
 /** Bengali text rendered in rough Latin letters. */
 export function transliterateBn(text: string): string {
+  if (!text) return '';
+  const cached = transliterationCache.get(text);
+  if (cached !== undefined) return cached;
+
   let out = text;
   for (const [bn, latin] of TRANSLITERATION) {
     out = out.split(bn).join(latin);
   }
-  return out.toLowerCase();
+  const result = out.toLowerCase();
+  if (transliterationCache.size > 2000) {
+    transliterationCache.clear();
+  }
+  transliterationCache.set(text, result);
+  return result;
 }
 
 /**
  * Everything a product should be findable by, as one lowercase haystack.
+ * Memoized per Product object reference for sub-millisecond POS filtering.
  */
 export function buildSearchIndex(product: Product): string {
+  const cached = productIndexCache.get(product);
+  if (cached !== undefined) return cached;
+
   const parts: string[] = [
     product.name_bn || '',
     product.name_en || '',
@@ -77,7 +93,9 @@ export function buildSearchIndex(product: Product): string {
     if (pattern.test(product.name_bn || '')) parts.push(alias);
   }
 
-  return parts.join(' ').toLowerCase();
+  const index = parts.join(' ').toLowerCase();
+  productIndexCache.set(product, index);
+  return index;
 }
 
 /**

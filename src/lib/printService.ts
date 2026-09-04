@@ -20,7 +20,10 @@ export function triggerThermalPrint(): void {
  * Generates an automated WhatsApp reminder link formatted with Bengali text
  */
 export function generateWhatsAppReminderUrl(data: WhatsAppReminderData): string {
-  const cleanPhone = data.customerPhone.replace(/\D/g, '');
+  const rawPhone = data.customerPhone || '';
+  const cleanPhone = rawPhone.replace(/\D/g, '');
+  if (!cleanPhone) return '#';
+
   // Format for Bangladesh (+880...)
   let internationalPhone = cleanPhone;
   if (cleanPhone.startsWith('01') && cleanPhone.length === 11) {
@@ -39,7 +42,7 @@ export function generateWhatsAppReminderUrl(data: WhatsAppReminderData): string 
     paymentDetails += `\n📱 নগদ: ${toBanglaDigits(data.nagadNumber)}`;
   }
 
-  const message = `আসসালামু আলাইকুম ${data.customerName} ভাই/আপা,
+  const message = `আসসালামু আলাইকুম ${data.customerName || 'গ্রাহক'} ভাই/আপা,
 ${data.storeName} থেকে আপনার মোট বকেয়া (বাকির) পরিমাণ হলো ${bnAmount}।
 
 সুবিধামতো সময়ে দোকানে এসে অথবা নিচে দেয়া নাম্বারে বকেয়া পরিশোধ করার জন্য বিনীত অনুরোধ জানাচ্ছি:${paymentDetails}
@@ -56,10 +59,13 @@ ${data.storeName}`;
  * Generates an SMS uri scheme link formatted with Bengali text
  */
 export function generateSmsReminderUrl(data: WhatsAppReminderData): string {
-  const cleanPhone = data.customerPhone.replace(/\D/g, '');
+  const rawPhone = data.customerPhone || '';
+  const cleanPhone = rawPhone.replace(/\D/g, '');
+  if (!cleanPhone) return '#';
+
   const bnAmount = formatBengaliCurrency(data.dueAmount);
   
-  const message = `শ্রদ্ধেয় ${data.customerName}, ${data.storeName}-এ আপনার মোট বাকি ${bnAmount}। অনুগ্রহ করে দ্রুত পরিশোধ করুন। বিকাশ: ${toBanglaDigits(data.bkashNumber || data.storePhone)}। ধন্যবাদ।`;
+  const message = `শ্রদ্ধেয় ${data.customerName || 'গ্রাহক'}, ${data.storeName}-এ আপনার মোট বাকি ${bnAmount}। অনুগ্রহ করে দ্রুত পরিশোধ করুন। বিকাশ: ${toBanglaDigits(data.bkashNumber || data.storePhone)}। ধন্যবাদ।`;
   const encoded = encodeURIComponent(message);
   return `sms:${cleanPhone}?body=${encoded}`;
 }

@@ -29,20 +29,18 @@ export function useBakiKhata() {
 
     setIsLoading(true);
     try {
-      if (isSupabaseConfigured()) {
+      if (isSupabaseConfigured() && navigator.onLine) {
         try {
           const [sbCustomers, sbTx] = await Promise.all([
-            supabase.from('customers').select('*').eq('store_id', activeStoreId),
-            supabase.from('baki_transactions').select('*').eq('store_id', activeStoreId),
+            supabase.from('customers').select('*').eq('store_id', activeStoreId).limit(500),
+            supabase.from('baki_transactions').select('*').eq('store_id', activeStoreId).order('created_at', { ascending: false }).limit(200),
           ]);
 
-          if (sbCustomers.data) {
-            await db.customers.where('store_id').equals(activeStoreId).delete();
-            if (sbCustomers.data.length > 0) await db.customers.bulkPut(sbCustomers.data);
+          if (sbCustomers.data && sbCustomers.data.length > 0) {
+            await db.customers.bulkPut(sbCustomers.data);
           }
-          if (sbTx.data) {
-            await db.baki_transactions.where('store_id').equals(activeStoreId).delete();
-            if (sbTx.data.length > 0) await db.baki_transactions.bulkPut(sbTx.data);
+          if (sbTx.data && sbTx.data.length > 0) {
+            await db.baki_transactions.bulkPut(sbTx.data);
           }
         } catch (sbErr) {
           console.warn('[useBakiKhata] Supabase live fetch note:', sbErr);
@@ -123,6 +121,12 @@ export function useBakiKhata() {
 
     await db.transaction('rw', [db.customers, db.baki_transactions, db.sync_queue], async () => {
       await db.customers.add(newCustomer);
+      await db.sync_queue.add(
+        buildSyncItem('customers', 'INSERT', {
+          ...newCustomer,
+          current_balance: cleanOpeningDue > 0 ? 0 : cleanOpeningDue,
+        } as unknown as Record<string, unknown>)
+      );
 
       if (cleanOpeningDue > 0) {
         const initialTx: BakiTransaction = {
@@ -143,14 +147,14 @@ export function useBakiKhata() {
         );
       }
 
-      if (isSupabaseConfigured()) {
+      if (isSupabaseConfigured() && navigator.onLine) {
         try {
           await supabase.from('customers').insert({
             ...newCustomer,
-            current_balance: cleanOpeningDue,
+            current_balance: cleanOpeningDue > 0 ? 0 : cleanOpeningDue,
           });
           if (cleanOpeningDue > 0) {
-            await supabase.from('baki_transactions').insert({
+            const initialTx: BakiTransaction = {
               id: crypto.randomUUID(),
               store_id: targetStoreId,
               customer_id: newCustomer.id,
@@ -158,20 +162,16 @@ export function useBakiKhata() {
               amount: cleanOpeningDue,
               payment_method: 'CASH',
               note: 'পূর্বের খাতার প্রারম্ভিক বকেয়া',
+              customer_name: newCustomer.name,
+              customer_phone: newCustomer.phone,
               created_at: now,
-            });
+            };
+            await supabase.from('baki_transactions').insert(initialTx);
           }
         } catch (sbErr) {
           console.warn('[useBakiKhata] Supabase customer insert note:', sbErr);
         }
       }
-
-      await db.sync_queue.add(
-        buildSyncItem('customers', 'INSERT', {
-          ...newCustomer,
-          current_balance: cleanOpeningDue,
-        } as unknown as Record<string, unknown>)
-      );
     });
 
     await refreshData();
@@ -217,21 +217,17 @@ export function useBakiKhata() {
           updated_at: now,
         });
 
-        if (isSupabaseConfigured()) {
-          try {
-            await supabase.from('baki_transactions').insert(txRecord);
-            await supabase.from('customers').update({
-              current_balance: newBalance,
-              updated_at: now,
-            }).eq('id', customerId);
-          } catch (sbErr) {
-            console.warn('[useBakiKhata] Supabase collect payment note:', sbErr);
-          }
-        }
-
         await db.sync_queue.add(
           buildSyncItem('baki_transactions', 'INSERT', txRecord as unknown as Record<string, unknown>)
         );
+
+        if (isSupabaseConfigured() && navigator.onLine) {
+          try {
+            await supabase.from('baki_transactions').insert(txRecord);
+          } catch (sbErr) {
+            console.warn('[useBakiKhata] Supabase collect payment insert note:', sbErr);
+          }
+        }
       });
 
       await refreshData();
@@ -283,10 +279,6 @@ export function useBakiKhata() {
         if (isSupabaseConfigured()) {
           try {
             await supabase.from('baki_transactions').insert(txRecord);
-            await supabase.from('customers').update({
-              current_balance: newBalance,
-              updated_at: now,
-            }).eq('id', customerId);
           } catch (sbErr) {
             console.warn('[useBakiKhata] Supabase add manual due note:', sbErr);
           }

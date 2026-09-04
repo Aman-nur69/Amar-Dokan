@@ -1,12 +1,8 @@
-// ==============================================================================
-// Amar Dokan (আমার দোকান) Active Store Resolver
-// Queries Supabase live database for active store identity
-// ==============================================================================
-
 import { useEffect, useState } from 'react';
 import { Store } from '../@types/database.types';
 import { useAuthStore } from './useAuthStore';
 import { isSupabaseConfigured, supabase } from '../lib/supabaseClient';
+import { db } from '../db/offlineDb';
 
 export const DEFAULT_STORE: Store = {
   id: '00000000-0000-0000-0000-000000000000',
@@ -30,8 +26,20 @@ export function useActiveStore(): Store {
 
     async function load() {
       if (!activeStoreId) return;
+
+      // 1. Immediate read from offline cache
       try {
-        if (isSupabaseConfigured()) {
+        const local = await db.stores.get(activeStoreId);
+        if (local && !cancelled) {
+          setStore(local);
+        }
+      } catch {
+        // ignore
+      }
+
+      // 2. Refresh from cloud if online
+      try {
+        if (isSupabaseConfigured() && navigator.onLine) {
           const { data, error } = await supabase
             .from('stores')
             .select('*')
@@ -40,6 +48,7 @@ export function useActiveStore(): Store {
 
           if (!error && data && !cancelled) {
             setStore(data);
+            await db.stores.put(data);
             return;
           }
         }

@@ -86,7 +86,7 @@ export const DashboardView: React.FC = () => {
     }
 
     try {
-      if (isSupabaseConfigured()) {
+      if (isSupabaseConfigured() && navigator.onLine) {
         try {
           const [
             sbSales,
@@ -99,53 +99,26 @@ export const DashboardView: React.FC = () => {
             sbClosings,
             sbCounts,
           ] = await Promise.all([
-            supabase.from('sales').select('*').eq('store_id', activeStoreId),
-            supabase.from('expenses').select('*').eq('store_id', activeStoreId),
-            supabase.from('baki_transactions').select('*').eq('store_id', activeStoreId),
-            supabase.from('sale_items').select('*').eq('store_id', activeStoreId),
-            supabase.from('supplier_chalans').select('*').eq('store_id', activeStoreId),
-            supabase.from('supplier_payments').select('*').eq('store_id', activeStoreId),
-            supabase.from('customers').select('*').eq('store_id', activeStoreId),
-            supabase.from('day_closings').select('*').eq('store_id', activeStoreId),
-            supabase.from('cash_counts').select('*').eq('store_id', activeStoreId),
+            supabase.from('sales').select('*').eq('store_id', activeStoreId).order('created_at', { ascending: false }).limit(300),
+            supabase.from('expenses').select('*').eq('store_id', activeStoreId).order('created_at', { ascending: false }).limit(200),
+            supabase.from('baki_transactions').select('*').eq('store_id', activeStoreId).order('created_at', { ascending: false }).limit(300),
+            supabase.from('sale_items').select('*').eq('store_id', activeStoreId).order('created_at', { ascending: false }).limit(1000),
+            supabase.from('supplier_chalans').select('*').eq('store_id', activeStoreId).order('created_at', { ascending: false }).limit(200),
+            supabase.from('supplier_payments').select('*').eq('store_id', activeStoreId).order('created_at', { ascending: false }).limit(200),
+            supabase.from('customers').select('*').eq('store_id', activeStoreId).limit(500),
+            supabase.from('day_closings').select('*').eq('store_id', activeStoreId).order('business_date', { ascending: false }).limit(60),
+            supabase.from('cash_counts').select('*').eq('store_id', activeStoreId).order('created_at', { ascending: false }).limit(60),
           ]);
 
-          if (sbSales.data) {
-            await db.sales.where('store_id').equals(activeStoreId).delete();
-            if (sbSales.data.length > 0) await db.sales.bulkPut(sbSales.data);
-          }
-          if (sbExpenses.data) {
-            await db.expenses.where('store_id').equals(activeStoreId).delete();
-            if (sbExpenses.data.length > 0) await db.expenses.bulkPut(sbExpenses.data);
-          }
-          if (sbBaki.data) {
-            await db.baki_transactions.where('store_id').equals(activeStoreId).delete();
-            if (sbBaki.data.length > 0) await db.baki_transactions.bulkPut(sbBaki.data);
-          }
-          if (sbItems.data) {
-            await db.sale_items.where('store_id').equals(activeStoreId).delete();
-            if (sbItems.data.length > 0) await db.sale_items.bulkPut(sbItems.data);
-          }
-          if (sbChalans.data) {
-            await db.supplier_chalans.where('store_id').equals(activeStoreId).delete();
-            if (sbChalans.data.length > 0) await db.supplier_chalans.bulkPut(sbChalans.data);
-          }
-          if (sbPayments.data) {
-            await db.supplier_payments.where('store_id').equals(activeStoreId).delete();
-            if (sbPayments.data.length > 0) await db.supplier_payments.bulkPut(sbPayments.data);
-          }
-          if (sbCustomers.data) {
-            await db.customers.where('store_id').equals(activeStoreId).delete();
-            if (sbCustomers.data.length > 0) await db.customers.bulkPut(sbCustomers.data);
-          }
-          if (sbClosings.data) {
-            await db.day_closings.where('store_id').equals(activeStoreId).delete();
-            if (sbClosings.data.length > 0) await db.day_closings.bulkPut(sbClosings.data);
-          }
-          if (sbCounts.data) {
-            await db.cash_counts.where('store_id').equals(activeStoreId).delete();
-            if (sbCounts.data.length > 0) await db.cash_counts.bulkPut(sbCounts.data);
-          }
+          if (sbSales.data && sbSales.data.length > 0) await db.sales.bulkPut(sbSales.data);
+          if (sbExpenses.data && sbExpenses.data.length > 0) await db.expenses.bulkPut(sbExpenses.data);
+          if (sbBaki.data && sbBaki.data.length > 0) await db.baki_transactions.bulkPut(sbBaki.data);
+          if (sbItems.data && sbItems.data.length > 0) await db.sale_items.bulkPut(sbItems.data);
+          if (sbChalans.data && sbChalans.data.length > 0) await db.supplier_chalans.bulkPut(sbChalans.data);
+          if (sbPayments.data && sbPayments.data.length > 0) await db.supplier_payments.bulkPut(sbPayments.data);
+          if (sbCustomers.data && sbCustomers.data.length > 0) await db.customers.bulkPut(sbCustomers.data);
+          if (sbClosings.data && sbClosings.data.length > 0) await db.day_closings.bulkPut(sbClosings.data);
+          if (sbCounts.data && sbCounts.data.length > 0) await db.cash_counts.bulkPut(sbCounts.data);
         } catch (sbErr) {
           console.warn('[DashboardView] Supabase live fetch error:', sbErr);
         }
@@ -248,7 +221,14 @@ export const DashboardView: React.FC = () => {
 
   // Financial Metrics Calculation
   const totalSales = filteredSales.reduce((acc, s) => acc + Number(s.total_amount || 0), 0);
-  const directCashSales = filteredSales.reduce((acc, s) => acc + Number(s.paid_amount || 0), 0);
+  const directCashSales = filteredSales.reduce((acc, s) => {
+    if (s.cash_amount !== undefined) return acc + Number(s.cash_amount || 0);
+    const mfs = Number(s.mfs_amount || (s.payment_method === 'MFS' ? s.paid_amount : 0) || 0);
+    return acc + Math.max(0, Number(s.paid_amount || 0) - mfs);
+  }, 0);
+  const totalMfsSales = filteredSales.reduce((acc, s) => {
+    return acc + Number(s.mfs_amount || (s.payment_method === 'MFS' ? s.paid_amount : 0) || 0);
+  }, 0);
   const totalDueCollected = filteredBakiCollections.reduce((acc, b) => acc + Number(b.amount || 0), 0);
   const totalExpenses = filteredExpenses.reduce((acc, e) => acc + Number(e.amount || 0), 0);
 
@@ -317,6 +297,7 @@ export const DashboardView: React.FC = () => {
     totalCogs,
     netProfit,
     saleCount: filteredSales.length,
+    totalMfsSales,
     totalChalanPurchases,
     totalChalanCashPaid,
     totalChalanDue,
