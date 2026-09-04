@@ -296,14 +296,21 @@ export async function purgeLocalDataAndSyncWithSupabase(): Promise<void> {
 }
 
 /**
- * Initializes and syncs the Dexie local database with live Supabase cloud database
+ * Initializes the Dexie local database safely without wiping offline tables
  */
 export async function initializeLocalDatabase(): Promise<void> {
   // 1. Request OS/Browser storage persistence
   requestPersistentStorage().catch(() => {});
 
-  // 2. Fetch live data from Supabase
-  await purgeLocalDataAndSyncWithSupabase();
+  // 2. Ensure initial seed profiles exist locally if no profiles are stored
+  try {
+    const profileCount = await db.profiles.count();
+    if (profileCount === 0 && INITIAL_PROFILES.length > 0) {
+      await db.profiles.bulkPut(INITIAL_PROFILES);
+    }
+  } catch (err) {
+    console.warn('[AmarDokan DB] Seed profiles init note:', err);
+  }
 }
 
 // ==============================================================================
